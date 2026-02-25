@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -78,7 +77,9 @@ export default function SearchPage() {
             <Link href="/" className="text-3xl font-black text-white tracking-tighter italic">StayFloow.com</Link>
             <div className="flex gap-4">
                <Button variant="ghost" className="text-white font-bold">DZD</Button>
-               <Button variant="outline" className="text-white border-white hover:bg-white/10 font-bold">Se connecter</Button>
+               <Button variant="outline" className="bg-transparent text-white border-white hover:bg-white hover:text-primary font-bold transition-all" asChild>
+                  <Link href="/login">Se connecter</Link>
+               </Button>
             </div>
           </div>
           <div className="max-w-5xl mx-auto w-full">
@@ -156,7 +157,7 @@ export default function SearchPage() {
           >
             <Image src="https://picsum.photos/seed/map/400/300" alt="Map" fill className="object-cover" />
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-              <div className="bg-[#006ce4] text-white px-4 py-2 rounded font-bold text-sm flex items-center gap-2">
+              <div className="bg-primary text-white px-4 py-2 rounded font-bold text-sm flex items-center gap-2">
                 <MapIcon className="h-4 w-4" /> Afficher sur la carte
               </div>
             </div>
@@ -227,7 +228,7 @@ function FilterItem({ label, count, icon }: { label: string, count?: number, ico
 function ResultCard({ item, mode }: { item: any, mode: 'list' | 'grid' }) {
   return (
     <Card className={cn(
-      "overflow-hidden border border-slate-200 hover:border-[#006ce4] transition-all bg-white",
+      "overflow-hidden border border-slate-200 hover:border-primary transition-all bg-white",
       mode === 'list' ? "flex flex-col md:flex-row h-auto md:h-64" : "flex flex-col h-full"
     )}>
       <div className={cn(
@@ -245,12 +246,12 @@ function ResultCard({ item, mode }: { item: any, mode: 'list' | 'grid' }) {
           <div className="flex justify-between items-start">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-xl font-black text-[#006ce4] hover:text-slate-900 truncate tracking-tight">{item.name}</h3>
+                <h3 className="text-xl font-black text-primary hover:text-slate-900 truncate tracking-tight">{item.name}</h3>
                 <div className="flex shrink-0">
                   {[1, 2, 3, 4, 5].map(i => <Star key={i} className="h-3 w-3 fill-[#febb02] text-[#febb02]" />)}
                 </div>
               </div>
-              <div className="flex items-center text-xs text-[#006ce4] font-bold underline mb-1">
+              <div className="flex items-center text-xs text-primary font-bold underline mb-1">
                 <MapPin className="h-3 w-3 mr-1" /> {item.location}
               </div>
               <div className="text-[11px] text-slate-600 mb-2">{item.distance}</div>
@@ -285,7 +286,7 @@ function ResultCard({ item, mode }: { item: any, mode: 'list' | 'grid' }) {
           </div>
           <div className="text-right">
             <div className="text-xl font-black text-slate-900 tracking-tight">{item.price} DZD</div>
-            <Button className="bg-[#006ce4] hover:bg-[#0057b8] h-10 px-6 font-bold mt-2">
+            <Button className="bg-primary hover:bg-primary/90 h-10 px-6 font-bold mt-2 text-white">
               Voir l'offre <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </div>

@@ -32,7 +32,7 @@ export default function Home() {
             <Link href="/search?type=accommodations" className="hover:bg-white/10 px-3 py-2 rounded-md transition-colors font-medium">Séjours</Link>
             <Link href="/search?type=cars" className="hover:bg-white/10 px-3 py-2 rounded-md transition-colors font-medium">Voitures</Link>
             <Link href="/search?type=circuits" className="hover:bg-white/10 px-3 py-2 rounded-md transition-colors font-medium">Circuits</Link>
-            <Button variant="outline" className="text-white border-white hover:bg-white/10 font-bold" asChild>
+            <Button variant="outline" className="bg-transparent text-white border-white hover:bg-white hover:text-primary font-black transition-all" asChild>
               <Link href="/partners/join">Devenir partenaire</Link>
             </Button>
             <Button variant="ghost" className="text-white hover:bg-white/10">Se connecter</Button>
@@ -62,7 +62,7 @@ export default function Home() {
             <span className="text-sm font-bold text-slate-500 mb-2 block">Offres Début 2026</span>
             <h2 className="text-3xl font-black mb-4">-15 % minimum</h2>
             <p className="text-slate-600 mb-6">Offres Début 2026 : réservez maintenant sur StayFloow.com et économisez sur votre prochain séjour avant le 1er avril 2026.</p>
-            <Button className="bg-[#006ce4] hover:bg-[#0057b8] text-white px-8 py-6 text-lg font-bold">
+            <Button className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg font-bold">
               Découvrir les offres
             </Button>
           </div>

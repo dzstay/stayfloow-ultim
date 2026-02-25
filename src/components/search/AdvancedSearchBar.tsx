@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -134,7 +133,7 @@ export default function AdvancedSearchBar() {
                 onDec={() => setOccupancy({...occupancy, rooms: Math.max(1, occupancy.rooms - 1)})}
                 onInc={() => setOccupancy({...occupancy, rooms: occupancy.rooms + 1})}
               />
-              <Button className="w-full bg-primary font-bold" onClick={() => setActiveStep(null)}>Terminé</Button>
+              <Button className="w-full bg-primary font-bold text-white hover:bg-primary/90" onClick={() => setActiveStep(null)}>Terminé</Button>
             </div>
           </PopoverContent>
         </Popover>
@@ -142,7 +141,7 @@ export default function AdvancedSearchBar() {
         {/* Search Button */}
         <div className="p-1 md:w-40 flex items-center justify-center">
           <Button 
-            className="w-full h-full bg-[#006ce4] hover:bg-[#0057b8] text-white text-lg rounded py-3 font-bold" 
+            className="w-full h-full bg-primary hover:bg-primary/90 text-white text-lg rounded py-3 font-bold" 
             onClick={handleSearch}
           >
             Rechercher
@@ -161,7 +160,7 @@ function OccupancyRow({ label, value, onDec, onInc }: { label: string, value: nu
         <Button 
           variant="outline" 
           size="icon" 
-          className="h-10 w-10 rounded-sm border-[#006ce4] text-[#006ce4] hover:bg-[#f0f6ff]" 
+          className="h-10 w-10 rounded-sm border-primary text-primary hover:bg-primary/5 hover:text-primary" 
           onClick={onDec}
         >
           <Minus className="h-4 w-4" />
@@ -170,7 +169,7 @@ function OccupancyRow({ label, value, onDec, onInc }: { label: string, value: nu
         <Button 
           variant="outline" 
           size="icon" 
-          className="h-10 w-10 rounded-sm border-[#006ce4] text-[#006ce4] hover:bg-[#f0f6ff]" 
+          className="h-10 w-10 rounded-sm border-primary text-primary hover:bg-primary/5 hover:text-primary" 
           onClick={onInc}
         >
           <Plus className="h-4 w-4" />

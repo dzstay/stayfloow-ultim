@@ -4,6 +4,7 @@ import Image from 'next/image';
 import PartnerOnboardingForm from '@/components/partners/PartnerOnboardingForm';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ShieldCheck, TrendingUp, Users, Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function PartnerJoinPage() {
   const partnerImage = PlaceHolderImages.find(img => img.id === 'partner-join');
@@ -13,7 +14,7 @@ export default function PartnerJoinPage() {
       {/* Header */}
       <header className="bg-primary text-white py-6 px-8 shadow-md">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/" className="text-3xl font-bold tracking-tight">
+          <Link href="/" className="text-3xl font-bold tracking-tight italic">
             StayFloow<span className="text-secondary">.com</span> Partner
           </Link>
           <div className="flex items-center gap-6">
@@ -30,9 +31,9 @@ export default function PartnerJoinPage() {
         <Image src={partnerImage?.imageUrl || ''} alt="Partner" fill className="object-cover" />
         <div className="absolute inset-0 bg-primary/80" />
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center text-white">
-          <h1 className="text-4xl md:text-5xl font-black mb-4">Devenir Partenaire StayFloow</h1>
+          <h1 className="text-4xl md:text-5xl font-black mb-4">Devenir Partenaire StayFloow.com</h1>
           <p className="text-xl opacity-90 max-w-2xl mx-auto">
-            Rejoignez le premier réseau de voyage en Afrique. Inscrivez votre établissement, voiture ou circuit et commencez à recevoir des réservations dès aujourd'hui.
+            Rejoignez le premier réseau de voyage en Afrique. Inscrivez votre établissement, voiture ou circuit et commencez à recevoir des réservations dès aujourd'hui sur StayFloow.com.
           </p>
         </div>
       </section>
@@ -43,11 +44,11 @@ export default function PartnerJoinPage() {
           
           {/* Benefits Column */}
           <div className="lg:col-span-1 space-y-8">
-            <h2 className="text-3xl font-bold text-primary mb-8">Pourquoi nous ?</h2>
+            <h2 className="text-3xl font-bold text-primary mb-8">Pourquoi StayFloow.com ?</h2>
             <BenefitCard 
               icon={<Users className="h-6 w-6" />}
               title="Plus de visibilité"
-              desc="Accédez à des milliers de voyageurs cherchant activement des séjours en Algérie et Égypte."
+              desc="Accédez à des milliers de voyageurs cherchant activement des séjours en Algérie, Égypte et au-delà."
             />
             <BenefitCard 
               icon={<ShieldCheck className="h-6 w-6" />}
@@ -62,7 +63,7 @@ export default function PartnerJoinPage() {
             <BenefitCard 
               icon={<Globe className="h-6 w-6" />}
               title="GPS Intégré"
-              desc="Vos clients vous trouvent facilement grâce à notre intégration OpenStreetMap ultra-précise."
+              desc="Vos clients vous trouvent facilement grâce à notre intégration GPS ultra-précise."
             />
           </div>
 
@@ -71,7 +72,7 @@ export default function PartnerJoinPage() {
             <div className="bg-white p-2 rounded-2xl shadow-xl border-2 border-primary/5">
                <div className="bg-muted/30 p-8 rounded-xl">
                   <h3 className="text-2xl font-bold text-primary mb-2 text-center">Formulaire d'inscription intelligent</h3>
-                  <p className="text-muted-foreground text-center mb-8">L'inscription est gratuite et ne prend que 5 minutes.</p>
+                  <p className="text-muted-foreground text-center mb-8">L'inscription est gratuite et ne prend que 5 minutes sur StayFloow.com.</p>
                   <PartnerOnboardingForm />
                </div>
             </div>
@@ -86,7 +87,7 @@ export default function PartnerJoinPage() {
              <Link href="#" className="hover:text-primary transition-colors">Confidentialité</Link>
              <Link href="#" className="hover:text-primary transition-colors">Conditions</Link>
           </div>
-          <p>© 2025 StayFloow Partner Program. Plateforme Sécurisée et Fiable.</p>
+          <p>© 2025 StayFloow.com Partner Program. Plateforme Sécurisée et Fiable.</p>
         </div>
       </footer>
     </div>
@@ -104,21 +105,5 @@ function BenefitCard({ icon, title, desc }: { icon: React.ReactNode, title: stri
         <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
       </div>
     </div>
-  );
-}
-
-function Button({ children, className, variant, asChild, ...props }: any) {
-  const Comp = asChild ? Link : 'button';
-  const base = "px-6 py-2 rounded-lg font-bold transition-all inline-flex items-center justify-center";
-  const variants: any = {
-    primary: "bg-primary text-white hover:bg-primary/90",
-    outline: "border-2 border-primary text-primary hover:bg-primary/5",
-    ghost: "text-primary hover:bg-primary/5",
-    link: "text-primary underline-offset-4 hover:underline"
-  };
-  return (
-    <Comp className={`${base} ${variants[variant || 'primary']} ${className}`} {...props}>
-      {children}
-    </Comp>
   );
 }

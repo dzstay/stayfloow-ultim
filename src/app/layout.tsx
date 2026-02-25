@@ -2,8 +2,8 @@ import type {Metadata} from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'StayFloow | Book Accommodations, Cars, & Circuits in Africa',
-  description: 'The premier platform for booking hotels, riads, car rentals, and excursions in Algeria, Egypt, and across Africa.',
+  title: 'StayFloow.com | Réservez Hébergements, Voitures & Circuits en Afrique',
+  description: 'La plateforme de référence pour réserver hôtels, riads, locations de voitures et excursions en Algérie, Égypte et partout en Afrique.',
 };
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

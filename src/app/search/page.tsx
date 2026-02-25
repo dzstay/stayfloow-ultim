@@ -75,13 +75,13 @@ export default function SearchPage() {
       <div className="bg-primary pt-6 pb-12 px-6 shadow-xl sticky top-0 z-40">
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
           <div className="flex justify-between items-center">
-            <Link href="/" className="text-3xl font-black text-white tracking-tighter">StayFloow</Link>
+            <Link href="/" className="text-3xl font-black text-white tracking-tighter italic">StayFloow.com</Link>
             <div className="flex gap-4">
                <Button variant="ghost" className="text-white font-bold">DZD</Button>
                <Button variant="outline" className="text-white border-white hover:bg-white/10 font-bold">Se connecter</Button>
             </div>
           </div>
-          <div className="max-w-5xl">
+          <div className="max-w-5xl mx-auto w-full">
             <AdvancedSearchBar />
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function SearchPage() {
         {/* Sidebar Filters */}
         <aside className="w-full lg:w-64 shrink-0 space-y-4">
           <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
-            <div className="p-4 bg-[#febb02]/10 border-b border-[#febb02]/20">
+            <div className="p-4 bg-primary/5 border-b border-primary/10">
               <h3 className="font-black text-sm uppercase tracking-wider text-slate-800">Filtrer par :</h3>
             </div>
             
@@ -258,7 +258,7 @@ function ResultCard({ item, mode }: { item: any, mode: 'list' | 'grid' }) {
             <div className="flex items-center gap-2 text-right">
                <div className="hidden sm:block">
                   <div className="font-black text-slate-900 text-sm">{item.ratingText}</div>
-                  <div className="text-[10px] text-slate-500">{item.reviews} expériences vécues</div>
+                  <div className="text-[10px] text-slate-500">{item.reviews} expériences vécues sur StayFloow.com</div>
                </div>
                <div className="bg-primary text-white font-black h-8 w-8 rounded-tr-lg rounded-bl-lg rounded-tl-lg flex items-center justify-center text-sm">
                   {item.rating}
@@ -281,7 +281,7 @@ function ResultCard({ item, mode }: { item: any, mode: 'list' | 'grid' }) {
 
         <div className="flex justify-between items-end border-t pt-3">
           <div className="text-[10px] text-slate-500">
-             Les prix incluent les taxes et frais.
+             Les prix incluent les taxes et frais StayFloow.com.
           </div>
           <div className="text-right">
             <div className="text-xl font-black text-slate-900 tracking-tight">{item.price} DZD</div>

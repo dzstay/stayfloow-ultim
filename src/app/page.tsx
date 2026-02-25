@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { Building, Car, Compass, ChevronRight, Star } from 'lucide-react';
@@ -7,8 +6,6 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import AdvancedSearchBar from '@/components/search/AdvancedSearchBar';
 
 export default function Home() {
-  const heroImage = PlaceHolderImages.find(img => img.id === 'hero-home');
-  
   const propertyTypes = [
     { name: 'Hôtels', image: 'https://picsum.photos/seed/hotel/400/300', count: '820,412' },
     { name: 'Appartements', image: 'https://picsum.photos/seed/apt/400/300', count: '915,234' },
@@ -45,12 +42,12 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="bg-primary pt-12 pb-24 px-6 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto relative z-10">
+        <div className="max-w-5xl mx-auto relative z-10 text-center md:text-left">
           <h1 className="text-5xl font-black text-white mb-4 leading-tight">
-            Trouvez votre prochain séjour
+            Trouvez votre prochain séjour sur StayFloow.com
           </h1>
           <p className="text-2xl text-white opacity-90 mb-12">
-            Des offres incroyables sur les hôtels, riads et bien plus encore...
+            Des offres incroyables sur les hôtels, riads et bien plus encore en Afrique...
           </p>
           <AdvancedSearchBar />
         </div>
@@ -64,7 +61,7 @@ export default function Home() {
           <div className="flex-1">
             <span className="text-sm font-bold text-slate-500 mb-2 block">Offres Début 2026</span>
             <h2 className="text-3xl font-black mb-4">-15 % minimum</h2>
-            <p className="text-slate-600 mb-6">Offres Début 2026 : réservez maintenant et économisez sur votre prochain séjour avant le 1er avril 2026.</p>
+            <p className="text-slate-600 mb-6">Offres Début 2026 : réservez maintenant sur StayFloow.com et économisez sur votre prochain séjour avant le 1er avril 2026.</p>
             <Button className="bg-[#006ce4] hover:bg-[#0057b8] text-white px-8 py-6 text-lg font-bold">
               Découvrir les offres
             </Button>
@@ -94,7 +91,7 @@ export default function Home() {
         <section className="mb-16">
           <div className="mb-8">
             <h2 className="text-2xl font-black text-slate-900">Séjournez dans nos hébergements uniques les mieux notés</h2>
-            <p className="text-slate-500">Des châteaux aux villas, des bateaux aux igloos, nous avons tout ce qu'il vous faut</p>
+            <p className="text-slate-500">Des châteaux aux villas, des bateaux aux igloos, StayFloow.com a tout ce qu'il vous faut</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {uniqueStays.map((stay, i) => (
@@ -127,6 +124,7 @@ export default function Home() {
             <Link href="/" className="text-3xl font-bold mb-6 block">
               StayFloow<span className="text-secondary">.com</span>
             </Link>
+            <p className="opacity-70">Le portail de voyage numéro 1 en Afrique.</p>
           </div>
           {['Support', 'Découvrir', 'Partenaires'].map((col) => (
             <div key={col}>
@@ -135,7 +133,7 @@ export default function Home() {
                 {col === 'Partenaires' ? (
                   <>
                     <li><Link href="/partners/join">Devenir partenaire</Link></li>
-                    <li>Extranet</li>
+                    <li>Extranet StayFloow.com</li>
                   </>
                 ) : (
                   <>
@@ -147,6 +145,9 @@ export default function Home() {
               </ul>
             </div>
           ))}
+        </div>
+        <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-white/10 text-center opacity-50">
+          <p>© 2025 StayFloow.com. Tous droits réservés.</p>
         </div>
       </footer>
     </div>

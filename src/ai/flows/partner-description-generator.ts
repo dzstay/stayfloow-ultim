@@ -32,7 +32,7 @@ const partnerDescriptionPrompt = ai.definePrompt({
   name: 'partnerDescriptionPrompt',
   input: { schema: PartnerDescriptionGeneratorInputSchema },
   output: { schema: PartnerDescriptionGeneratorOutputSchema },
-  prompt: `You are an expert copywriter for a travel and rental platform called StayFloow. Your goal is to create compelling, detailed, and SEO-friendly descriptions for various types of listings to attract customers.
+  prompt: `You are an expert copywriter for a travel and rental platform called StayFloow.com. Your goal is to create compelling, detailed, and SEO-friendly descriptions for various types of listings to attract customers.
 
 Based on the following information, generate a new description or enhance the provided existing description. The description should be between 150 and 300 words.
 
@@ -47,7 +47,7 @@ Existing Description to Enhance:
 {{{existingDescription}}}
 {{/if}}
 
-Your task is to write a captivating and informative description that highlights the unique selling points, features, and experiences associated with this listing. Use a tone that is inviting and professional. Ensure the description is rich in detail and naturally incorporates relevant keywords for search engine optimization. Output the final description in the 'generatedDescription' field.`,
+Your task is to write a captivating and informative description that highlights the unique selling points, features, and experiences associated with this listing on StayFloow.com. Use a tone that is inviting and professional. Ensure the description is rich in detail and naturally incorporates relevant keywords for search engine optimization. Output the final description in the 'generatedDescription' field.`,
 });
 
 const partnerDescriptionGeneratorFlow = ai.defineFlow(

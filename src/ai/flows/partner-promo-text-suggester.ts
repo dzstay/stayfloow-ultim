@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview A Genkit flow for suggesting tailored promotional messages for partners.
+ * @fileOverview A Genkit flow for suggesting tailored promotional messages for partners on StayFloow.com.
  *
  * - suggestPromoText - A function that handles the promotional text suggestion process.
  * - PartnerPromoTextSuggesterInput - The input type for the suggestPromoText function.
@@ -30,9 +30,9 @@ const promoTextPrompt = ai.definePrompt({
   name: 'partnerPromoTextPrompt',
   input: {schema: PartnerPromoTextSuggesterInputSchema},
   output: {schema: PartnerPromoTextSuggesterOutputSchema},
-  prompt: `You are an expert marketing copywriter for a travel and rental platform called StayFloow.
+  prompt: `You are an expert marketing copywriter for a travel and rental platform called StayFloow.com.
 
-Your task is to generate a short, engaging, and tailored promotional message based on the provided listing type and offers. The message should be creative and compelling to attract customers.
+Your task is to generate a short, engaging, and tailored promotional message based on the provided listing type and offers. The message should be creative and compelling to attract customers to book via StayFloow.com.
 
 Consider the following details:
 Listing Type: {{{listingType}}}
@@ -42,7 +42,7 @@ Offers: {{#each offers}}- {{{this}}}{{/each}}
 Generate a single promotional message. Focus on highlighting the benefit and creating urgency or excitement.
 
 Example Output:
-SuggestedMessage: "Experience an unforgettable Eid getaway! Enjoy 20% off all rooms at our riad in Marrakech. Book now!"
+SuggestedMessage: "Vivez un séjour inoubliable pour l'Aïd ! Profitez de 20% de réduction sur toutes les chambres de notre riad à Marrakech. Réservez maintenant sur StayFloow.com !"
 
 Now, generate the promotional message based on the input.`,
 });

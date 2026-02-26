@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { LanguageProvider } from '@/context/language-context';
 import { CurrencyProvider } from '@/context/currency-context';
 import { Footer } from '@/components/Footer';
+import { Header } from '@/components/Header';
 
 export const metadata: Metadata = {
   title: 'StayFloow.com | Réservez Hébergements, Voitures & Circuits en Afrique',
@@ -27,6 +28,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <LanguageProvider>
             <CurrencyProvider>
+              <Header />
               <div className="flex-grow">
                 {children}
               </div>

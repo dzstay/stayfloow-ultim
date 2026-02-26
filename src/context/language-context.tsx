@@ -40,6 +40,10 @@ const translations: Translations = {
     'terms': 'Conditions d\'utilisation',
     'privacy': 'Confidentialité',
     'rights_reserved': 'Tous droits réservés.',
+    'become_partner': 'Devenir partenaire',
+    'login': 'Se connecter',
+    'signup': 'S\'inscrire',
+    'open_menu': 'Ouvrir le menu',
   },
   ar: {
     'contact.title': 'اتصل بنا',
@@ -70,6 +74,10 @@ const translations: Translations = {
     'terms': 'شروط الاستخدام',
     'privacy': 'الخصوصية',
     'rights_reserved': 'جميع الحقوق محفوظة.',
+    'become_partner': 'كن شريكاً',
+    'login': 'تسجيل الدخول',
+    'signup': 'إنشاء حساب',
+    'open_menu': 'افتح القائمة',
   },
   en: {
     'contact.title': 'Contact Us',
@@ -100,6 +108,10 @@ const translations: Translations = {
     'terms': 'Terms of Use',
     'privacy': 'Privacy Policy',
     'rights_reserved': 'All rights reserved.',
+    'become_partner': 'Become a partner',
+    'login': 'Log in',
+    'signup': 'Sign up',
+    'open_menu': 'Open menu',
   }
 };
 

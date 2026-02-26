@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { useDoc, useFirestore } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -28,13 +27,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/context/currency-context";
 import { sendBookingConfirmationEmail } from "@/lib/mail";
+import { Separator } from "@/components/ui/separator";
+import { CrossSellCard } from "@/components/cross-sell-card";
 
 const bookingSchema = z.object({
   fullName: z.string().min(2, "Le nom complet est requis"),
@@ -52,7 +51,7 @@ export default function PropertyBookingPage({ params }: { params: Promise<{ id: 
   const { formatPrice } = useCurrency();
   const db = useFirestore();
   
-  const [date, setDate] = useState<{ from: Date; to: Date }>({
+  const [date] = useState<{ from: Date; to: Date }>({
     from: new Date(),
     to: addDays(new Date(), 3),
   });
@@ -124,19 +123,26 @@ export default function PropertyBookingPage({ params }: { params: Promise<{ id: 
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <Card className="max-w-md w-full border-none shadow-2xl rounded-3xl p-10 text-center animate-in zoom-in-95 duration-500">
-          <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="h-12 w-12 text-primary" />
-          </div>
-          <h1 className="text-3xl font-black text-slate-900 mb-4">Félicitations !</h1>
-          <p className="text-slate-500 mb-8 leading-relaxed">
-            Votre demande de réservation a été enregistrée avec succès. Vous recevrez les détails complets par email d'ici quelques instants.
-          </p>
-          <Button className="w-full h-14 bg-primary text-white font-black rounded-xl" asChild>
-            <Link href="/">Retour à l'accueil</Link>
-          </Button>
-        </Card>
+      <div className="min-h-screen bg-slate-50 py-20 px-6">
+        <div className="max-w-5xl mx-auto space-y-12">
+          <Card className="max-w-md w-full mx-auto border-none shadow-2xl rounded-3xl p-10 text-center animate-in zoom-in-95 duration-500 bg-white">
+            <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="h-12 w-12 text-primary" />
+            </div>
+            <h1 className="text-3xl font-black text-slate-900 mb-4">Félicitations !</h1>
+            <p className="text-slate-500 mb-8 leading-relaxed">
+              Votre demande de réservation a été enregistrée avec succès. Vous recevrez les détails complets par email d'ici quelques instants.
+            </p>
+            <Button className="w-full h-14 bg-primary text-white font-black rounded-xl" asChild>
+              <Link href="/">Retour à l'accueil</Link>
+            </Button>
+          </Card>
+
+          <CrossSellCard 
+            location={property?.location?.address?.split(',').pop()?.trim() || "Alger"} 
+            bookedItemType="property" 
+          />
+        </div>
       </div>
     );
   }

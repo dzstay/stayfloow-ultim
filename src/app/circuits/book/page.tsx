@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { Suspense, useState, useEffect } from 'react';
@@ -8,7 +7,7 @@ import { circuits as initialCircuits, pendingCircuits as initialPendingCircuits 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, CreditCard, CheckCircle, Calendar as CalendarIcon, Info, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CreditCard, CheckCircle, Calendar as CalendarIcon, Info, ShieldCheck, Users } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
@@ -26,6 +25,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CrossSellCard } from '@/components/cross-sell-card';
 
 const bookingSchema = z.object({
     fullName: z.string().min(2, "Le nom est requis"),
@@ -117,15 +117,22 @@ function CircuitBookingForm() {
 
     if (isBookingConfirmed) {
         return (
-            <div className="container mx-auto px-4 py-20 text-center max-w-2xl animate-in fade-in zoom-in-95 duration-500">
-                <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8">
-                    <CheckCircle className="h-16 w-16 text-primary" />
-                </div>
-                <h1 className="text-3xl font-black mb-4">Réservation terminée !</h1>
-                <p className="text-xl text-slate-600 mb-8 leading-relaxed">
-                    N° {reservationDetails.number}. Un e-mail de confirmation a été envoyé à <strong>{reservationDetails.email}</strong>.
-                </p>
-                <Link href="/"><Button className="bg-primary hover:bg-primary/90 h-12 px-8 font-black">Retour à l'accueil</Button></Link>
+            <div className="container mx-auto px-4 py-20 text-center max-w-5xl animate-in fade-in zoom-in-95 duration-500">
+                <Card className="max-w-2xl mx-auto border-none shadow-2xl rounded-3xl p-12 text-center bg-white mb-12">
+                    <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8">
+                        <CheckCircle className="h-16 w-16 text-primary" />
+                    </div>
+                    <h1 className="text-3xl font-black mb-4">Réservation terminée !</h1>
+                    <p className="text-xl text-slate-600 mb-8 leading-relaxed">
+                        N° {reservationDetails.number}. Un e-mail de confirmation a été envoyé à <strong>{reservationDetails.email}</strong>.
+                    </p>
+                    <Link href="/"><Button className="bg-primary hover:bg-primary/90 h-12 px-8 font-black">Retour à l'accueil</Button></Link>
+                </Card>
+
+                <CrossSellCard 
+                    location={circuit?.location?.split(',').pop()?.trim() || "Alger"} 
+                    bookedItemType="circuit" 
+                />
             </div>
         );
     }

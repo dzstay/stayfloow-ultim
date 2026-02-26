@@ -1,83 +1,105 @@
-
 "use client";
 
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Filter, Star, Info } from "lucide-react";
-import { Button } from "./ui/button";
+import { popularFilters, propertyTypesList } from "@/lib/data";
+import { useCurrency } from "@/context/currency-context";
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export function FilterSidebar({ resultCount }: { resultCount: number }) {
+  const { formatPrice, convertFromDZD, currency } = useCurrency();
+
+  const maxPriceDZD = 30000;
+  const maxPriceConverted =
+    Math.ceil(convertFromDZD(maxPriceDZD)) || maxPriceDZD;
+
+  const [priceRange, setPriceRange] = useState([
+    convertFromDZD(3000) || 3000,
+    convertFromDZD(20000) || 20000,
+  ]);
+
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xl sticky top-24">
-      <div className="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-        <h3 className="font-black text-xs uppercase tracking-widest text-slate-800 flex items-center gap-2">
-          <Filter className="h-4 w-4 text-primary" /> Filtrer ({resultCount})
-        </h3>
-        <Button variant="ghost" size="sm" className="text-[10px] font-black text-primary p-0 h-auto">TOUT EFFACER</Button>
-      </div>
-      
-      <div className="p-6 space-y-8">
-        {/* Budget */}
-        <div className="space-y-4">
-          <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Budget par nuit</h4>
-          <div className="space-y-3">
-            <FilterItem label="0 - 5 000 DZD" />
-            <FilterItem label="5 000 - 10 000 DZD" />
-            <FilterItem label="10 000 - 20 000 DZD" />
-            <FilterItem label="20 000 DZD +" />
-          </div>
-        </div>
+    <Card className="sticky top-24 border-none shadow-xl rounded-3xl overflow-hidden bg-white">
+      <CardHeader className="p-6 bg-slate-50 border-b border-slate-100">
+        <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-800">Filtres de recherche</CardTitle>
+      </CardHeader>
 
-        <Separator className="bg-slate-100" />
+      <CardContent className="p-0 max-h-[calc(100vh-12rem)] overflow-y-auto">
+        <Accordion type="multiple" className="w-full">
 
-        {/* Étoiles */}
-        <div className="space-y-4">
-          <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Étoiles</h4>
-          <div className="space-y-3">
-            {[5, 4, 3, 2].map(s => (
-              <FilterItem 
-                key={s} 
-                label={`${s} étoiles`} 
-                icon={<div className="flex ml-1">{Array(s).fill(0).map((_, i) => <Star key={i} className="h-2 w-2 fill-amber-400 text-amber-400" />)}</div>} 
+          {/* Budget */}
+          <AccordionItem value="budget" className="border-slate-100">
+            <AccordionTrigger className="px-6 py-4 font-bold text-sm hover:no-underline hover:bg-slate-50">
+              Budget (par nuit)
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6 pt-2 space-y-6">
+              <Slider
+                value={priceRange}
+                max={maxPriceConverted}
+                step={currency === "DZD" ? 500 : 5}
+                onValueChange={setPriceRange}
+                className="mt-4"
               />
-            ))}
-          </div>
+
+              <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span className="font-black text-primary text-xs">{formatPrice(priceRange[0])}</span>
+                <span className="font-black text-primary text-xs">{formatPrice(priceRange[1])}</span>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Populaires */}
+          <AccordionItem value="popular" className="border-slate-100">
+            <AccordionTrigger className="px-6 py-4 font-bold text-sm hover:no-underline hover:bg-slate-50">
+              Populaires
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6 pt-2 space-y-3">
+              {popularFilters.map((item) => (
+                <div key={item} className="flex items-center space-x-3 group cursor-pointer">
+                  <Checkbox id={`popular-${item}`} className="h-5 w-5 rounded-md border-slate-300" />
+                  <Label htmlFor={`popular-${item}`} className="font-bold text-slate-600 text-sm group-hover:text-primary transition-colors cursor-pointer">
+                    {item}
+                  </Label>
+                </div>
+              ))}
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Types de propriétés */}
+          <AccordionItem value="types" className="border-none">
+            <AccordionTrigger className="px-6 py-4 font-bold text-sm hover:no-underline hover:bg-slate-50">
+              Types de propriétés
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6 pt-2 space-y-3">
+              {propertyTypesList.map((item) => (
+                <div key={item} className="flex items-center space-x-3 group cursor-pointer">
+                  <Checkbox id={`type-${item}`} className="h-5 w-5 rounded-md border-slate-300" />
+                  <Label htmlFor={`type-${item}`} className="font-bold text-slate-600 text-sm group-hover:text-primary transition-colors cursor-pointer">
+                    {item}
+                  </Label>
+                </div>
+              ))}
+            </AccordionContent>
+          </AccordionItem>
+
+        </Accordion>
+
+        <div className="p-6 border-t border-slate-100 bg-slate-50/50">
+          <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-black rounded-xl shadow-lg">
+            Afficher les {resultCount || 0} résultats
+          </Button>
         </div>
-
-        <Separator className="bg-slate-100" />
-
-        {/* Équipements populaires */}
-        <div className="space-y-4">
-          <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Équipements</h4>
-          <div className="space-y-3">
-            <FilterItem label="WiFi gratuit" />
-            <FilterItem label="Piscine" />
-            <FilterItem label="Petit-déjeuner inclus" />
-            <FilterItem label="Parking gratuit" />
-          </div>
-        </div>
-
-        <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
-          <div className="flex items-start gap-2">
-            <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-            <p className="text-[10px] text-slate-500 font-bold leading-relaxed uppercase">
-              Les filtres vous aident à trouver l'hébergement idéal selon vos critères spécifiques.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FilterItem({ label, icon }: { label: string, icon?: React.ReactNode }) {
-  return (
-    <div className="flex items-center space-x-3 group cursor-pointer">
-      <Checkbox id={label} className="h-5 w-5 rounded-md border-slate-300 data-[state=checked]:bg-primary transition-all" />
-      <Label htmlFor={label} className="text-sm font-bold text-slate-600 leading-none flex items-center group-hover:text-primary transition-colors cursor-pointer">
-        {label} {icon}
-      </Label>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -118,3 +118,6 @@ export const circuits = [
 ];
 
 export const pendingCircuits = [];
+
+export const popularFilters = ["WiFi gratuit", "Piscine", "Petit-déjeuner inclus", "Parking gratuit", "Climatisation"];
+export const propertyTypesList = ["Hôtel", "Appartement", "Riad", "Villa", "Bateau-Hôtel", "Hôtel Insolite"];

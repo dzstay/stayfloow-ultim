@@ -57,6 +57,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     description: '',
     price: '',
     type: [] as string[],
+    roomType: 'double_room', // Default choice for hotel room
     stars: 'N/A',
     isManagementGroup: 'no',
     freeCancellation48h: false,
@@ -183,7 +184,8 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         details: {
           name: formData.listingName,
           description: formData.description,
-          type: formData.type[0], // On enregistre seulement le premier (sélection unique)
+          type: formData.type[0], 
+          roomType: formData.roomType,
           stars: formData.stars,
           isManagementGroup: formData.isManagementGroup === 'yes',
           freeCancellation48h: formData.freeCancellation48h,
@@ -268,8 +270,8 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
   const renderStep3 = () => {
     const options = {
       accommodation: {
-        types: ['Hôtel ★★★', 'Hôtel ★★★★', 'Hôtel ★★★★★', 'Riad', 'Villa', 'Appartement', 'Studio', 'Glamping'],
-        amenities: ['WiFi gratuit', 'Piscine', 'Climatisation', 'Parking gratuit', 'Cuisine', 'Salle de bain', 'Toilettes', 'Barbecue', 'Terrasse', 'Jardin', 'Vue mer']
+        types: ['Hôtel ★★★', 'Hôtel ★★★★', 'Hôtel ★★★★★'],
+        amenities: ['WiFi gratuit', 'Piscine', 'Climatisation', 'Parking gratuit', 'Cuisine équipée', 'Salle de bain privée', 'Toilettes', 'Produits de toilette', 'Barbecue', 'Terrasse', 'Jardin', 'Vue mer']
       },
       car_rental: {
         types: ['Économique', 'SUV / 4x4', 'Van / Minibus', 'Luxe', 'Moto'],
@@ -285,18 +287,18 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
 
     return (
       <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
-        {/* Type d'hébergement - Sélection UNIQUE */}
+        {/* Type d'hébergement - Sélection UNIQUE par icônes */}
         <div className="space-y-6">
           <Label className="font-black text-xl text-slate-900">{t('listing_type_label')} *</Label>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {options.types.map(opt => (
               <div 
                 key={opt}
                 onClick={() => setFormData(prev => ({ ...prev, type: [opt] }))}
                 className={cn(
-                  "p-5 rounded-2xl border-2 text-center cursor-pointer text-sm font-bold transition-all shadow-sm hover:shadow-md",
+                  "p-8 rounded-2xl border-2 text-center cursor-pointer text-base font-black transition-all shadow-sm hover:shadow-xl",
                   formData.type.includes(opt) 
-                    ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20" 
+                    ? "border-primary bg-primary/5 text-primary ring-4 ring-primary/10 scale-105" 
                     : "border-slate-100 bg-white hover:border-slate-200"
                 )}
               >
@@ -346,6 +348,36 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
           </div>
         )}
 
+        {/* TYPE DE CHAMBRE (NOUVEAU) */}
+        {initialCategory === 'accommodation' && (
+          <div className="space-y-6 bg-white p-8 rounded-3xl border-2 border-slate-100 shadow-sm">
+            <Label className="font-black text-xl text-slate-900 flex items-center gap-3">
+              <Building className="h-6 w-6 text-primary" /> {t('room_type_label')} *
+            </Label>
+            <RadioGroup 
+              value={formData.roomType} 
+              onValueChange={(val) => setFormData({...formData, roomType: val})} 
+              className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
+              {[
+                { id: 'single_room', label: 'single_room' },
+                { id: 'double_room', label: 'double_room' },
+                { id: 'suite_room', label: 'suite_room' }
+              ].map((rt) => (
+                <div key={rt.id}>
+                  <RadioGroupItem value={rt.id} id={rt.id} className="peer sr-only" />
+                  <Label 
+                    htmlFor={rt.id} 
+                    className="flex flex-col items-center p-6 border-2 rounded-xl cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 hover:bg-slate-50 transition-all font-bold text-slate-700"
+                  >
+                    {t(rt.label)}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+        )}
+
         {/* Capacité & Inventaire */}
         {initialCategory === 'accommodation' && (
           <div className="space-y-6 bg-white p-8 rounded-3xl border-2 border-slate-100 shadow-sm">
@@ -353,7 +385,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
               <Users className="h-6 w-6 text-primary" /> {t('capacity_title')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* ADULTES */}
               <div className="space-y-4">
                 <Label className="font-bold text-slate-600">{t('adults_max')}</Label>
                 <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl border border-slate-200">
@@ -362,7 +393,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
                   <button onClick={() => updateCapacity('adults', 1)} className="h-10 w-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-primary"><Plus className="h-4 w-4"/></button>
                 </div>
               </div>
-              {/* ENFANTS */}
               <div className="space-y-4">
                 <Label className="font-bold text-slate-600">{t('children_max')}</Label>
                 <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl border border-slate-200">
@@ -371,7 +401,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
                   <button onClick={() => updateCapacity('children', 1)} className="h-10 w-10 bg-white shadow-sm rounded-lg flex items-center justify-center text-primary"><Plus className="h-4 w-4"/></button>
                 </div>
               </div>
-              {/* INVENTAIRE */}
               <div className="space-y-4">
                 <Label className="font-bold text-slate-600">{t('inventory_label')}</Label>
                 <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl border border-slate-200">
@@ -387,7 +416,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         {/* Configuration des lits */}
         {initialCategory === 'accommodation' && (
           <div className="space-y-6 bg-white p-8 rounded-3xl border-2 border-slate-100 shadow-sm">
-            <h3 className="text-3xl font-black text-slate-900 mb-8">{t('room_setup_title')} 1</h3>
+            <h3 className="text-3xl font-black text-slate-900 mb-8">{t('room_setup_title')}</h3>
             <div className="space-y-8">
               <p className="text-slate-600 font-medium">{t('bed_types_question')}</p>
               
@@ -435,7 +464,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
           </div>
         )}
 
-        {/* Équipements & Annulation */}
+        {/* Équipements & Annulation (SYSTÈME DE COCHE) */}
         <div className="space-y-8">
           <div className="flex justify-between items-center">
             <Label className="font-black text-xl text-slate-900">{t('amenities_label')} *</Label>
@@ -447,14 +476,13 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
                   id={a} 
                   checked={formData.amenities.includes(a)}
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, amenities: checked ? [...prev.amenities, a] : prev.amenities.filter(x => x !== a) }))}
-                  className="h-6 w-6 rounded-md border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  className="h-6 w-6 rounded-md border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary shadow-sm"
                 />
                 <label htmlFor={a} className="text-sm font-bold text-slate-600 group-hover:text-primary cursor-pointer transition-colors">{t(a)}</label>
               </div>
             ))}
           </div>
 
-          {/* CANCELLATION POLICY */}
           <div className="bg-primary/5 p-8 rounded-3xl border-2 border-primary/10 space-y-4">
             <Label className="font-black text-lg text-primary flex items-center gap-2">
               <Info className="h-5 w-5" /> {t('cancellation_policy')}

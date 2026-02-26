@@ -16,7 +16,7 @@ const translations: Record<string, Record<Locale, string>> = {
     "accommodations": { fr: "Hébergements", en: "Accommodations", ar: "أماكن الإقامة", es: "Alojamientos" },
     "car_rental": { fr: "Voitures", en: "Car Rental", ar: "تأجير السيارات", es: "Alquiler de Coches" },
     "tours": { fr: "Circuits", en: "Tours & Activities", ar: "الجولات والأنشطة", es: "Tours y Actividades" },
-    "list_property": { fr: "Listez votre bien", en: "List your property", ar: "أضف عقارك", es: "Publica tu propiedad" },
+    "list_property": { fr: "Listez votre bien", en: "List your property", ar: "أضف عقارك", es: "Publica tu propriété" },
     "login": { fr: "Se connecter", en: "Log In", ar: "تسجيل الدخول", es: "Iniciar sesión" },
     "register": { fr: "S'inscrire", en: "Sign Up", ar: "إنشاء حساب", es: "Registrarse" },
     "profile": { fr: "Profil", en: "Profile", ar: "الملف الشخصi", es: "Perfil" },
@@ -45,7 +45,13 @@ const translations: Record<string, Record<Locale, string>> = {
     "futon": { fr: "Futon", en: "Futon", ar: "فوتون", es: "Futón" },
     "futon_desc": { fr: "Dimensions variables", en: "Variable dimensions", ar: "أبعاد متغيرة", es: "Dimensiones variables" },
     "show_more_beds": { fr: "Plus de types de lits", en: "More bed types", ar: "المزيد من أنواع الأسرة", es: "Más tipos de camas" },
-    "show_less_beds": { fr: "Moins de types de lits", en: "Less bed types", ar: "أنواع أسرة أقل", es: "Menos tipos de camas" },
+    "show_less_beds": { fr: "Moins de types de lits", en: "Less bed types", ar: "أنواع أسرة أقل", es: "Menos types de camas" },
+
+    // Room Types
+    "room_type_label": { fr: "Type de chambre", en: "Room Type", ar: "نوع الغرفة", es: "Tipo de habitación" },
+    "single_room": { fr: "Chambre Simple", en: "Single Room", ar: "غرفة فردية", es: "Habitación individual" },
+    "double_room": { fr: "Chambre Double", en: "Double Room", ar: "غرفة مزدوجة", es: "Habitación doble" },
+    "suite_room": { fr: "Suite", en: "Suite", ar: "جناح", es: "Suite" },
 
     // Capacity & Inventory
     "capacity_title": { fr: "Capacité & Disponibilité", en: "Capacity & Availability", ar: "السعة والتوافر", es: "Capacidad y Disponibilidad" },
@@ -72,7 +78,7 @@ const translations: Record<string, Record<Locale, string>> = {
     "unique_stays_desc": { fr: "Une sélection rigoureuse des établissements les mieux notés sur StayFloow.com", en: "A careful selection of top-rated properties on StayFloow.com", ar: "مجموعة مختارة بعناية من أفضل العقارات تقييمًا على StayFloow.com", es: "Una cuidada selección de las propiedades mejor valoradas en StayFloow.com" },
     "from_price": { fr: "À partir de", en: "Starting from", ar: "ابتداءً من", es: "Desde" },
     "per_night": { fr: "nuit", en: "night", ar: "ليلة", es: "noche" },
-    "recently_viewed": { fr: "Consultés récemment", en: "Recently viewed", ar: "تمت مشاهدتها مؤخراً", es: "Vistos récemment" },
+    "recently_viewed": { fr: "Consultés récemment", en: "Recently viewed", ar: "تمت melanch مشاهدتها مؤخراً", es: "Vistos récemment" },
     "inspired_by_visit": { fr: "Inspirés par votre visite", en: "Inspired by your visit", ar: "مستوحى من زيارتك", es: "Inspirado por tu visita" },
 
     // Search Bar
@@ -87,7 +93,7 @@ const translations: Record<string, Record<Locale, string>> = {
     "room_short": { fr: "ch.", en: "rm.", ar: "غرفة", es: "hab." },
 
     // Partner Portal & Registration
-    "partner_hero_title": { fr: "Inscrivez votre établissement sur StayFloow.com", en: "List your property on StayFloow.com", ar: "سجل عقارك على StayFloow.com", es: "Publique su propiedad en StayFloow.com" },
+    "partner_hero_title": { fr: "Inscrivez votre établissement sur StayFloow.com", en: "List your property on StayFloow.com", ar: "سجل عقارك على StayFloow.com", es: "Publique su propriété en StayFloow.com" },
     "partner_hero_subtitle": { fr: "Rejoignez la plus grande communauté de voyageurs en Afrique et boostez vos réservations gratuitement.", en: "Join the largest travel community in Africa and boost your bookings for free.", ar: "انضم إلى أكبر مجتمع للمسافرين في إفريقيا وعزز حجوزاتك مجانًا.", es: "Únase a la comunidad de viajeros más grande de África y aumente sus reservas gratis." },
     "partner_hero_cta": { fr: "Commencer gratuitement", en: "Start for free", ar: "ابدأ مجاناً", es: "Empezar gratis" },
     "register_my_property": { fr: "ENREGISTRER MON BIEN", en: "REGISTER MY PROPERTY", ar: "تسجيل عقاري", es: "REGISTRAR MI PROPIEDAD" },
@@ -135,7 +141,9 @@ const translations: Record<string, Record<Locale, string>> = {
     "Cuisine équipée": { fr: "Cuisine équipée", en: "Equipped Kitchen", ar: "مطبخ مجهز", es: "Cocina equipada" },
     "Cuisine": { fr: "Cuisine", en: "Kitchen", ar: "مطبخ", es: "Cocina" },
     "Salle de bain": { fr: "Salle de bain", en: "Bathroom", ar: "حمام", es: "Baño" },
+    "Salle de bain privée": { fr: "Salle de bain privée", en: "Private Bathroom", ar: "حمام خاص", es: "Baño privado" },
     "Toilettes": { fr: "Toilettes", en: "Toilets", ar: "مرحاض", es: "Aseo" },
+    "Produits de toilette": { fr: "Produits de toilette", en: "Toiletries", ar: "مستلزمات الحمام", es: "Productos de aseo" },
     "Barbecue": { fr: "Barbecue", en: "BBQ", ar: "شواء", es: "Barbacoa" },
     "Terrasse": { fr: "Terrasse", en: "Terrace", ar: "تراس", es: "Terraza" },
     "Jardin": { fr: "Jardin", en: "Garden", ar: "حديقة", es: "Jardín" },

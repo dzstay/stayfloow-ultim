@@ -6,7 +6,7 @@ import { MessageSquare, X, Send, Headset } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
-export function CustomerSupportChat() {
+export default function CustomerSupportChat() {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleToggle = () => setIsOpen(!isOpen);

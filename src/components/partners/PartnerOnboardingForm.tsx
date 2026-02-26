@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,12 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Building, Car, Compass, MapPin, Upload, CheckCircle2, 
-  ChevronRight, ChevronLeft, Loader2, Wand2, X, Plus, Info
+  ChevronRight, ChevronLeft, Loader2, Wand2, X, Plus, Info, TrendingUp, AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generatePartnerDescription } from '@/ai/flows/partner-description-generator';
+import { getPriceRecommendation, type PriceRecommendationOutput } from '@/ai/flows/price-recommendation-flow';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { getFirestore } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 interface Props {
@@ -25,10 +25,13 @@ interface Props {
 
 export default function PartnerOnboardingForm({ initialCategory }: Props) {
   const { toast } = useToast();
+  const db = useFirestore();
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [recommendation, setRecommendation] = useState<PriceRecommendationOutput | null>(null);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -80,6 +83,27 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     }
   };
 
+  const handlePriceAnalyze = async () => {
+    if (!formData.price || !formData.listingName || !formData.address) {
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Nom, adresse et prix requis pour l\'analyse.' });
+      return;
+    }
+    setIsAnalyzing(true);
+    try {
+      const result = await getPriceRecommendation({
+        name: formData.listingName,
+        location: formData.address,
+        price: parseFloat(formData.price),
+        demandScore: Math.floor(Math.random() * 40) + 60, // Simulate dynamic market score
+      });
+      setRecommendation(result);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (photos.length < 5) {
       toast({ variant: 'destructive', title: 'Photos manquantes', description: 'Veuillez ajouter au moins 5 photos.' });
@@ -87,7 +111,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     }
     setIsSubmitting(true);
     try {
-      const db = getFirestore();
       const listingId = `list_${Date.now()}`;
       await setDoc(doc(db, 'listings', listingId), {
         category: initialCategory,
@@ -133,7 +156,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     }
   };
 
-  // Content renderers
   const renderStep1 = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -249,7 +271,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <Label className="font-black text-lg">Description attractive (Min 150 car.)</Label>
-            <Button variant="outline" size="sm" onClick={handleAIEnhance} disabled={isGenerating} className="text-primary border-primary gap-2">
+            <Button variant="outline" size="sm" onClick={handleAIEnhance} disabled={isGenerating} className="text-primary border-primary gap-2 hover:bg-primary hover:text-white">
               {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
               Améliorer avec l'IA
             </Button>
@@ -291,16 +313,14 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
             </label>
           )}
         </div>
-        <p className="text-xs text-slate-500 italic">Glissez-déposez pour réorganiser. Max 30 photos.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-900 p-8 rounded-2xl text-white shadow-2xl">
-        <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-900 p-8 rounded-2xl text-white shadow-2xl relative overflow-hidden">
+        <div className="space-y-4 relative z-10">
           <Label className="font-black text-xl flex items-center gap-2">
             <Info className="h-5 w-5 text-secondary" />
             Prix de base (DZD)
           </Label>
-          <p className="text-xs opacity-70">Saisissez le prix par nuit ou par jour. Ce prix sera votre référence.</p>
           <div className="relative">
              <Input 
                 type="number" 
@@ -311,17 +331,50 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
              />
              <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-xl opacity-50">DZD</span>
           </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handlePriceAnalyze} 
+            disabled={isAnalyzing}
+            className="text-secondary border-secondary hover:bg-secondary hover:text-primary mt-4 w-full md:w-auto"
+          >
+            {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <TrendingUp className="h-4 w-4 mr-2" />}
+            Analyser mon prix avec l'IA StayFloow
+          </Button>
         </div>
-        <div className="flex flex-col justify-center gap-4 border-l border-white/10 pl-8">
-           <div className="flex justify-between items-center text-sm">
-              <span className="opacity-70">Frais StayFloow.com (15%)</span>
-              <span className="font-bold">-{formData.price ? (parseFloat(formData.price) * 0.15).toFixed(0) : 0} DZD</span>
-           </div>
-           <div className="flex justify-between items-center text-xl font-black text-secondary">
-              <span>Votre gain net</span>
-              <span>{formData.price ? (parseFloat(formData.price) * 0.85).toFixed(0) : 0} DZD</span>
-           </div>
+        
+        <div className="flex flex-col justify-center gap-4 border-l border-white/10 pl-8 relative z-10">
+           {recommendation ? (
+             <div className="space-y-3 animate-in fade-in zoom-in-95 duration-500">
+               <div className="flex justify-between items-center text-secondary font-black text-lg">
+                 <span>Prix recommandé :</span>
+                 <span>{recommendation.recommendedPrice} DZD</span>
+               </div>
+               <div className="bg-white/5 p-3 rounded-lg text-[10px] space-y-2">
+                 <p className="font-bold text-secondary flex items-center gap-1">
+                   <CheckCircle2 className="h-3 w-3" /> Confiance : {recommendation.confidence}%
+                 </p>
+                 <ul className="list-disc pl-4 opacity-70">
+                   {recommendation.reasoning.map((r, idx) => <li key={idx}>{r}</li>)}
+                 </ul>
+               </div>
+             </div>
+           ) : (
+             <>
+               <div className="flex justify-between items-center text-sm">
+                  <span className="opacity-70">Frais StayFloow.com (15%)</span>
+                  <span className="font-bold">-{formData.price ? (parseFloat(formData.price) * 0.15).toFixed(0) : 0} DZD</span>
+               </div>
+               <div className="flex justify-between items-center text-xl font-black text-secondary">
+                  <span>Votre gain net</span>
+                  <span>{formData.price ? (parseFloat(formData.price) * 0.85).toFixed(0) : 0} DZD</span>
+               </div>
+             </>
+           )}
         </div>
+
+        {/* Decorative AI Sparkle */}
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
       </div>
     </div>
   );
@@ -336,8 +389,8 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         Votre annonce est en cours de validation par nos experts. Vous recevrez une notification par email sous 24 à 48 heures.
       </p>
       <div className="mt-12">
-        <Button size="lg" className="bg-primary hover:bg-primary/90 px-10" asChild>
-          <a href="/">Retour à l'accueil</a>
+        <Button size="lg" className="bg-primary hover:bg-primary/90 px-10 text-white font-black" asChild>
+          <a href="/">Retour à l'accueil de StayFloow.com</a>
         </Button>
       </div>
     </div>
@@ -383,14 +436,14 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
             <Button 
               onClick={handleSubmit} 
               disabled={isSubmitting}
-              className="bg-primary hover:bg-primary/90 px-12 h-14 rounded-xl font-black text-lg shadow-xl shadow-primary/20"
+              className="bg-primary hover:bg-primary/90 text-white px-12 h-14 rounded-xl font-black text-lg shadow-xl shadow-primary/20"
             >
               {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : 'Valider et envoyer pour examen'}
             </Button>
           ) : (
             <Button 
               onClick={handleNext}
-              className="bg-primary hover:bg-primary/90 px-12 h-14 rounded-xl font-black text-lg shadow-xl shadow-primary/20"
+              className="bg-primary hover:bg-primary/90 text-white px-12 h-14 rounded-xl font-black text-lg shadow-xl shadow-primary/20"
             >
               Continuer <ChevronRight className="ml-2 h-4 w-4" />
             </Button>

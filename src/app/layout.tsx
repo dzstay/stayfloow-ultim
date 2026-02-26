@@ -6,6 +6,7 @@ import { LanguageProvider } from '@/context/language-context';
 import { CurrencyProvider } from '@/context/currency-context';
 import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
+import { CustomerSupportChat } from '@/components/customer-support-chat';
 
 export const metadata: Metadata = {
   title: 'StayFloow.com | Réservez Hébergements, Voitures & Circuits en Afrique',
@@ -33,6 +34,7 @@ export default function RootLayout({
                 {children}
               </div>
               <Footer />
+              <CustomerSupportChat />
               <Toaster />
             </CurrencyProvider>
           </LanguageProvider>

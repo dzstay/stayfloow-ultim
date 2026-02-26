@@ -1,6 +1,7 @@
+
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star } from 'lucide-react';
+import { Star, ShieldCheck, MapPin, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AdvancedSearchBar from '@/components/search/AdvancedSearchBar';
 import { AiRecommender } from '@/components/ai-recommender';
@@ -20,108 +21,93 @@ export default function Home() {
     { name: 'Villas', image: 'https://picsum.photos/seed/villa/400/300', count: '450,123' },
   ];
 
+  // Suppression des prix codés en dur (€) pour utiliser le système global
   const uniqueStays = [
-    { id: 'prop-1', name: 'Riad Dar Al-Andalus', location: 'Fès, Maroc', rating: 9.8, price: '120 €', image: 'https://picsum.photos/seed/unique1/400/500' },
-    { id: 'prop-2', name: 'Desert Cave Hotel', location: 'Ghardaïa, Algérie', rating: 9.5, price: '85 €', image: 'https://picsum.photos/seed/unique2/400/500' },
-    { id: 'prop-3', name: 'Nile Floating Palace', location: 'Louxor, Égypte', rating: 9.6, price: '150 €', image: 'https://picsum.photos/seed/unique3/400/500' },
-    { id: 'prop-4', name: 'Royal Algerian Tent', location: 'Timimoun, Algérie', rating: 9.7, price: '110 €', image: 'https://picsum.photos/seed/unique4/400/500' },
+    { id: 'prop-1', name: 'Riad Dar Al-Andalus', location: 'Fès, Maroc', rating: 9.8, price: 12500, image: 'https://picsum.photos/seed/unique1/400/500' },
+    { id: 'prop-2', name: 'Desert Cave Hotel', location: 'Ghardaïa, Algérie', rating: 9.5, price: 8500, image: 'https://picsum.photos/seed/unique2/400/500' },
+    { id: 'prop-3', name: 'Nile Floating Palace', location: 'Louxor, Égypte', rating: 9.6, price: 15000, image: 'https://picsum.photos/seed/unique3/400/500' },
+    { id: 'prop-4', name: 'Royal Algerian Tent', location: 'Timimoun, Algérie', rating: 9.7, price: 11000, image: 'https://picsum.photos/seed/unique4/400/500' },
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f5f5f5]">
-      {/* Hero Section */}
-      <section className="bg-primary pt-12 pb-24 px-6 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto relative z-10 text-center md:text-left">
-          <h1 className="text-5xl font-black text-white mb-4 leading-tight tracking-tighter">
-            Trouvez votre prochain séjour sur StayFloow<span className="text-secondary">.com</span>
+    <div className="flex flex-col min-h-screen bg-background">
+      {/* Hero Section - Inspirée de Booking.com mais en VERT StayFloow */}
+      <section className="bg-primary text-white pt-16 pb-32 px-6">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <h1 className="text-5xl md:text-6xl font-black tracking-tighter max-w-3xl leading-tight">
+            Des séjours inoubliables pour tous les budgets.
           </h1>
-          <p className="text-2xl text-white opacity-90 mb-12 font-medium">
-            Des offres incroyables sur les hôtels, riads et bien plus encore en Afrique...
+          <p className="text-xl md:text-2xl font-medium opacity-90 max-w-2xl">
+            Économisez 15 % ou plus sur vos réservations de 2026 grâce aux offres StayFloow.
           </p>
-          <AdvancedSearchBar />
+          <div className="pt-4">
+            <Button size="lg" className="bg-white text-primary hover:bg-slate-100 font-bold px-8 h-14 rounded-md shadow-xl border-none">
+              Se connecter ou créer un compte
+            </Button>
+          </div>
         </div>
-        {/* Decoration */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl -mr-20 -mt-20" />
       </section>
 
-      {/* Content */}
-      <main className="max-w-7xl mx-auto px-6 -mt-10 pb-20 w-full z-20">
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-          {/* AI Recommender - Section Vedette */}
-          <div className="lg:col-span-2">
-            <AiRecommender />
-          </div>
+      {/* Barre de Recherche - Chevauchement précis */}
+      <div className="max-w-7xl mx-auto w-full px-6 -mt-8 z-30 mb-12">
+        <AdvancedSearchBar />
+      </div>
 
-          {/* Promotion Banner */}
-          <div className="lg:col-span-1">
-            <section className="h-full bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 p-8 flex flex-col justify-between group">
-              <div>
-                <span className="text-xs font-black text-primary bg-primary/10 px-3 py-1 rounded-full mb-4 inline-block uppercase tracking-widest">Offres 2026</span>
-                <h2 className="text-3xl font-black mb-4 group-hover:text-primary transition-colors">-15 % minimum</h2>
-                <p className="text-slate-500 font-medium leading-relaxed mb-6">Réservez dès maintenant votre aventure africaine sur StayFloow.com et profitez de réductions exceptionnelles.</p>
-              </div>
-              <div className="space-y-6">
-                <div className="w-full h-48 relative rounded-2xl overflow-hidden shadow-lg">
-                  <Image src="https://picsum.photos/seed/promo/600/400" alt="Promotion StayFloow" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
-                </div>
-                <Button className="w-full bg-primary hover:bg-primary/90 text-white h-14 text-lg font-black rounded-xl shadow-lg shadow-primary/20">
-                  Découvrir les offres
-                </Button>
-              </div>
-            </section>
-          </div>
-        </div>
+      <main className="max-w-7xl mx-auto px-6 pb-20 w-full">
+        
+        {/* IA Assistant - Section Vedette plus compacte */}
+        <section className="mb-20">
+          <AiRecommender />
+        </section>
 
         {/* Property Types */}
         <section className="mb-20">
-          <h2 className="text-3xl font-black mb-8 text-slate-900 tracking-tight">Rechercher par type d'hébergement</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <h2 className="text-2xl font-black mb-6 text-slate-900 tracking-tight">Rechercher par type d'hébergement</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {propertyTypes.map((type) => (
-              <Link key={type.name} href={`/search?type=${type.name.toLowerCase()}`} className="group">
-                <div className="relative aspect-[4/3] rounded-3xl overflow-hidden mb-4 shadow-xl border-4 border-white transition-all group-hover:shadow-2xl group-hover:-translate-y-1">
-                  <Image src={type.image} alt={type.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+              <Link key={type.name} href={`/search?type=${type.name.toLowerCase()}`} className="group space-y-3">
+                <div className="relative aspect-[4/3] rounded-lg overflow-hidden shadow-sm">
+                  <Image src={type.image} alt={type.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
-                <h3 className="font-black text-xl group-hover:text-primary transition-colors text-slate-900">{type.name}</h3>
-                <p className="text-sm text-slate-500 font-bold uppercase tracking-wider">{type.count} établissements</p>
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 group-hover:underline">{type.name}</h3>
+                  <p className="text-xs text-slate-500">{type.count} établissements</p>
+                </div>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* Unique Stays */}
+        {/* Unique Stays - Utilisation des cartes standard pour éviter les doublons de style */}
         <section className="mb-20">
-          <div className="mb-10">
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Séjournez dans nos hébergements uniques</h2>
-            <p className="text-slate-500 font-medium text-lg mt-2">Une sélection rigoureuse des établissements les mieux notés sur StayFloow.com</p>
+          <div className="mb-8">
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Nos pépites StayFloow</h2>
+            <p className="text-slate-500 font-medium mt-1">Les établissements préférés de notre communauté en Afrique.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-            {uniqueStays.map((stay, i) => (
-              <Link key={i} href={`/properties/${stay.id}`} className="group cursor-pointer">
-                <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden mb-5 shadow-2xl border-4 border-white transition-all group-hover:shadow-primary/20 group-hover:-translate-y-2">
-                  <Image src={stay.image} alt={stay.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
-                  <div className="absolute top-5 left-5 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-xl">
-                    <div className="flex items-center gap-1.5">
-                      <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                      <span className="text-sm font-black text-slate-900">{stay.rating}</span>
-                    </div>
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {uniqueStays.map((stay) => (
+              <Link key={stay.id} href={`/properties/${stay.id}`} className="group block">
+                <div className="relative aspect-square rounded-xl overflow-hidden mb-3 shadow-md">
+                  <Image src={stay.image} alt={stay.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
-                <h3 className="font-black text-xl text-slate-900 truncate group-hover:text-primary transition-colors mb-1">{stay.name}</h3>
-                <p className="text-sm text-slate-500 mb-4 font-bold flex items-center gap-1"><Star className="h-3 w-3 text-primary" /> {stay.location}</p>
-                <div className="flex justify-between items-end">
-                  <span className="text-xs font-black text-primary bg-primary/5 px-3 py-1 rounded-full uppercase tracking-widest">ÉLITE</span>
-                  <div className="text-right">
-                    <span className="text-[10px] font-black text-slate-400 uppercase block">À partir de </span>
-                    <span className="font-black text-2xl text-slate-900 tracking-tighter">{stay.price}</span>
+                <h3 className="font-bold text-slate-900 truncate group-hover:text-primary transition-colors">{stay.name}</h3>
+                <p className="text-xs text-slate-500 flex items-center gap-1 mb-2"><MapPin className="h-3 w-3" /> {stay.location}</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="bg-primary text-white text-[10px] font-black h-6 w-6 flex items-center justify-center rounded">
+                    {stay.rating}
                   </div>
+                  <span className="text-xs font-bold text-slate-700">Exceptionnel</span>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">À partir de</p>
+                  <p className="text-xl font-black text-slate-900">DZD {stay.price.toLocaleString()}</p>
                 </div>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* Personalized Recommendations */}
+        {/* Personalized Recommendations - Le script intelligent que nous avons fait */}
         <PersonalizedRecommendations />
 
       </main>

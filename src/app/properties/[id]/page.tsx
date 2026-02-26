@@ -25,6 +25,7 @@ import {
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/context/currency-context';
+import Link from 'next/link';
 
 export default function PropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -47,6 +48,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
 
   // Données par défaut si le document n'existe pas encore dans Firestore
   const displayData = property || {
+    id: 'default',
     details: {
       name: "Riad Dar Al-Andalus",
       description: "Niché au cœur de la médina, ce riad historique offre une expérience immersive unique. Entièrement restauré par des artisans locaux, il allie confort moderne et architecture traditionnelle fassie. Profitez de notre patio arboré et de notre terrasse panoramique surplombant les toits de la ville.",
@@ -61,6 +63,8 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
       "https://picsum.photos/seed/riad-detail-4/1200/800"
     ]
   };
+
+  const propertyId = property?.id || id;
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] flex flex-col">
@@ -194,7 +198,6 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                       <p className="text-sm font-bold opacity-80">/ nuit</p>
                     </div>
                   </div>
-                  {/* Decorative background circle */}
                   <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-secondary/20 rounded-full blur-2xl" />
                 </div>
 
@@ -227,8 +230,10 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                     </div>
                   </div>
 
-                  <Button className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 rounded-2xl active:scale-95 transition-all">
-                    Réserver maintenant
+                  <Button className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 rounded-2xl active:scale-95 transition-all" asChild>
+                    <Link href={`/properties/${propertyId}/book`}>
+                      Réserver maintenant
+                    </Link>
                   </Button>
 
                   <div className="space-y-4 pt-4">
@@ -287,4 +292,3 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     </div>
   );
 }
-

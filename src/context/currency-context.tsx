@@ -2,78 +2,129 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export type Currency = "DZD" | "EUR" | "USD" | "GBP" | "CHF" | "EGP";
+export type Currency = 'DZD' | 'USD' | 'EUR' | 'GBP' | 'CHF' | 'EGP';
+
+const conversionRates: Record<Currency, number> = {
+  DZD: 1,
+  USD: 1 / 134.5,
+  EUR: 1 / 145.2,
+  GBP: 1 / 171.1,
+  CHF: 1 / 150.5,
+  EGP: 1 / 2.85,
+};
+
+const currencySymbols: Record<Currency, string> = {
+  DZD: 'DA',
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  CHF: 'CHF',
+  EGP: 'E£'
+};
+
+const currencyFlags: Record<Currency, string> = {
+  DZD: '🇩🇿',
+  USD: '🇺🇸',
+  EUR: '🇪🇺',
+  GBP: '🇬🇧',
+  CHF: '🇨🇭',
+  EGP: '🇪🇬'
+};
 
 interface CurrencyContextType {
   currency: Currency;
-  setCurrency: (c: Currency) => void;
-  formatPrice: (price: number) => string;
-  getCurrencySymbol: (c: Currency) => string;
-  getCurrencyFlag: (c: Currency) => string;
+  setCurrency: (currency: Currency) => void;
+  formatPrice: (priceInDZD: number, isRawValue?: boolean) => string;
   convertFromDZD: (priceInDZD: number) => number;
+  getCurrencySymbol: (curr?: Currency) => string;
+  getCurrencyFlag: (curr?: Currency) => string;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
-export function CurrencyProvider({ children }: { children: ReactNode }) {
+export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   const [currency, setCurrency] = useState<Currency>('DZD');
 
-  const rates: Record<Currency, number> = {
-    DZD: 1,
-    EUR: 0.0068,
-    USD: 0.0074,
-    GBP: 0.0058,
-    CHF: 0.0065,
-    EGP: 0.35
-  };
-
-  const getCurrencySymbol = (c: Currency): string => {
-    const symbols: Record<Currency, string> = {
-      DZD: "DZD",
-      EUR: "€",
-      USD: "$",
-      GBP: "£",
-      CHF: "CHF",
-      EGP: "EGP"
-    };
-    return symbols[c];
-  };
-
-  const getCurrencyFlag = (c: Currency): string => {
-    const flags: Record<Currency, string> = {
-      DZD: "🇩🇿",
-      EUR: "🇪🇺",
-      USD: "🇺🇸",
-      GBP: "🇬🇧",
-      CHF: "🇨🇭",
-      EGP: "🇪🇬"
-    };
-    return flags[c];
-  };
-
   const convertFromDZD = (priceInDZD: number) => {
-    return priceInDZD * rates[currency];
+    return priceInDZD * conversionRates[currency];
   };
 
-  const formatPrice = (price: number) => {
-    const convertedPrice = price * (rates[currency] || 1);
+  const getCurrencySymbol = (curr?: Currency) => {
+    return currencySymbols[curr || currency];
+  };
 
-    return new Intl.NumberFormat(currency === 'DZD' ? 'fr-DZ' : 'en-US', {
+  const getCurrencyFlag = (curr?: Currency) => {
+    return currencyFlags[curr || currency];
+  };
+
+  const formatPrice = (priceInDZD: number, isRawValue = false) => {
+    const rate = conversionRates[currency];
+    const convertedPrice = priceInDZD * rate;
+
+    if (isRawValue) {
+      return new Intl.NumberFormat('fr-FR', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(convertedPrice);
+    }
+
+    if (currency === 'DZD') {
+      return new Intl.NumberFormat('fr-DZ', {
+        style: 'currency',
+        currency: 'DZD',
+        currencyDisplay: 'narrowSymbol',
+        minimumFractionDigits: 0,
+      }).format(convertedPrice);
+    }
+
+    return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: currency,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 0,
     }).format(convertedPrice);
   };
 
   return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, formatPrice, getCurrencySymbol, getCurrencyFlag, convertFromDZD }}>
+    <CurrencyContext.Provider
+      value={{
+        currency,
+        setCurrency,
+        formatPrice,
+        convertFromDZD,
+        getCurrencySymbol,
+        getCurrencyFlag,
+      }}
+    >
       {children}
     </CurrencyContext.Provider>
   );
-}
+};
 
-export function useCurrency() {
+/**
+ * Hook personnalisé useCurrency avec protection anti-crash.
+ * Garantit des valeurs par défaut si le provider est absent.
+ */
+export const useCurrency = () => {
   const context = useContext(CurrencyContext);
-  if (!context) throw new Error('useCurrency must be used within a CurrencyProvider');
+
+  if (!context) {
+    return {
+      currency: "DZD" as Currency,
+      setCurrency: () => {},
+      formatPrice: (priceInDZD: number, isRawValue = false) => {
+        if (isRawValue) return priceInDZD.toString();
+        return new Intl.NumberFormat("fr-DZ", {
+          style: "currency",
+          currency: "DZD",
+          currencyDisplay: "narrowSymbol",
+          minimumFractionDigits: 0,
+        }).format(priceInDZD);
+      },
+      convertFromDZD: (priceInDZD: number) => priceInDZD,
+      getCurrencySymbol: () => "DA",
+      getCurrencyFlag: () => "🇩🇿",
+    };
+  }
+
   return context;
-}
+};

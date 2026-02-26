@@ -24,6 +24,23 @@ const translations: Record<string, Record<Locale, string>> = {
     "dashboard": { fr: "Dashboard", en: "Dashboard", ar: "لوحة التحكم", es: "Panel de control" },
     "logout": { fr: "Se déconnecter", en: "Log Out", ar: "تسجيل الخروج", es: "Cerrar sesión" },
 
+    // Partner Page (Image Matching)
+    "partner_hero_title": { fr: "Inscrivez votre établissement sur StayFloow.com", en: "List your establishment on StayFloow.com", ar: "سجل منشأتك على StayFloow.com", es: "Registre su establecimiento en StayFloow.com" },
+    "partner_hero_subtitle": { fr: "Rejoignez la plus grande communauté de voyageurs en Afrique et boostez vos réservations gratuitement.", en: "Join the largest travel community in Africa and boost your bookings for free.", ar: "انضم إلى أكبر مجتمع للمسافرين في إفريقيا وعزز حجوزاتك مجانًا.", es: "Únase a la comunidad de viajeros más grande de África y aumente sus reservas gratis." },
+    "partner_hero_cta": { fr: "Commencer gratuitement", en: "Start for free", ar: "ابدأ مجاناً", es: "Empezar gratis" },
+    "register_my_property": { fr: "ENREGISTRER MON BIEN", en: "REGISTER MY PROPERTY", ar: "تسجيل عقاري", es: "REGISTRAR MI PROPIEDAD" },
+    "partner_cat_acc_desc": { fr: "Hôtels, riads, appartements, villas, maisons d'hôtes...", en: "Hotels, riads, apartments, villas, guest houses...", ar: "فنادق، رياض، شقق، فيلات، بيوت ضيافة...", es: "Hoteles, riads, apartamentos, villas, casas de huéspedes..." },
+    "partner_cat_car_desc": { fr: "Berlines, SUV, 4x4, minibus, voitures de luxe...", en: "Sedans, SUVs, 4x4s, minibuses, luxury cars...", ar: "سيدان، دفع رباعي، ميني باص، سيارات فاخرة...", es: "Sedanes, SUV, 4x4, minibuses, coches de lujo..." },
+    "partner_cat_tour_desc": { fr: "Safaris, visites guidées, treks, croisières sur le Nil...", en: "Safaris, guided tours, treks, Nile cruises...", ar: "رحلات سفاري، جولات سياحية، رحلات نيلية...", es: "Safaris, visitas guiadas, treks, cruceros por el Nilo..." },
+    "trust_visibility_title": { fr: "Visibilité mondiale", en: "Global Visibility", ar: "ظهور عالمي", es: "Visibilidad mundial" },
+    "trust_visibility_desc": { fr: "Touchez des clients du monde entier.", en: "Reach customers from all over the world.", ar: "صل إلى العملاء من جميع أنحاء العالم.", es: "Llegue a clientes de todo el mundo." },
+    "trust_payment_title": { fr: "Paiements sécurisés", en: "Secure Payments", ar: "مدفوعات آمنة", es: "Pagos seguros" },
+    "trust_payment_desc": { fr: "Gérez vos revenus en toute sérénité.", en: "Manage your income with peace of mind.", ar: "إدارة دخلك براحة بال.", es: "Gestione sus ingresos con tranquilidad." },
+    "trust_mgmt_title": { fr: "Gestion simplifiée", en: "Simplified Management", ar: "إدارة مبسطة", es: "Gestión simplificada" },
+    "trust_mgmt_desc": { fr: "Des outils pro pour votre activité.", en: "Professional tools for your business.", ar: "أدوات احترافية لنشاطك.", es: "Herramientas pro para su negocio." },
+    "trust_gps_title": { fr: "GPS Précis", en: "Precise GPS", ar: "نظام تحديد المواقع دقيق", es: "GPS preciso" },
+    "trust_gps_desc": { fr: "Vos clients vous trouvent à coup sûr.", en: "Your customers find you for sure.", ar: "عملاؤك يجدونك بالتأكيد.", es: "Sus clientes lo encuentran con seguridad." },
+
     // Search Bar & Summary
     "where_to": { fr: "Où allez-vous ?", en: "Where are you going?", ar: "إلى أين أنت ذاهب؟", es: "¿A dónde vas?" },
     "dates_placeholder": { fr: "Arrivée — Départ", en: "Check-in — Check-out", ar: "الوصول — المغادرة", es: "Entrada — Salida" },
@@ -71,9 +88,6 @@ const translations: Record<string, Record<Locale, string>> = {
     "partner_cta_title": { fr: "Référencez votre établissement sur StayFloow.com", en: "List your property on StayFloow.com", ar: "أدرج عقارك على StayFloow.com", es: "Registra tu establecimiento en StayFloow.com" },
     "partner_cta_desc": { fr: "Rejoignez des milliers de partenaires en Afrique et commencez à recevoir des réservations dès aujourd'hui.", en: "Join thousands of partners in Africa and start receiving bookings today.", ar: "انضم إلى آلاف الشركاء في إفريقيا وابدأ في تلقي الحجوزات اليوم.", es: "Únase a miles de socios en África y comience a recibir reservas hoy." },
     "start": { fr: "Commencer", en: "Get Started", ar: "ابدأ", es: "Empezar" },
-    "add_property": { fr: "Ajouter un hébergement", en: "Add accommodation", ar: "إضافة سكن", es: "Añadir alojamiento" },
-    "add_vehicle": { fr: "Ajouter un véhicule", en: "Add vehicle", ar: "إضافة مركبة", es: "Añadir vehículo" },
-    "add_tour": { fr: "Ajouter un circuit", en: "Add tour", ar: "إضافة جولة", es: "Añadir tour" },
 
     // Retargeting
     "email_retargeting_title": { fr: "Reprenez là où vous vous êtes arrêté", en: "Pick up where you left off", ar: "تابع من حيث توقفت", es: "Continúa donde lo dejaste" },

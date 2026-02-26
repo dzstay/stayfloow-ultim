@@ -27,6 +27,14 @@ const translations: Record<string, Record<Locale, string>> = {
     "start": { fr: "Commencer", en: "Start", ar: "ابدأ", es: "Empezar" },
     "help": { fr: "Aide", en: "Help", ar: "مساعدة", es: "Ayuda" },
 
+    // Car Specific
+    "car_hero_title": { fr: "Location de voitures pour tous les types de voyages", en: "Car rentals for every kind of trip", ar: "تأجير سيارات لجميع أنواع الرحلات", es: "Alquiler de coches para todo tipo de viajes" },
+    "car_hero_subtitle": { fr: "De super voitures à des tarifs avantageux, proposées par les plus grandes sociétés de location de voitures.", en: "Great cars at great prices, from the biggest car rental companies.", ar: "سيارات رائعة بأسعار رائعة، من أكبر شركات تأجير السيارات.", es: "Grandes coches a grandes precios, de las mayores empresas de alquiler de coches." },
+    "pickup_location": { fr: "Lieu de prise en charge", en: "Pick-up location", ar: "موقع الاستلام", es: "Lugar de recogida" },
+    "pickup_date": { fr: "Date de prise en charge", en: "Pick-up date", ar: "تاريخ الاستلام", es: "Fecha de recogida" },
+    "return_date": { fr: "Date de restitution", en: "Return date", ar: "تاريخ العودة", es: "Fecha de devolución" },
+    "hour": { fr: "Heure", en: "Time", ar: "الوقت", es: "Hora" },
+
     // Bed Types
     "room_setup_title": { fr: "Configuration de la Chambre", en: "Room Setup", ar: "إعداد الغرفة", es: "Configuración de la habitación" },
     "bed_types_question": { fr: "Quels sont les types de lits disponibles dans cet hébergement ?", en: "What bed types are available in this accommodation?", ar: "ما هي أنواع الأسرة المتوفرة في مكان الإقامة هذا؟", es: "¿Qué tipos de camas hay disponibles en este alojamiento?" },
@@ -52,7 +60,7 @@ const translations: Record<string, Record<Locale, string>> = {
     "bedrooms_count": { fr: "Nombre de chambres", en: "Number of bedrooms", ar: "عدد الغرف", es: "Número de habitaciones" },
     "bathrooms_count": { fr: "Nombre de salles de bain", en: "Number of bathrooms", ar: "عدد الحمامات", es: "Número de baños" },
     "kitchens_count": { fr: "Nombre de cuisines", en: "Number of kitchens", ar: "عدد المطابخ", es: "Número de cocinas" },
-    "toilets_count": { fr: "Nombre de toilettes", en: "Number of toilets", ar: "عدد المراحيض", es: "Número de aseos" },
+    "toilets_count": { fr: "Nombre de toilettes", en: "Number of toilets", ar: "عدد المراحيض", es: "عدد المراحيض" },
 
     // Room Types
     "room_type_label": { fr: "Type de chambre", en: "Room Type", ar: "نوع الغرفة", es: "Tipo de habitación" },
@@ -106,7 +114,7 @@ const translations: Record<string, Record<Locale, string>> = {
     "unique_stays_desc": { fr: "Une sélection rigoureuse des établissements les mieux notés sur StayFloow.com", en: "A careful selection of top-rated properties on StayFloow.com", ar: "مجموعة مختارة بعناية من أفضل العقارات تقييمًا على StayFloow.com", es: "Una cuidada selección de las propiedades mejor valoradas en StayFloow.com" },
     "from_price": { fr: "À partir de", en: "Starting from", ar: "ابتداءً من", es: "Desde" },
     "per_night": { fr: "nuit", en: "night", ar: "ليلة", es: "noche" },
-    "recently_viewed": { fr: "Consultés récemment", en: "Recently viewed", ar: "تمت مشاهدتها مؤخراً", es: "Vistos recientemente" },
+    "recently_viewed": { fr: "Consultés récemment", en: "Recently viewed", ar: "تمت مشاهدتها مؤخراً", es: "Vistos récemment" },
     "inspired_by_visit": { fr: "Inspirés par votre visite", en: "Inspired by your visit", ar: "مستوحى من زيارتك", es: "Inspirado por tu visita" },
 
     // Search Bar

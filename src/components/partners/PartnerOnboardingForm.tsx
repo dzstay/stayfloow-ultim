@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { 
   Building, Car, Compass, MapPin, Upload, CheckCircle2, 
-  ChevronRight, ChevronLeft, Loader2, Wand2, X, Plus, Minus, Info, TrendingUp, AlertCircle, Bed, Star, Users, Home
+  ChevronRight, ChevronLeft, Loader2, Wand2, X, Plus, Minus, Info, TrendingUp, Star, Users, Home
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generatePartnerDescription } from '@/ai/flows/partner-description-generator';
@@ -283,7 +283,12 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     const options = {
       accommodation: {
         types: ['Hôtel', 'Villa', 'Appartement', 'Studio'],
-        amenities: ['WiFi gratuit', 'Piscine', 'Climatisation', 'Parking gratuit', 'Cuisine équipée', 'Cuisine', 'Salle de bain privée', 'Salle de bain', 'Toilettes', 'Produits de toilette', 'Barbecue', 'Terrasse', 'Jardin', 'Vue mer']
+        amenities: [
+          'WiFi gratuit', 'Climatisation', 'Parking gratuit', 'Petit-déjeuner inclus', 
+          'Piscine', 'Restaurant sur place', 'Réception 24h/24', 'Animaux domestiques acceptés', 
+          'Terrasse / balcon / vue', 'Cuisine / coin cuisine', 'Prises électriques près du lit', 
+          'Salle de bain privée', 'Lit bébé / lit supplémentaire', 'Ascenseur', 'Accessibilité PMR'
+        ]
       },
       car_rental: {
         types: ['Économique', 'SUV / 4x4', 'Van / Minibus', 'Luxe', 'Moto'],
@@ -324,7 +329,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
           </div>
         </div>
 
-        {/* Composition du logement (Pour Villa/Appartement/Studio) */}
+        {/* Composition du logement */}
         {initialCategory === 'accommodation' && (
           <div className="space-y-6 bg-white p-8 rounded-3xl border-2 border-slate-100 shadow-sm">
             <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
@@ -350,7 +355,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
           </div>
         )}
 
-        {/* ETOILES & GROUPE (Optionnel pour Hôtels) */}
+        {/* ETOILES & GROUPE */}
         {initialCategory === 'accommodation' && formData.type.includes('Hôtel') && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-white p-8 rounded-3xl border-2 border-slate-100 shadow-sm">
             <div className="space-y-6">
@@ -437,7 +442,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
                   <div key={bed.id} className="flex items-center justify-between group">
                     <div className="flex items-center gap-6">
                       <div className="bg-slate-50 p-3 rounded-xl group-hover:bg-primary/5 transition-colors">
-                        <Bed className="h-8 w-8 text-slate-400 group-hover:text-primary transition-colors" />
+                        <Star className="h-8 w-8 text-slate-400 group-hover:text-primary transition-colors" />
                       </div>
                       <div>
                         <p className="font-black text-slate-900">{t(bed.name)}</p>
@@ -478,9 +483,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
 
         {/* Équipements & Annulation */}
         <div className="space-y-8">
-          <div className="flex justify-between items-center">
-            <Label className="font-black text-xl text-slate-900">{t('amenities_label')} *</Label>
-          </div>
+          <Label className="font-black text-xl text-slate-900">{t('amenities_label')} *</Label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/50 p-8 rounded-3xl border-2 border-slate-100">
             {options.amenities.map(a => (
               <div key={a} className="flex items-center space-x-4 group">
@@ -532,7 +535,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
             placeholder={t('description_placeholder')}
             className="min-h-[180px] rounded-2xl border-slate-200 focus:border-primary p-6 text-lg leading-relaxed shadow-inner"
           />
-          <div className="text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">{formData.description.length} / 150 MIN</div>
         </div>
       </div>
     );
@@ -552,7 +554,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
               >
                 <X className="h-3 w-3" />
               </button>
-              {i === 0 && <span className="absolute bottom-0 left-0 right-0 bg-primary/90 text-[10px] text-white py-1 font-black text-center uppercase">PRINCIPALE</span>}
             </div>
           ))}
           {photos.length < 30 && (

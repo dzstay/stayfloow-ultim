@@ -1,9 +1,13 @@
 import { PerformanceAnalyzer } from "@/components/performance-analyzer";
+import { PriceRecommender } from "@/components/price-recommender";
 import Link from "next/link";
-import { LayoutDashboard, Users, CheckSquare, Search, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Users, CheckSquare, Search, ArrowLeft, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { properties } from "@/lib/data";
 
 export default function AdminPage() {
+  const mockProperty = properties[0]; // Riad Dar Al-Andalus pour la demo
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header Admin */}
@@ -14,7 +18,7 @@ export default function AdminPage() {
               <LayoutDashboard className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight">StayFloow Admin</h1>
+              <h1 className="text-2xl font-black tracking-tight text-white">StayFloow Admin</h1>
               <p className="text-xs text-white/50 font-bold uppercase tracking-widest">Portail de Gestion Globale</p>
             </div>
           </div>
@@ -25,12 +29,12 @@ export default function AdminPage() {
       </header>
 
       <main className="max-w-7xl mx-auto w-full px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           {/* Navigation Rapide */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-8">
             <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2">Menu Navigation</h2>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-4">
               <AdminNavLink 
                 href="/admin/validate" 
                 icon={<CheckSquare className="h-5 w-5" />} 
@@ -63,10 +67,17 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Analyseur de Performance IA */}
-          <div className="lg:col-span-2 space-y-6">
-            <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2">Intelligence & Data</h2>
-            <PerformanceAnalyzer />
+          {/* Intelligence & Data */}
+          <div className="lg:col-span-2 space-y-12">
+            <div className="space-y-6">
+              <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2">Algorithmes de Revenus</h2>
+              <PriceRecommender property={mockProperty} />
+            </div>
+
+            <div className="space-y-6">
+              <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2">Audit de Site</h2>
+              <PerformanceAnalyzer />
+            </div>
           </div>
 
         </div>
@@ -83,18 +94,18 @@ function AdminNavLink({ href, icon, title, desc, disabled = false }: { href: str
   return (
     <Link 
       href={disabled ? "#" : href} 
-      className={`p-5 rounded-2xl border-2 border-transparent transition-all flex items-center gap-4 shadow-sm ${
+      className={`p-6 rounded-2xl border-2 border-transparent transition-all flex items-center gap-5 shadow-sm ${
         disabled 
           ? "bg-slate-100 opacity-50 cursor-not-allowed" 
           : "bg-white hover:border-primary hover:shadow-xl group"
       }`}
     >
-      <div className={`p-3 rounded-xl transition-colors ${disabled ? "bg-slate-200 text-slate-400" : "bg-slate-50 text-slate-400 group-hover:bg-primary group-hover:text-white"}`}>
+      <div className={`p-3.5 rounded-xl transition-colors ${disabled ? "bg-slate-200 text-slate-400" : "bg-slate-50 text-slate-400 group-hover:bg-primary group-hover:text-white"}`}>
         {icon}
       </div>
       <div>
         <h4 className="font-black text-slate-900 text-sm">{title}</h4>
-        <p className="text-[10px] text-slate-400 font-bold uppercase">{desc}</p>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">{desc}</p>
       </div>
     </Link>
   );

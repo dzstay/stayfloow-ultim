@@ -55,7 +55,8 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto w-full px-6 -mt-8 z-30 mb-12">
+      {/* Container de la barre de recherche remonté sur la ligne verte */}
+      <div className="max-w-7xl mx-auto w-full px-6 -mt-12 z-30 mb-12">
         <AdvancedSearchBar />
       </div>
 

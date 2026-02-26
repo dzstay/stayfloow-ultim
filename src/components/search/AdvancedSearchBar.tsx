@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -41,7 +40,8 @@ export default function AdvancedSearchBar() {
 
   return (
     <div className="w-full space-y-1">
-      <div className="flex gap-2 mb-3 overflow-x-auto no-scrollbar">
+      {/* Onglets plus visibles avec fond plus sombre pour contraste */}
+      <div className="flex gap-2 mb-2 overflow-x-auto no-scrollbar py-1">
         <CategoryTab 
           active={activeCategory === 'accommodations'} 
           onClick={() => setActiveCategory('accommodations')}
@@ -62,7 +62,8 @@ export default function AdvancedSearchBar() {
         />
       </div>
 
-      <div className="bg-[#febb02] p-1 rounded-lg shadow-2xl flex flex-col md:flex-row items-stretch gap-1">
+      {/* Cadre jaune avec overflow-hidden pour supprimer les flèches de scroll */}
+      <div className="bg-[#febb02] p-1 rounded-lg shadow-2xl flex flex-col md:flex-row items-stretch gap-1 overflow-hidden">
         <div className="flex-1 bg-white rounded flex items-center px-4 py-3 gap-3 focus-within:ring-2 ring-primary transition-all">
           <MapPin className="text-slate-400 h-5 w-5 shrink-0" />
           <input 
@@ -117,7 +118,7 @@ export default function AdvancedSearchBar() {
         </Popover>
 
         <Button 
-          className="md:w-40 bg-primary hover:bg-primary/90 text-white h-14 md:h-auto font-black text-xl rounded shadow-lg transition-all active:scale-95 border-none" 
+          className="md:w-44 bg-primary hover:bg-primary/90 text-white h-14 md:h-auto font-black text-xl rounded shadow-lg transition-all active:scale-95 border-none" 
           onClick={handleSearch}
         >
           {t("search_btn")}
@@ -135,7 +136,7 @@ function CategoryTab({ active, onClick, icon, label }: { active: boolean, onClic
         "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all border whitespace-nowrap", 
         active 
           ? "bg-white text-primary border-white shadow-md scale-105" 
-          : "bg-black/10 text-white border-white/20 hover:bg-white/20"
+          : "bg-black/30 text-white border-white/10 hover:bg-black/40"
       )}
     >
       {icon} {label}

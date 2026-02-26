@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -40,7 +41,7 @@ export default function AdvancedSearchBar() {
 
   return (
     <div className="w-full space-y-1">
-      <div className="flex gap-2 mb-2 overflow-x-auto no-scrollbar">
+      <div className="flex gap-2 mb-3 overflow-x-auto no-scrollbar">
         <CategoryTab 
           active={activeCategory === 'accommodations'} 
           onClick={() => setActiveCategory('accommodations')}
@@ -115,7 +116,10 @@ export default function AdvancedSearchBar() {
           </PopoverContent>
         </Popover>
 
-        <Button className="md:w-40 bg-[#006ce4] hover:bg-[#0052ad] text-white h-14 md:h-auto font-black text-xl rounded shadow-lg transition-transform active:scale-95" onClick={handleSearch}>
+        <Button 
+          className="md:w-40 bg-primary hover:bg-primary/90 text-white h-14 md:h-auto font-black text-xl rounded shadow-lg transition-all active:scale-95 border-none" 
+          onClick={handleSearch}
+        >
           {t("search_btn")}
         </Button>
       </div>
@@ -125,7 +129,15 @@ export default function AdvancedSearchBar() {
 
 function CategoryTab({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
   return (
-    <button onClick={onClick} className={cn("flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold transition-all border border-transparent whitespace-nowrap", active ? "bg-white/20 text-white border-white shadow-sm" : "text-white/80 hover:bg-white/10")}>
+    <button 
+      onClick={onClick} 
+      className={cn(
+        "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all border whitespace-nowrap", 
+        active 
+          ? "bg-white text-primary border-white shadow-md scale-105" 
+          : "bg-black/10 text-white border-white/20 hover:bg-white/20"
+      )}
+    >
       {icon} {label}
     </button>
   );

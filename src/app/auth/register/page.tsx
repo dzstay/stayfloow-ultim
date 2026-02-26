@@ -3,53 +3,61 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 import {
   Form,
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormControl,
   FormMessage,
 } from "@/components/ui/form";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, LogIn } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
 
-export default function LoginPage() {
+const schema = z.object({
+  email: z.string().email("Email invalide"),
+  password: z.string().min(6, "Minimum 6 caractères"),
+});
+
+export default function RegisterPage() {
   const router = useRouter();
   const auth = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
   const form = useForm({
+    resolver: zodResolver(schema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: z.infer<typeof schema>) => {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
+      await createUserWithEmailAndPassword(auth, values.email, values.password);
       toast({
-        title: "Connexion réussie",
-        description: "Bienvenue sur StayFloow.com !",
+        title: "Compte créé !",
+        description: "Bienvenue sur StayFloow.com.",
       });
       router.push("/");
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("Register error:", error);
       toast({
         variant: "destructive",
-        title: "Erreur de connexion",
-        description: "Email ou mot de passe incorrect.",
+        title: "Erreur d'inscription",
+        description: error.message || "Impossible de créer le compte.",
       });
     } finally {
       setLoading(false);
@@ -63,8 +71,8 @@ export default function LoginPage() {
           <Link href="/" className="text-3xl font-black text-primary mb-2 block">
             StayFloow<span className="text-secondary">.com</span>
           </Link>
-          <h1 className="text-xl font-bold text-slate-700">Bon retour parmi nous</h1>
-          <p className="text-sm text-slate-500 mt-1">Connectez-vous pour gérer vos réservations</p>
+          <h1 className="text-xl font-bold text-slate-700">Créer un compte</h1>
+          <p className="text-sm text-slate-500 mt-1">Rejoignez la communauté StayFloow</p>
         </div>
 
         <Form {...form}>
@@ -118,7 +126,7 @@ export default function LoginPage() {
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <span className="flex items-center gap-2">
-                  <LogIn className="h-5 w-5" /> Se connecter
+                  <UserPlus className="h-5 w-5" /> S'inscrire
                 </span>
               )}
             </Button>
@@ -127,9 +135,9 @@ export default function LoginPage() {
 
         <div className="mt-8 pt-6 border-t border-slate-100 text-center">
           <p className="text-sm text-slate-500">
-            Vous n'avez pas de compte ?{" "}
-            <Link href="/auth/register" className="text-primary font-bold hover:underline">
-              S'inscrire
+            Déjà un compte ?{" "}
+            <Link href="/auth/login" className="text-primary font-bold hover:underline">
+              Se connecter
             </Link>
           </p>
         </div>

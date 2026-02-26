@@ -1,10 +1,16 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Building, Car, Compass, Star, Sparkles } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AdvancedSearchBar from '@/components/search/AdvancedSearchBar';
 import { AiRecommender } from '@/components/ai-recommender';
 import { PersonalizedRecommendations } from '@/components/personalized-recommendations';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'StayFloow.com | Accueil - Trouvez votre séjour idéal en Afrique',
+  description: 'Découvrez les meilleures offres sur les hôtels, riads, locations de voitures et circuits en Algérie, au Maroc et en Égypte sur StayFloow.com.',
+};
 
 export default function Home() {
   const propertyTypes = [
@@ -23,8 +29,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f5f5f5]">
-      {/* Header handled by RootLayout */}
-
       {/* Hero Section */}
       <section className="bg-primary pt-12 pb-24 px-6 relative overflow-hidden">
         <div className="max-w-5xl mx-auto relative z-10 text-center md:text-left">
@@ -59,7 +63,7 @@ export default function Home() {
               </div>
               <div className="space-y-6">
                 <div className="w-full h-48 relative rounded-2xl overflow-hidden shadow-lg">
-                  <Image src="https://picsum.photos/seed/promo/600/400" alt="Promotion" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <Image src="https://picsum.photos/seed/promo/600/400" alt="Promotion StayFloow" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
                 <Button className="w-full bg-primary hover:bg-primary/90 text-white h-14 text-lg font-black rounded-xl shadow-lg shadow-primary/20">
                   Découvrir les offres

@@ -14,10 +14,10 @@ export default function Home() {
   ];
 
   const uniqueStays = [
-    { name: 'Riad Dar Al-Andalus', location: 'Fès, Maroc', rating: 9.8, price: '120 €', image: 'https://picsum.photos/seed/unique1/400/500' },
-    { name: 'Desert Cave Hotel', location: 'Ghardaïa, Algérie', rating: 9.5, price: '85 €', image: 'https://picsum.photos/seed/unique2/400/500' },
-    { name: 'Nile Floating Palace', location: 'Louxor, Égypte', rating: 9.6, price: '150 €', image: 'https://picsum.photos/seed/unique3/400/500' },
-    { name: 'Royal Algerian Tent', location: 'Timimoun, Algérie', rating: 9.7, price: '110 €', image: 'https://picsum.photos/seed/unique4/400/500' },
+    { id: 'prop-1', name: 'Riad Dar Al-Andalus', location: 'Fès, Maroc', rating: 9.8, price: '120 €', image: 'https://picsum.photos/seed/unique1/400/500' },
+    { id: 'prop-2', name: 'Desert Cave Hotel', location: 'Ghardaïa, Algérie', rating: 9.5, price: '85 €', image: 'https://picsum.photos/seed/unique2/400/500' },
+    { id: 'prop-3', name: 'Nile Floating Palace', location: 'Louxor, Égypte', rating: 9.6, price: '150 €', image: 'https://picsum.photos/seed/unique3/400/500' },
+    { id: 'prop-4', name: 'Royal Algerian Tent', location: 'Timimoun, Algérie', rating: 9.7, price: '110 €', image: 'https://picsum.photos/seed/unique4/400/500' },
   ];
 
   return (
@@ -97,9 +97,9 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {uniqueStays.map((stay, i) => (
-              <div key={i} className="group cursor-pointer">
+              <Link key={i} href={`/properties/${stay.id}`} className="group cursor-pointer">
                 <div className="relative aspect-[4/5] rounded-xl overflow-hidden mb-4 shadow-lg">
-                  <Image src={stay.image} alt={stay.name} fill className="object-cover" />
+                  <Image src={stay.image} alt={stay.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <h3 className="font-black text-lg text-slate-900 truncate">{stay.name}</h3>
                 <p className="text-sm text-slate-500 mb-2">{stay.location}</p>
@@ -113,7 +113,7 @@ export default function Home() {
                   <span className="text-xs text-slate-500">Dès </span>
                   <span className="font-black text-lg text-slate-900">{stay.price}</span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

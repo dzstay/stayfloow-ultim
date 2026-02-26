@@ -101,16 +101,16 @@ export default function AdvancedSearchBar() {
             <div className="flex-1 bg-white rounded flex items-center px-4 py-3 gap-3 cursor-pointer hover:bg-slate-50 transition-all">
               <Users className="text-slate-400 h-5 w-5 shrink-0" />
               <span className="text-sm font-bold text-slate-800 truncate">
-                {occupancy.adults} ad · {occupancy.children} enf · {occupancy.rooms} ch.
+                {occupancy.adults} {t('adult_short')} · {occupancy.children} {t('child_short')} · {occupancy.rooms} {t('room_short')}
               </span>
             </div>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-6 shadow-2xl bg-white rounded-xl border border-slate-100">
             <div className="space-y-6">
-              <OccupancyRow label="Adultes" value={occupancy.adults} onDec={() => setOccupancy({...occupancy, adults: Math.max(1, occupancy.adults - 1)})} onInc={() => setOccupancy({...occupancy, adults: occupancy.adults + 1})} />
-              <OccupancyRow label="Enfants" value={occupancy.children} onDec={() => setOccupancy({...occupancy, children: Math.max(0, occupancy.children - 1)})} onInc={() => setOccupancy({...occupancy, children: occupancy.children + 1})} />
-              <OccupancyRow label="Chambres" value={occupancy.rooms} onDec={() => setOccupancy({...occupancy, rooms: Math.max(1, occupancy.rooms - 1)})} onInc={() => setOccupancy({...occupancy, rooms: occupancy.rooms + 1})} />
-              <Button className="w-full bg-primary font-black text-white hover:bg-primary/90 mt-4 rounded-md h-12" onClick={() => {}}>Terminé</Button>
+              <OccupancyRow label={t('adults')} value={occupancy.adults} onDec={() => setOccupancy({...occupancy, adults: Math.max(1, occupancy.adults - 1)})} onInc={() => setOccupancy({...occupancy, adults: occupancy.adults + 1})} />
+              <OccupancyRow label={t('children')} value={occupancy.children} onDec={() => setOccupancy({...occupancy, children: Math.max(0, occupancy.children - 1)})} onInc={() => setOccupancy({...occupancy, children: occupancy.children + 1})} />
+              <OccupancyRow label={t('rooms')} value={occupancy.rooms} onDec={() => setOccupancy({...occupancy, rooms: Math.max(1, occupancy.rooms - 1)})} onInc={() => setOccupancy({...occupancy, rooms: occupancy.rooms + 1})} />
+              <Button className="w-full bg-primary font-black text-white hover:bg-primary/90 mt-4 rounded-md h-12" onClick={() => {}}>{t('start')}</Button>
             </div>
           </PopoverContent>
         </Popover>
@@ -132,11 +132,12 @@ function CategoryTab({ active, onClick, icon, label }: { active: boolean, onClic
 }
 
 function OccupancyRow({ label, value, onDec, onInc }: { label: string, value: number, onDec: () => void, onInc: () => void }) {
+  const { t } = useLanguage();
   return (
     <div className="flex items-center justify-between">
-      <span className="font-bold text-slate-700 text-sm">{label}</span>
+      <span className="font-bold text-slate-700 text-sm capitalize">{label}</span>
       <div className="flex items-center gap-4">
-        <button onClick={onDec} className="h-8 w-8 rounded border border-primary text-primary flex items-center justify-center hover:bg-primary/5 transition-colors disabled:opacity-30" disabled={value <= 0 && label !== "Adultes" || (label === "Adultes" && value <= 1)}><Minus className="h-4 w-4" /></button>
+        <button onClick={onDec} className="h-8 w-8 rounded border border-primary text-primary flex items-center justify-center hover:bg-primary/5 transition-colors disabled:opacity-30" disabled={value <= 0 && label !== t('adults') || (label === t('adults') && value <= 1)}><Minus className="h-4 w-4" /></button>
         <span className="w-4 text-center font-bold text-sm">{value}</span>
         <button onClick={onInc} className="h-8 w-8 rounded border border-primary text-primary flex items-center justify-center hover:bg-primary/5 transition-colors"><Plus className="h-4 w-4" /></button>
       </div>

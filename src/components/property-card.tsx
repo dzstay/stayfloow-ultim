@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "./ui/badge";
 import { useCurrency } from "@/context/currency-context";
+import { useLanguage } from "@/context/language-context";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -32,6 +32,7 @@ const getRatingColor = (rating: number) => {
 
 export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: PropertyCardProps) {
   const { formatPrice } = useCurrency();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [isFavorited, setIsFavorited] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -64,7 +65,7 @@ export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: 
         localStorage.setItem("favorites", JSON.stringify([...new Set([...favorites, property.id])]));
 
         toast({
-          title: "Ajouté aux favoris !",
+          title: t('Ajouté aux favoris !'),
           description: `${property.name} a été ajouté à votre liste.`,
         });
 
@@ -77,7 +78,7 @@ export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: 
         localStorage.setItem("favorites", JSON.stringify(favorites.filter((id) => id !== property.id)));
 
         toast({
-          title: "Retiré des favoris",
+          title: t('Retiré des favoris'),
           description: `${property.name} a été retiré de votre liste.`,
           variant: "destructive",
         });
@@ -92,7 +93,7 @@ export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: 
   ------------------------------------------------------------------*/
   if (viewMode === "list") {
     return (
-      <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col md:flex-row group/card border-slate-200">
+      <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col md:flex-row group/card border-slate-200 bg-white">
         <div className="relative w-full md:w-[350px] flex-shrink-0 h-64 md:h-auto group overflow-hidden">
           <Image
             src={property.images[0] || "https://picsum.photos/seed/stay/800/600"}
@@ -104,8 +105,8 @@ export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: 
 
           <div className="absolute top-2 left-2 flex flex-col gap-2 z-10">
             {property.isBoosted && (
-              <Badge className="bg-amber-400 text-amber-900 border-none shadow-lg">
-                <Zap className="w-3 h-3 mr-1" /> Boosté
+              <Badge className="bg-amber-400 text-amber-900 border-none shadow-lg font-black uppercase text-[10px]">
+                <Zap className="w-3 h-3 mr-1" /> {t('boosted')}
               </Badge>
             )}
           </div>
@@ -125,7 +126,7 @@ export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: 
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-headline text-2xl font-black leading-tight tracking-tight">
-                  <Link href={`/properties/${property.id}`} className="hover:text-primary transition-colors">
+                  <Link href={`/properties/${property.id}`} className="hover:text-primary transition-colors text-slate-900">
                     {property.name}
                   </Link>
                 </h3>
@@ -147,8 +148,12 @@ export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: 
 
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <p className="font-black text-sm text-slate-900">{property.rating >= 9 ? 'Exceptionnel' : 'Superbe'}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{property.reviewsCount || 0} avis</p>
+                  <p className="font-black text-sm text-slate-900">
+                    {property.rating >= 9 ? t('exceptionnel') : t('superb')}
+                  </p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    {property.reviewsCount || 0} {t('reviews')}
+                  </p>
                 </div>
 
                 <div
@@ -170,15 +175,15 @@ export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: 
               <div className="flex flex-wrap gap-2">
                 {property.amenities.slice(0, 3).map((amenity) => (
                   <Badge key={amenity} variant="secondary" className="bg-slate-50 border-slate-100 text-slate-600 font-bold px-3 py-1">
-                    {amenity}
+                    {t(amenity)}
                   </Badge>
                 ))}
               </div>
               
               {property.isHighDemand && (
-                <div className="flex items-center gap-1.5 text-xs font-black text-red-600 bg-red-50 w-fit px-3 py-1 rounded-full border border-red-100">
+                <div className="flex items-center gap-1.5 text-[10px] font-black text-red-600 bg-red-50 w-fit px-3 py-1 rounded-full border border-red-100 uppercase tracking-tighter">
                   <AlertCircle className="h-3.5 w-3.5" />
-                  TRÈS DEMANDÉ SUR STAYFLOOW
+                  {t('high_demand')}
                 </div>
               )}
             </div>
@@ -193,14 +198,18 @@ export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: 
                 </p>
               )}
 
-              <p className={cn("font-black text-3xl text-slate-900 tracking-tighter", isGenius && "text-base text-slate-400 line-through")}>
+              <p className={cn("font-black text-3xl text-slate-900 tracking-tighter leading-none", isGenius && "text-base text-slate-400 line-through")}>
                 {formatPrice(property.price)}
               </p>
 
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">par nuit (TTC)</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                {t('per_night')} ({t('taxes_included')})
+              </p>
 
               <Button asChild className="mt-6 w-full bg-primary hover:bg-primary/90 text-white font-black h-12 rounded-xl shadow-xl shadow-primary/10">
-                <Link href={`/properties/${property.id}`}>Voir l'offre <Zap className="ml-2 h-4 w-4 fill-current" /></Link>
+                <Link href={`/properties/${property.id}`}>
+                  {t('view_offer')} <Zap className="ml-2 h-4 w-4 fill-current" />
+                </Link>
               </Button>
             </div>
           </div>
@@ -213,7 +222,7 @@ export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: 
       GRID VIEW
   ------------------------------------------------------------------*/
   return (
-    <Card className="overflow-hidden flex flex-col h-full transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border-slate-200 group/card rounded-3xl">
+    <Card className="overflow-hidden flex flex-col h-full transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border-slate-200 group/card rounded-3xl bg-white">
       <div className="relative group">
         <div className="relative h-56 w-full overflow-hidden">
           <Link href={`/properties/${property.id}`} className="block h-full w-full">
@@ -229,14 +238,14 @@ export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: 
 
         <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
           {property.isBoosted && (
-            <Badge className="bg-amber-400 text-amber-900 shadow-xl border-none font-black px-3">
-              <Zap className="w-3 h-3 mr-1 fill-current" /> Boosté
+            <Badge className="bg-amber-400 text-amber-900 shadow-xl border-none font-black px-3 uppercase text-[10px]">
+              <Zap className="w-3 h-3 mr-1 fill-current" /> {t('boosted')}
             </Badge>
           )}
 
           {property.isWeekendOffer && (
-            <Badge className="bg-primary text-white shadow-xl border-none font-black px-3">
-              <CalendarDays className="w-3 h-3 mr-1" /> Offre Weekend
+            <Badge className="bg-primary text-white shadow-xl border-none font-black px-3 uppercase text-[10px]">
+              <CalendarDays className="w-3 h-3 mr-1" /> Weekend Offer
             </Badge>
           )}
         </div>
@@ -244,7 +253,7 @@ export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: 
         {isMounted && (
           <Button
             onClick={handleFavoriteToggle}
-            className="absolute top-3 right-3 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white transition z-10 shadow-xl border-none"
+            className="absolute top-3 right-3 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-slate-700 hover:bg-white transition z-10 shadow-xl border-none"
           >
             <Heart className={cn("h-5 w-5 transition-colors", isFavorited && "fill-red-500 text-red-500")} />
           </Button>
@@ -270,28 +279,28 @@ export function PropertyCard({ property, isGenius = false, viewMode = "grid" }: 
         </div>
 
         {property.isHighDemand && (
-          <div className="flex items-center gap-1.5 text-[10px] font-black text-red-600 bg-red-50 px-2 py-1 rounded-md border border-red-100 w-fit">
+          <div className="flex items-center gap-1.5 text-[10px] font-black text-red-600 bg-red-50 px-2 py-1 rounded-md border border-red-100 w-fit uppercase">
             <AlertCircle className="h-3 w-3" />
-            <span>TRÈS DEMANDÉ</span>
+            <span>{t('high_demand')}</span>
           </div>
         )}
 
         <div className="pt-2 flex flex-wrap gap-2">
-          <Badge variant="outline" className="border-slate-200 text-slate-500 font-bold px-2 py-0">{property.type}</Badge>
+          <Badge variant="outline" className="border-slate-200 text-slate-500 font-bold px-2 py-0 uppercase text-[9px]">{t(property.type)}</Badge>
         </div>
       </CardContent>
 
       <CardContent className="p-6 pt-0 border-t border-slate-50 mt-auto">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Dès</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t('from_price')}</p>
             <div className="flex items-baseline gap-1">
               <p className="font-black text-2xl text-slate-900 tracking-tighter">{formatPrice(property.price)}</p>
-              <span className="text-[10px] font-bold text-slate-400">/ nuit</span>
+              <span className="text-[10px] font-bold text-slate-400">/ {t('per_night')}</span>
             </div>
           </div>
           <Button size="sm" variant="ghost" className="text-primary font-black gap-1 hover:bg-primary/5 p-0" asChild>
-            <Link href={`/properties/${property.id}`}>Explorer <Zap className="h-3 w-3 fill-current" /></Link>
+            <Link href={`/properties/${property.id}`}>{t('search')} <Zap className="h-3 w-3 fill-current" /></Link>
           </Button>
         </div>
       </CardContent>

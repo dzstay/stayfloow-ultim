@@ -18,6 +18,7 @@ import { getPriceRecommendation, type PriceRecommendationOutput } from '@/ai/flo
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { OnboardingMap } from '@/components/onboarding-map';
 
 interface Props {
   initialCategory: 'accommodation' | 'car_rental' | 'circuit';
@@ -190,28 +191,19 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
       <div className="space-y-2">
         <Label className="font-bold">Adresse complète *</Label>
-        <Input value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="Numéro, Rue, Ville, Code Postal" className="h-12" />
+        <Input 
+          value={formData.address} 
+          onChange={e => setFormData({...formData, address: e.target.value})} 
+          placeholder="Numéro, Rue, Ville, Code Postal" 
+          className="h-12" 
+        />
       </div>
       <div className="space-y-2">
-        <Label className="font-bold">Localisation GPS (Cliquez sur la carte)</Label>
-        <div 
-          className="h-64 bg-slate-200 rounded-xl relative overflow-hidden cursor-crosshair group flex items-center justify-center border-2 border-slate-300 border-dashed"
-          onClick={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / rect.width;
-            const y = (e.clientY - rect.top) / rect.height;
-            setFormData({...formData, lat: 36.75 + (0.5 - y) * 0.1, lng: 3.05 + (x - 0.5) * 0.1});
-          }}
-        >
-          <MapPin className="h-12 w-12 text-primary absolute z-10 animate-bounce" style={{ top: '40%', left: '50%', marginLeft: '-24px' }} />
-          <Image src="https://picsum.photos/seed/map-preview/800/400" alt="Map Preview" fill className="object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
-          <div className="absolute bottom-4 left-4 bg-white p-2 rounded shadow text-xs font-bold">
-            Lat: {formData.lat.toFixed(4)} | Lng: {formData.lng.toFixed(4)}
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span className="bg-primary/90 text-white px-4 py-2 rounded-full text-sm font-bold">Cliquez pour définir la position</span>
-          </div>
-        </div>
+        <Label className="font-bold">Aperçu de la localisation</Label>
+        <OnboardingMap location={formData.address} />
+        <p className="text-[10px] text-slate-400 font-medium italic mt-2">
+          * La carte s'ajuste automatiquement en fonction de la ville saisie dans l'adresse.
+        </p>
       </div>
     </div>
   );

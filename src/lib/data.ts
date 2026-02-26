@@ -225,3 +225,21 @@ export const pendingCircuits = [];
 export const popularFilters = ["WiFi gratuit", "Piscine", "Petit-déjeuner inclus", "Parking gratuit", "Climatisation"];
 export const propertyTypesList = ["Hôtel", "Appartement", "Riad", "Villa", "Bateau-Hôtel", "Hôtel Insolite"];
 export const circuitThemes = ["Désert", "Culturel", "Nature", "Aventure", "Gastronomie"];
+
+export const cityCoordinates: Record<string, { lat: number; lon: number }> = {
+  "Alger": { lat: 36.7538, lon: 3.0588 },
+  "Oran": { lat: 35.6971, lon: -0.6308 },
+  "Constantine": { lat: 36.365, lon: 6.6147 },
+  "Annaba": { lat: 36.9, lon: 7.7667 },
+  "Ghardaïa": { lat: 32.4909, lon: 3.6735 },
+  "Timimoun": { lat: 29.2639, lon: 0.2306 },
+  "Tamanrasset": { lat: 22.785, lon: 5.5228 },
+  "Béjaïa": { lat: 36.7511, lon: 5.0567 },
+  "Sétif": { lat: 36.19, lon: 5.41 },
+  "Tlemcen": { lat: 34.8783, lon: -1.315 },
+  "Marrakech": { lat: 31.6295, lon: -7.9811 },
+  "Fès": { lat: 34.0333, lon: -5.0000 },
+  "Le Caire": { lat: 30.0444, lon: 31.2357 },
+  "Louxor": { lat: 25.6872, lon: 32.6396 },
+  "Alexandrie": { lat: 31.2001, lon: 29.9187 }
+};

@@ -1,14 +1,12 @@
-
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Compass, MapPin, Star, Calendar, Users, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Compass, ShieldCheck, Calendar, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { circuits } from '@/lib/data';
+import { CircuitCard } from '@/components/circuit-card';
 
 export default function CircuitsPage() {
   const router = useRouter();
@@ -33,92 +31,52 @@ export default function CircuitsPage() {
       </header>
 
       <main className="container mx-auto px-4 py-12 max-w-7xl">
-        <div className="mb-8">
+        <div className="mb-12">
           <Button 
             variant="ghost" 
             onClick={() => router.back()} 
-            className="mb-6 font-bold text-slate-600 hover:text-primary"
+            className="mb-6 font-bold text-slate-600 hover:text-primary transition-colors"
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Retour
           </Button>
-          <h1 className="text-4xl font-black text-slate-900 flex items-center gap-3">
-            <Compass className="h-10 w-10 text-primary" /> Nos Circuits & Excursions
-          </h1>
-          <p className="text-xl text-slate-500 mt-2">Explorez les merveilles de l'Afrique avec nos guides certifiés StayFloow.</p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-black text-slate-900 flex items-center gap-4 tracking-tighter">
+                <Compass className="h-12 w-12 text-primary" /> Nos Circuits & Excursions
+              </h1>
+              <p className="text-xl text-slate-500 mt-3 font-medium">Explorez les merveilles de l'Afrique avec nos guides certifiés StayFloow.</p>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {circuits.map((circuit) => (
-            <Card key={circuit.id} className="overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all group">
-              <div className="relative h-64 w-full">
-                <Image 
-                  src={circuit.images[0]} 
-                  alt={circuit.title} 
-                  fill 
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute top-4 left-4">
-                  <span className="bg-primary text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg">CIRCUIT CERTIFIÉ</span>
-                </div>
-              </div>
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-black text-slate-900 group-hover:text-primary transition-colors">{circuit.title}</h3>
-                    <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
-                      <MapPin className="h-3 w-3" /> {circuit.location}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded text-xs font-bold">
-                    <Star className="h-3 w-3 fill-primary" /> 4.9
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <Calendar className="h-4 w-4 text-primary" /> Multi-jours
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <Users className="h-4 w-4 text-primary" /> Groupe partagé
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-end pt-4 border-t">
-                  <div>
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">À partir de</span>
-                    <p className="text-xl font-black text-primary">{circuit.pricePerPerson.toLocaleString()} DZD</p>
-                  </div>
-                  <Button className="bg-primary hover:bg-primary/90 text-white font-bold" asChild>
-                    <Link href={`/circuits/book?id=${circuit.id}`}>Réserver</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <CircuitCard key={circuit.id} circuit={circuit} />
           ))}
         </div>
 
         {/* Pourquoi réserver avec nous */}
-        <section className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="text-center p-8 bg-white rounded-3xl shadow-sm border border-slate-100">
-            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ShieldCheck className="h-8 w-8 text-primary" />
+        <section className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="text-center p-10 bg-white rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-500">
+            <div className="bg-primary/10 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-8 transform rotate-3">
+              <ShieldCheck className="h-10 w-10 text-primary" />
             </div>
-            <h4 className="text-lg font-black mb-2">Guides Certifiés</h4>
-            <p className="text-sm text-slate-500">Tous nos guides sont rigoureusement sélectionnés et formés.</p>
+            <h4 className="text-xl font-black mb-3">Guides Certifiés</h4>
+            <p className="text-slate-500 font-medium leading-relaxed">Tous nos guides sont rigoureusement sélectionnés et formés selon notre charte de qualité.</p>
           </div>
-          <div className="text-center p-8 bg-white rounded-3xl shadow-sm border border-slate-100">
-            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Calendar className="h-8 w-8 text-primary" />
+          <div className="text-center p-10 bg-white rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-500">
+            <div className="bg-primary/10 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-8 transform -rotate-3">
+              <Calendar className="h-10 w-10 text-primary" />
             </div>
-            <h4 className="text-lg font-black mb-2">Flexibilité Totale</h4>
-            <p className="text-sm text-slate-500">Annulation gratuite jusqu'à 48h avant le départ sur la plupart des circuits.</p>
+            <h4 className="text-xl font-black mb-3">Flexibilité Totale</h4>
+            <p className="text-slate-500 font-medium leading-relaxed">Annulation gratuite jusqu'à 48h avant le départ sur la plupart des circuits et activités.</p>
           </div>
-          <div className="text-center p-8 bg-white rounded-3xl shadow-sm border border-slate-100">
-            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Compass className="h-8 w-8 text-primary" />
+          <div className="text-center p-10 bg-white rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-500">
+            <div className="bg-primary/10 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-8 transform rotate-6">
+              <Compass className="h-10 w-10 text-primary" />
             </div>
-            <h4 className="text-lg font-black mb-2">Expériences Uniques</h4>
-            <p className="text-sm text-slate-500">Des itinéraires hors des sentiers battus pour découvrir la vraie Afrique.</p>
+            <h4 className="text-xl font-black mb-3">Expériences Uniques</h4>
+            <p className="text-slate-500 font-medium leading-relaxed">Des itinéraires hors des sentiers battus pour découvrir la culture africaine authentique.</p>
           </div>
         </section>
       </main>

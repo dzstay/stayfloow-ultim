@@ -195,6 +195,8 @@ export const circuits = [
     title: "Expédition Grand Sahara",
     location: "Timimoun, Algérie",
     pricePerPerson: 45000,
+    rating: 4.9,
+    duration: "4 jours, 3 nuits",
     images: ["https://picsum.photos/seed/sahara1/800/600"],
     guide: {
       name: "Ahmed Sahara",
@@ -207,6 +209,8 @@ export const circuits = [
     title: "Croisière Nil et Temples de Louxor",
     location: "Louxor, Égypte",
     pricePerPerson: 65000,
+    rating: 4.8,
+    duration: "3 jours, 2 nuits",
     images: ["https://picsum.photos/seed/nile1/800/600"],
     guide: {
       name: "Youssef Nile",

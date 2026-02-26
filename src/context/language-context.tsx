@@ -44,6 +44,8 @@ const translations: Translations = {
     'login': 'Se connecter',
     'signup': 'S\'inscrire',
     'open_menu': 'Ouvrir le menu',
+    'recently_viewed': 'Consultés récemment',
+    'inspired_by_visit': 'Inspirés par votre visite',
   },
   ar: {
     'contact.title': 'اتصل بنا',
@@ -78,6 +80,8 @@ const translations: Translations = {
     'login': 'تسجيل الدخول',
     'signup': 'إنشاء حساب',
     'open_menu': 'افتح القائمة',
+    'recently_viewed': 'تمت مشاهدتها مؤخراً',
+    'inspired_by_visit': 'مستوحاة من زيارتك',
   },
   en: {
     'contact.title': 'Contact Us',
@@ -112,6 +116,8 @@ const translations: Translations = {
     'login': 'Log in',
     'signup': 'Sign up',
     'open_menu': 'Open menu',
+    'recently_viewed': 'Recently viewed',
+    'inspired_by_visit': 'Inspired by your visit',
   }
 };
 

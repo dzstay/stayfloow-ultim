@@ -77,6 +77,59 @@ export const properties: Property[] = [
     stars: 5,
     reviewsCount: 210,
     isBoosted: true
+  },
+  { 
+    id: "prop-5", 
+    name: "Algeria Business Tower", 
+    rating: 8.5, 
+    location: "Alger, Algérie",
+    price: 18000,
+    description: "Appartement de standing au coeur du centre d'affaires d'Alger.",
+    images: ["https://picsum.photos/seed/tower1/800/600"],
+    amenities: ["Conciergerie", "Salle de sport", "WiFi haut débit"],
+    type: "Appartement",
+    stars: 4,
+    reviewsCount: 67
+  },
+  { 
+    id: "prop-6", 
+    name: "Marrakech Serenity Riad", 
+    rating: 9.9, 
+    location: "Marrakech, Maroc",
+    price: 14000,
+    description: "Un havre de paix absolu à quelques minutes de la place Jemaa el-Fna.",
+    images: ["https://picsum.photos/seed/marrakech1/800/600"],
+    amenities: ["Spa", "Piscine", "Cuisine gastronomique"],
+    type: "Riad",
+    stars: 5,
+    reviewsCount: 342,
+    isBoosted: true
+  },
+  { 
+    id: "prop-7", 
+    name: "Alexandria Sea View", 
+    rating: 8.9, 
+    location: "Alexandrie, Égypte",
+    price: 9500,
+    description: "Réveillez-vous avec le bruit des vagues de la Méditerranée.",
+    images: ["https://picsum.photos/seed/alex1/800/600"],
+    amenities: ["Vue mer", "Balcon", "WiFi"],
+    type: "Hôtel",
+    stars: 4,
+    reviewsCount: 156
+  },
+  { 
+    id: "prop-8", 
+    name: "Tamanrasset Desert Camp", 
+    rating: 9.2, 
+    location: "Tamanrasset, Algérie",
+    price: 11000,
+    description: "Une expérience de camping de luxe sous les étoiles du Hoggar.",
+    images: ["https://picsum.photos/seed/camp1/800/600"],
+    amenities: ["Dîner au feu de camp", "Guide local", "Transfert 4x4"],
+    type: "Glamping",
+    stars: 3,
+    reviewsCount: 42
   }
 ];
 

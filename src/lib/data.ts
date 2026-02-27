@@ -237,48 +237,69 @@ export const circuits: Circuit[] = [
     rating: 4.9,
     reviewsCount: 337,
     duration: "4 jours, 3 nuits",
-    description: "Une aventure inoubliable au cœur du Tassili n'Ajjer. Découvrez les gravures rupestres millénaires et les dunes géantes de l'Assekrem.",
-    longDescription: "Plongez dans le silence mystique du Sahara. Ce circuit vous emmène à travers les paysages lunaires de Djanet, où vous dormirez sous un ciel étoilé incomparable. Accompagnés de guides Touaregs experts, vous explorerez des canyons cachés et des arches naturelles sculptées par le vent.",
-    images: ["https://picsum.photos/seed/sahara1/800/600", "https://picsum.photos/seed/sahara2/800/600"],
+    description: "Une aventure inoubliable au cœur du Tassili n'Ajjer. Découvrez les gravures rupestres millénaires et les dunes géantes.",
+    longDescription: "Plongez dans le silence mystique du Sahara. Ce circuit vous emmène à travers les paysages lunaires de Djanet.",
+    images: ["https://images.unsplash.com/photo-1674109739254-c0c425a1975d?w=800", "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?w=800"],
     languages: ["Français", "Arabe", "Anglais"],
-    highlights: ["Gravures rupestres classées UNESCO", "Coucher de soleil sur les dunes de sable rouge", "Bivouac traditionnel touareg", "Thé traditionnel au feu de bois"],
-    inclusions: ["Transport 4x4", "Tous les repas (halal)", "Équipement de camping", "Guide local certifié"],
-    restrictions: ["Non accessible aux fauteuils roulants", "Déconseillé aux femmes enceintes", "Âge minimum : 6 ans"],
+    highlights: ["UNESCO Sites", "Sunset on dunes", "Tuareg tea"],
+    inclusions: ["4x4", "Halal Meals", "Guide"],
+    restrictions: ["No wheelchair access"],
     ticketTypes: [
       { id: "adult", name: "Adulte", price: 45000 },
-      { id: "child", name: "Enfant (6-15 ans)", price: 25000 },
-      { id: "infant", name: "Jeune enfant (0-5 ans)", price: 0 }
+      { id: "child", name: "Enfant", price: 25000 }
     ],
-    guide: {
-      name: "Ahmed Sahara",
-      email: "ahmed@stayfloow.com",
-      phone: "+213 661 00 00 00"
-    }
+    guide: { name: "Ahmed Sahara", email: "ahmed@stayfloow.com", phone: "+213 661 00 00 00" }
   },
   {
-    id: "circ-2",
-    title: "Croisière Nil et Temples de Louxor",
-    location: "Louxor, Égypte",
-    pricePerPerson: 65000,
-    rating: 4.8,
-    reviewsCount: 128,
+    id: "circ-algeria-taghit",
+    title: "Magie de Taghit - L'Enchanteresse du Désert",
+    location: "Taghit, Algérie",
+    pricePerPerson: 38000,
+    rating: 9.6,
+    reviewsCount: 184,
     duration: "3 jours, 2 nuits",
-    description: "Naviguez sur le Nil à bord d'une Dahabiya traditionnelle et explorez la Vallée des Rois et le Temple de Karnak.",
-    longDescription: "Vivez l'Égypte comme les pharaons. Ce circuit combine une croisière relaxante sur le Nil et des visites guidées approfondies des sites archéologiques les plus célèbres au monde. Guide égyptologue inclus pour des explications historiques fascinantes.",
-    images: ["https://picsum.photos/seed/nile1/800/600", "https://picsum.photos/seed/nile2/800/600"],
-    languages: ["Anglais", "Arabe", "Espagnol"],
-    highlights: ["Visite de la Vallée des Rois", "Temple de Karnak au lever du soleil", "Croisière privée sur Dahabiya", "Dîner de gala égyptien"],
-    inclusions: ["Croisière en pension complète", "Billets d'entrée aux sites", "Guide égyptologue", "Transferts aéroport"],
-    restrictions: ["Non accessible aux fauteuils roulants"],
-    ticketTypes: [
-      { id: "adult", name: "Adulte", price: 65000 },
-      { id: "child", name: "Enfant (6-12 ans)", price: 35000 }
-    ],
-    guide: {
-      name: "Youssef Nile",
-      email: "youssef@stayfloow.com",
-      phone: "+20 100 000 0000"
-    }
+    description: "Explorez l'oasis de Taghit, surnommée l'enchanteresse. Ascension des plus hautes dunes d'Algérie et visite du vieux Ksar.",
+    images: ["https://images.unsplash.com/photo-1509114397022-ed747cca3f65?w=800", "https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=800"],
+    languages: ["Français", "Arabe"],
+    highlights: ["Vieille ville de Taghit", "Dîner sous les étoiles", "Balade à dos de chameau"],
+    inclusions: ["Transport 4x4", "Hébergement en maison d'hôte", "Pension complète"],
+    restrictions: ["Bonne condition physique requise"],
+    ticketTypes: [{ id: "adult", name: "Adulte", price: 38000 }, { id: "child", name: "Enfant", price: 20000 }],
+    guide: { name: "Mustapha Taghit", email: "musta@stayfloow.com", phone: "+213 555 12 34 56" }
+  },
+  {
+    id: "circ-egypt-pyramids",
+    title: "Les Mystères de Gizeh - Pyramides & Sphinx",
+    location: "Le Caire, Égypte",
+    pricePerPerson: 12000,
+    rating: 9.8,
+    reviewsCount: 1250,
+    duration: "1 jour",
+    description: "Une journée complète pour explorer les merveilles du monde antique. Guide égyptologue certifié et déjeuner local inclus.",
+    images: ["https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?w=800", "https://images.unsplash.com/photo-1539650116574-8efeb43e2750?w=800"],
+    languages: ["Français", "Anglais", "Arabe"],
+    highlights: ["Grande Pyramide de Khéops", "Le Sphinx", "Musée du Caire"],
+    inclusions: ["Guide égyptologue", "Tickets d'entrée", "Repas de midi"],
+    restrictions: ["Accès limité pour PMR"],
+    ticketTypes: [{ id: "adult", name: "Adulte", price: 12000 }, { id: "child", name: "Enfant", price: 6000 }],
+    guide: { name: "Dr. Khaled", email: "khaled@stayfloow.com", phone: "+20 100 123 4567" }
+  },
+  {
+    id: "circ-egypt-redsea",
+    title: "Trésors de la Mer Rouge - Hurghada & Corail",
+    location: "Hurghada, Égypte",
+    pricePerPerson: 18500,
+    rating: 9.4,
+    reviewsCount: 442,
+    duration: "1 jour",
+    description: "Sortie en bateau privé pour découvrir les fonds marins exceptionnels. Snorkeling guidé et buffet de fruits de mer.",
+    images: ["https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800", "https://images.unsplash.com/photo-1582967788606-a171c1080cb0?w=800"],
+    languages: ["Français", "Anglais", "Espagnol"],
+    highlights: ["Récifs coralliens", "Île Giftun", "Dauphins en liberté"],
+    inclusions: ["Équipement snorkeling", "Boissons à volonté", "Transfert hôtel"],
+    restrictions: ["Savoir nager"],
+    ticketTypes: [{ id: "adult", name: "Adulte", price: 18500 }],
+    guide: { name: "Captain Sam", email: "sam@stayfloow.com", phone: "+20 111 987 6543" }
   }
 ];
 
@@ -303,5 +324,8 @@ export const cityCoordinates: Record<string, { lat: number; lon: number }> = {
   "Fès": { lat: 34.0333, lon: -5.0000 },
   "Le Caire": { lat: 30.0444, lon: 31.2357 },
   "Louxor": { lat: 25.6872, lon: 32.6396 },
-  "Alexandrie": { lat: 31.2001, lon: 29.9187 }
+  "Alexandrie": { lat: 31.2001, lon: 29.9187 },
+  "Hurghada": { lat: 27.2579, lon: 33.8116 },
+  "Taghit": { lat: 30.9231, lon: -2.0303 },
+  "Djanet": { lat: 24.5553, lon: 9.4847 }
 };

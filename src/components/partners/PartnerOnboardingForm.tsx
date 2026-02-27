@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { 
   Building, Car, Compass, MapPin, Upload, CheckCircle2, 
-  Loader2, Wand2, X, Plus, Minus, Users, Home, Bed, Bath, Utensils, Fuel, Gauge, Calendar as CalendarIcon
+  Loader2, Wand2, X, Plus, Minus, Users, Home, Bed, Bath, Utensils, Fuel, Gauge, Calendar as CalendarIcon, Clock, Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generatePartnerDescription } from '@/ai/flows/partner-description-generator';
@@ -57,6 +57,10 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     transmission: 'Manuelle',
     fuel: 'Essence',
     seats: 5,
+    // Circuit fields
+    duration: '1 jour',
+    maxGroupSize: 10,
+    languages: [] as string[],
     // Shared
     amenities: [] as string[],
   });
@@ -128,6 +132,10 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
             transmission: formData.transmission,
             fuel: formData.fuel,
             seats: formData.seats,
+          } : initialCategory === 'circuit' ? {
+            duration: formData.duration,
+            maxGroupSize: formData.maxGroupSize,
+            languages: formData.languages,
           } : {})
         },
         price: parseFloat(formData.price) || 0,
@@ -157,26 +165,26 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
   const renderStep1 = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2"><Label className="font-bold">{t('first_name')} *</Label><Input value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} className="h-12" /></div>
-        <div className="space-y-2"><Label className="font-bold">{t('last_name')} *</Label><Input value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} className="h-12" /></div>
-        <div className="space-y-2"><Label className="font-bold">{t('pro_email')} *</Label><Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="h-12" /></div>
+        <div className="space-y-2"><Label className="font-bold">{t('first_name')} *</Label><Input value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} className="h-12 bg-slate-50" /></div>
+        <div className="space-y-2"><Label className="font-bold">{t('last_name')} *</Label><Input value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} className="h-12 bg-slate-50" /></div>
+        <div className="space-y-2"><Label className="font-bold">{t('pro_email')} *</Label><Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="h-12 bg-slate-50" /></div>
         <div className="space-y-2">
           <Label className="font-bold">{t('phone_whatsapp')} *</Label>
           <div className="flex gap-2">
             <Input value={formData.dialCode} onChange={e => setFormData({...formData, dialCode: e.target.value})} className="w-24 h-12 text-center font-bold bg-slate-50" />
-            <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 flex-1" />
+            <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 flex-1 bg-slate-50" />
           </div>
         </div>
       </div>
       <div className="space-y-2">
         <Label className="font-bold">
-          {initialCategory === 'car_rental' ? 'Nom du véhicule / Flotte *' : "Nom commercial de l'annonce *"}
+          {initialCategory === 'car_rental' ? 'Nom du véhicule / Flotte *' : initialCategory === 'circuit' ? "Titre de l'excursion / Circuit *" : "Nom commercial de l'annonce *"}
         </Label>
         <Input 
           value={formData.listingName} 
           onChange={e => setFormData({...formData, listingName: e.target.value})} 
-          placeholder={initialCategory === 'car_rental' ? "Ex: Dacia Duster 4x4 Premium" : "Ex: Riad Alger Luxury"} 
-          className="h-12" 
+          placeholder={initialCategory === 'car_rental' ? "Ex: Dacia Duster 4x4 Premium" : initialCategory === 'circuit' ? "Ex: Safari Sahara 3 Jours" : "Ex: Riad Alger Luxury"} 
+          className="h-12 bg-slate-50" 
         />
       </div>
     </div>
@@ -184,7 +192,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
 
   const renderStep2 = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-      <div className="space-y-2"><Label className="font-bold">{t('full_address')} *</Label><Input value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="Ville, Quartier, Rue..." className="h-12" /></div>
+      <div className="space-y-2"><Label className="font-bold">{t('full_address')} *</Label><Input value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="Ville, Point de départ, Point de rdv..." className="h-12 bg-slate-50" /></div>
       <OnboardingMap location={formData.address} />
     </div>
   );
@@ -205,15 +213,15 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <Label className="font-bold">Marque du véhicule *</Label>
-              <Input value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} placeholder="Ex: Toyota" className="h-12" />
+              <Input value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} placeholder="Ex: Toyota" className="h-12 bg-slate-50" />
             </div>
             <div className="space-y-2">
               <Label className="font-bold">Modèle *</Label>
-              <Input value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} placeholder="Ex: Corolla" className="h-12" />
+              <Input value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} placeholder="Ex: Corolla" className="h-12 bg-slate-50" />
             </div>
             <div className="space-y-2">
               <Label className="font-bold">Année *</Label>
-              <Input value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} placeholder="Ex: 2023" className="h-12" />
+              <Input value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} placeholder="Ex: 2023" className="h-12 bg-slate-50" />
             </div>
           </div>
 
@@ -268,7 +276,83 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
               value={formData.description} 
               onChange={e => setFormData({...formData, description: e.target.value})} 
               placeholder="Décrivez l'état du véhicule, les conditions de remise des clés..."
-              className="min-h-[150px] rounded-2xl"
+              className="min-h-[150px] rounded-2xl bg-slate-50"
+            />
+          </div>
+        </div>
+      );
+    }
+
+    if (initialCategory === 'circuit') {
+      const circuitOptions = [
+        "Guide inclus (local arabe/français)", "Repas inclus (halal)", "Transport 4x4 (désert)",
+        "Durée 1 jour", "Durée multi-jours (2-7 jours)", "Annulation gratuite",
+        "Langue arabe", "Langue français", "Thème désert/Sahara",
+        "Thème culturel/historique (pyramides, ruines)", "Thème Nil/croisière",
+        "Groupe petit (max 10 pers)", "Assurance incluse",
+        "Départ depuis aéroport (Alger/Caire)", "Rating guide 8+"
+      ];
+
+      return (
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+            <CounterField icon={<Users/>} label="Taille max du groupe" value={formData.maxGroupSize} onChange={v => setFormData({...formData, maxGroupSize: v})} />
+            <div className="flex flex-col items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+              <div className="bg-primary/5 p-3 rounded-xl text-primary"><Clock/></div>
+              <span className="text-[10px] font-black text-slate-400 uppercase">Durée estimée</span>
+              <Input value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} placeholder="Ex: 3 jours / 2 nuits" className="h-10 text-center font-bold border-none shadow-none focus:ring-0" />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label className="font-black text-lg">Options & Thèmes populaires *</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {circuitOptions.map(option => (
+                <div key={option} className={cn(
+                  "flex items-center space-x-3 p-4 rounded-xl border transition-all cursor-pointer",
+                  formData.amenities.includes(option) ? "border-primary bg-primary/5" : "border-slate-100 hover:border-slate-200"
+                )}>
+                  <Checkbox 
+                    id={option} 
+                    checked={formData.amenities.includes(option)}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, amenities: checked ? [...prev.amenities, option] : prev.amenities.filter(a => a !== option) }))}
+                  />
+                  <label htmlFor={option} className="text-sm font-bold text-slate-700 cursor-pointer flex-1">{option}</label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label className="font-black text-lg">Langues parlées par le guide *</Label>
+            <div className="flex flex-wrap gap-3">
+              {["Arabe", "Français", "Anglais", "Espagnol", "Allemand"].map(lang => (
+                <Button 
+                  key={lang} 
+                  type="button"
+                  variant={formData.languages.includes(lang) ? "default" : "outline"}
+                  onClick={() => setFormData(prev => ({ ...prev, languages: prev.languages.includes(lang) ? prev.languages.filter(l => l !== lang) : [...prev.languages, lang] }))}
+                  className="rounded-full font-bold"
+                >
+                  {lang === 'Français' ? '🇫🇷' : lang === 'Arabe' ? '🇩🇿' : lang === 'Anglais' ? '🇬🇧' : lang === 'Espagnol' ? '🇪🇸' : '🇩🇪'} {lang}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <Label className="font-black text-lg">Itinéraire & Points Forts</Label>
+              <Button variant="outline" size="sm" onClick={handleAIEnhance} disabled={isGenerating} className="text-primary border-primary rounded-full font-bold">
+                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
+                {t('ai_improve_btn')}
+              </Button>
+            </div>
+            <Textarea 
+              value={formData.description} 
+              onChange={e => setFormData({...formData, description: e.target.value})} 
+              placeholder="Détaillez le programme jour par jour..."
+              className="min-h-[200px] rounded-2xl bg-slate-50"
             />
           </div>
         </div>
@@ -354,7 +438,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
             value={formData.description} 
             onChange={e => setFormData({...formData, description: e.target.value})} 
             placeholder="Ex: Niché au calme, cet appartement offre une vue imprenable sur la baie..."
-            className="min-h-[150px] rounded-2xl"
+            className="min-h-[150px] rounded-2xl bg-slate-50"
           />
         </div>
       </div>
@@ -388,12 +472,12 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
             value={formData.price} 
             onChange={e => setFormData({...formData, price: e.target.value})} 
             placeholder="Ex: 12500" 
-            className="h-14 pl-12 text-xl font-black rounded-2xl"
+            className="h-14 pl-12 text-xl font-black rounded-2xl bg-slate-50"
           />
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">DA</div>
         </div>
         <p className="text-xs text-slate-400 font-medium">
-          {initialCategory === 'car_rental' ? 'Prix de location par jour (24h).' : 'Prix par nuit pour l\'ensemble du logement ou par chambre.'}
+          {initialCategory === 'car_rental' ? 'Prix de location par jour (24h).' : initialCategory === 'circuit' ? 'Prix par personne (TTC).' : 'Prix par nuit pour l\'ensemble du logement ou par chambre.'}
         </p>
       </div>
     </div>
@@ -454,9 +538,9 @@ function CounterField({ icon, label, value, onChange }: { icon: any, label: stri
       <div className="bg-primary/5 p-3 rounded-xl text-primary">{icon}</div>
       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
       <div className="flex items-center gap-4">
-        <button onClick={() => onChange(Math.max(0, value - 1))} className="h-8 w-8 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"><Minus className="h-4 w-4 text-slate-400" /></button>
+        <button type="button" onClick={() => onChange(Math.max(0, value - 1))} className="h-8 w-8 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"><Minus className="h-4 w-4 text-slate-400" /></button>
         <span className="font-black text-lg w-4 text-center">{value}</span>
-        <button onClick={() => onChange(value + 1)} className="h-8 w-8 rounded-full border border-primary text-primary flex items-center justify-center hover:bg-primary/5 transition-colors"><Plus className="h-4 w-4" /></button>
+        <button type="button" onClick={() => onChange(value + 1)} className="h-8 w-8 rounded-full border border-primary text-primary flex items-center justify-center hover:bg-primary/5 transition-colors"><Plus className="h-4 w-4" /></button>
       </div>
     </div>
   );

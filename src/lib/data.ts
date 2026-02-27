@@ -190,15 +190,58 @@ export const carTypes = ['Économique', 'SUV / 4x4', 'Van / Minibus', 'Luxe', 'M
 export const fuelTypes = ['Essence', 'Diesel', 'Électrique', 'Hybride'];
 export const carFeatures = ['Kilométrage illimité', 'Climatisation', 'Boîte Automatique', 'GPS intégré', 'Assurance incluse', 'Siège enfant'];
 
-export const circuits = [
+export interface TicketType {
+  id: string;
+  name: string;
+  ageRange?: string;
+  price: number;
+}
+
+export interface Circuit {
+  id: string;
+  title: string;
+  location: string;
+  pricePerPerson: number;
+  rating: number;
+  reviewsCount: number;
+  duration: string;
+  description: string;
+  longDescription?: string;
+  images: string[];
+  languages: string[];
+  inclusions: string[];
+  exclusions?: string[];
+  restrictions: string[];
+  highlights: string[];
+  ticketTypes: TicketType[];
+  guide: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+}
+
+export const circuits: Circuit[] = [
   {
     id: "circ-1",
-    title: "Expédition Grand Sahara",
-    location: "Timimoun, Algérie",
+    title: "Expédition Grand Sahara - Djanet & Tassili",
+    location: "Djanet, Algérie",
     pricePerPerson: 45000,
     rating: 4.9,
+    reviewsCount: 337,
     duration: "4 jours, 3 nuits",
-    images: ["https://picsum.photos/seed/sahara1/800/600"],
+    description: "Une aventure inoubliable au cœur du Tassili n'Ajjer. Découvrez les gravures rupestres millénaires et les dunes géantes de l'Assekrem.",
+    longDescription: "Plongez dans le silence mystique du Sahara. Ce circuit vous emmène à travers les paysages lunaires de Djanet, où vous dormirez sous un ciel étoilé incomparable. Accompagnés de guides Touaregs experts, vous explorerez des canyons cachés et des arches naturelles sculptées par le vent.",
+    images: ["https://picsum.photos/seed/sahara1/800/600", "https://picsum.photos/seed/sahara2/800/600"],
+    languages: ["Français", "Arabe", "Anglais"],
+    highlights: ["Gravures rupestres classées UNESCO", "Coucher de soleil sur les dunes de sable rouge", "Bivouac traditionnel touareg", "Thé traditionnel au feu de bois"],
+    inclusions: ["Transport 4x4", "Tous les repas (halal)", "Équipement de camping", "Guide local certifié"],
+    restrictions: ["Non accessible aux fauteuils roulants", "Déconseillé aux femmes enceintes", "Âge minimum : 6 ans"],
+    ticketTypes: [
+      { id: "adult", name: "Adulte", price: 45000 },
+      { id: "child", name: "Enfant (6-15 ans)", price: 25000 },
+      { id: "infant", name: "Jeune enfant (0-5 ans)", price: 0 }
+    ],
     guide: {
       name: "Ahmed Sahara",
       email: "ahmed@stayfloow.com",
@@ -211,8 +254,19 @@ export const circuits = [
     location: "Louxor, Égypte",
     pricePerPerson: 65000,
     rating: 4.8,
+    reviewsCount: 128,
     duration: "3 jours, 2 nuits",
-    images: ["https://picsum.photos/seed/nile1/800/600"],
+    description: "Naviguez sur le Nil à bord d'une Dahabiya traditionnelle et explorez la Vallée des Rois et le Temple de Karnak.",
+    longDescription: "Vivez l'Égypte comme les pharaons. Ce circuit combine une croisière relaxante sur le Nil et des visites guidées approfondies des sites archéologiques les plus célèbres au monde. Guide égyptologue inclus pour des explications historiques fascinantes.",
+    images: ["https://picsum.photos/seed/nile1/800/600", "https://picsum.photos/seed/nile2/800/600"],
+    languages: ["Anglais", "Arabe", "Espagnol"],
+    highlights: ["Visite de la Vallée des Rois", "Temple de Karnak au lever du soleil", "Croisière privée sur Dahabiya", "Dîner de gala égyptien"],
+    inclusions: ["Croisière en pension complète", "Billets d'entrée aux sites", "Guide égyptologue", "Transferts aéroport"],
+    restrictions: ["Non accessible aux fauteuils roulants"],
+    ticketTypes: [
+      { id: "adult", name: "Adulte", price: 65000 },
+      { id: "child", name: "Enfant (6-12 ans)", price: 35000 }
+    ],
     guide: {
       name: "Youssef Nile",
       email: "youssef@stayfloow.com",

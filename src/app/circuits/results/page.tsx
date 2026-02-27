@@ -1,28 +1,41 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { 
   Search as SearchIcon, Loader2, Map as MapIcon, 
-  Info, ChevronRight
+  Info, ChevronRight, Calendar as CalendarIcon, MapPin, X
 } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { CircuitResultCard, type CircuitListing } from '@/components/circuit-result-card';
+import { CircuitResultCard } from '@/components/circuit-result-card';
 import { CircuitSearchSidebar, type CircuitFilterStats } from '@/components/circuit-search-sidebar';
-import AdvancedSearchBar from '@/components/search/AdvancedSearchBar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import type { DateRange } from 'react-day-picker';
+import { circuits as mockCircuits, type Circuit } from '@/lib/data';
 
 function CircuitResultsContent() {
   const searchParams = useSearchParams();
   const db = useFirestore();
   
-  const [allApproved, setAllApproved] = useState<CircuitListing[]>([]);
+  const [allApproved, setAllApproved] = useState<Circuit[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [selectedRatings, setSelectedRatings] = useState<string[]>([]);
+
+  // Search Bar State (Capture 2 Style)
+  const [destination, setDestination] = useState(searchParams.get('dest') || '');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined,
+    to: searchParams.get('to') ? new Date(searchParams.get('to')!) : undefined,
+  });
 
   const locationParam = searchParams.get('dest') || '';
 
@@ -42,23 +55,28 @@ function CircuitResultsContent() {
           const data = doc.data();
           return {
             id: doc.id,
-            name: data.details?.name || 'Circuit Authentique',
+            title: data.details?.name || 'Circuit Authentique',
             location: data.location?.address || 'Sahara, Algérie',
-            guide: data.partnerInfo?.firstName || 'Guide Local StayFloow',
-            guideRating: data.guideRating || 8.8,
+            guide: {
+              name: data.partnerInfo?.firstName || 'Guide StayFloow',
+              email: data.partnerInfo?.email || '',
+              phone: data.partnerInfo?.phone || ''
+            },
+            rating: data.rating || 8.8,
             reviewsCount: Math.floor(Math.random() * 150) + 5,
             duration: data.details?.duration || "3 jours",
             description: data.details?.description || 'Une aventure inoubliable au cœur du désert.',
             images: data.photos || ["https://picsum.photos/seed/desert/400/300"],
-            options: data.details?.amenities || ["Guide Pro", "Transport 4x4"],
+            inclusions: data.details?.amenities || ["Guide Pro", "Transport 4x4"],
             pricePerPerson: data.price || 45000,
-            isPopular: data.isBoosted || false
-          } as CircuitListing;
+            ticketTypes: data.details?.ticketTypes || [{ id: 'adult', name: 'Adulte', price: data.price || 45000 }]
+          } as Circuit;
         });
 
-        setAllApproved(dbCircuits);
+        setAllApproved([...mockCircuits, ...dbCircuits]);
       } catch (error) {
         console.error("Error fetching circuits:", error);
+        setAllApproved(mockCircuits);
       } finally {
         setTimeout(() => setLoading(false), 800);
       }
@@ -84,12 +102,12 @@ function CircuitResultsContent() {
     optionsList.forEach(o => s.options[o] = 0);
 
     allApproved.forEach(circ => {
-      if (circ.guideRating >= 9) s.ratings["9+"]++;
-      if (circ.guideRating >= 8) s.ratings["8+"]++;
-      if (circ.guideRating >= 7) s.ratings["7+"]++;
-      if (circ.guideRating >= 6) s.ratings["6+"]++;
+      if (circ.rating >= 9) s.ratings["9+"]++;
+      if (circ.rating >= 8) s.ratings["8+"]++;
+      if (circ.rating >= 7) s.ratings["7+"]++;
+      if (circ.rating >= 6) s.ratings["6+"]++;
 
-      circ.options.forEach(opt => {
+      circ.inclusions.forEach(opt => {
         if (s.options[opt] !== undefined) s.options[opt]++;
       });
     });
@@ -102,13 +120,13 @@ function CircuitResultsContent() {
       if (locationParam && !circ.location.toLowerCase().includes(locationParam.toLowerCase())) return false;
 
       if (selectedOptions.length > 0) {
-        const hasAll = selectedOptions.every(opt => circ.options.includes(opt));
+        const hasAll = selectedOptions.every(opt => circ.inclusions.includes(opt));
         if (!hasAll) return false;
       }
 
       if (selectedRatings.length > 0) {
         const minRating = Math.min(...selectedRatings.map(r => parseInt(r)));
-        if (circ.guideRating < minRating) return false;
+        if (circ.rating < minRating) return false;
       }
 
       return true;
@@ -129,23 +147,53 @@ function CircuitResultsContent() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Search Bar (Capture 2 Style) */}
       <div className="bg-[#10B981] pt-6 pb-10 px-4">
         <div className="max-w-[1100px] mx-auto">
-          <AdvancedSearchBar />
+          <div className="bg-white p-1 rounded-lg shadow-2xl flex flex-col md:flex-row items-stretch gap-1">
+            <div className="flex-[1.5] bg-white rounded flex items-center px-4 py-3 gap-3 focus-within:ring-2 ring-primary transition-all relative">
+              <MapPin className="text-slate-400 h-5 w-5" />
+              <div className="flex flex-col flex-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase leading-none">Destination</span>
+                <input 
+                  className="w-full bg-transparent border-none focus:ring-0 p-0 text-sm font-bold text-slate-800 placeholder:text-slate-500 outline-none"
+                  placeholder="Où allez-vous ?"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                />
+              </div>
+              {destination && <X className="h-4 w-4 text-slate-400 cursor-pointer" onClick={() => setDestination('')} />}
+            </div>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="flex-[1.5] bg-white rounded flex items-center px-4 py-3 gap-3 cursor-pointer hover:bg-slate-50 transition-all">
+                  <CalendarIcon className="text-slate-400 h-5 w-5" />
+                  <div className="flex flex-col flex-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase leading-none">Dates</span>
+                    <span className="text-sm font-bold text-slate-800">
+                      {dateRange?.from ? (
+                        dateRange.to ? `${format(dateRange.from, "dd MMM", { locale: fr })} — ${format(dateRange.to, "dd MMM", { locale: fr })}` 
+                        : format(dateRange.from, "dd MMM", { locale: fr })
+                      ) : "Sélectionnez des dates"}
+                    </span>
+                  </div>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="center">
+                <Calendar mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} locale={fr} disabled={{ before: new Date() }} />
+              </PopoverContent>
+            </Popover>
+
+            <Button className="md:w-44 bg-primary hover:bg-[#059669] text-white h-14 md:h-auto font-black text-xl rounded shadow-lg">
+              Rechercher
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className="max-w-[1100px] mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
         <aside className="w-full lg:w-[280px] shrink-0 space-y-4">
-          <div className="relative h-24 rounded-lg overflow-hidden border shadow-sm cursor-pointer group">
-            <div className="absolute inset-0 bg-slate-200 animate-pulse" />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-              <Button size="sm" className="bg-[#10B981] hover:bg-[#059669] text-white font-bold h-8">
-                <MapIcon className="mr-2 h-4 w-4" /> Voir sur la carte
-              </Button>
-            </div>
-          </div>
-
           <CircuitSearchSidebar 
             resultCount={filteredResults.length} 
             stats={stats}
@@ -160,13 +208,6 @@ function CircuitResultsContent() {
           <h1 className="text-2xl font-bold text-slate-900">
             {locationParam || 'Tous les circuits'} : {filteredResults.length} expériences trouvées
           </h1>
-
-          <Alert className="bg-slate-50 border-slate-200">
-            <Info className="h-4 w-4 text-slate-400" />
-            <AlertDescription className="text-xs text-slate-600">
-              Découvrez l'Afrique authentique. Nos circuits sont validés par des experts locaux pour garantir votre sécurité et votre confort.
-            </AlertDescription>
-          </Alert>
 
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center space-y-4">

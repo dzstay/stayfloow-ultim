@@ -1,12 +1,12 @@
 'use client';
 
-import React, { use, useState, useMemo } from 'react';
+import React, { use, useState, useMemo, useEffect } from 'react';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { 
   MapPin, Star, Share2, Heart, ShieldCheck, 
   ChevronLeft, Loader2, Info, Fuel, Gauge, Users, Calendar as CalendarIcon, 
-  ArrowRight, Check, CheckCircle, Briefcase, Settings2, MessageSquare, AlertTriangle, X
+  ArrowRight, Check, CheckCircle, Briefcase, Settings2, MessageSquare, AlertTriangle, X, Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,6 +26,19 @@ import { useLanguage } from '@/context/language-context';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format, addDays, differenceInDays } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export default function CarDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -34,12 +47,32 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
 
-  // State pour le prix dynamique
+  // State pour le prix dynamique et la recherche
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [days] = useState(3); // Simulation durée
+  const [isEditDialogOpen, setIsEditingOpen] = useState(false);
+  
+  // États de recherche modifiables
+  const [pickupLocation, setPickupLocation] = useState("");
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: new Date(),
+    to: addDays(new Date(), 3),
+  });
+
+  // États temporaires pour le formulaire de modification
+  const [tempLocation, setTempLocation] = useState("");
+  const [tempDates, setTempDates] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
 
   const docRef = doc(db, 'listings', id);
   const { data: car, loading } = useDoc(docRef);
+
+  useEffect(() => {
+    if (car && !pickupLocation) {
+      setPickupLocation(car.location?.address || "Aéroport d'Alger (ALG), Algérie");
+    }
+  }, [car, pickupLocation]);
 
   const optionsList = [
     { id: 'insurance', label: 'Protection Complète (Zéro Franchise)', price: 2500 },
@@ -80,17 +113,33 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
     reviewsCount: 156
   };
 
+  const daysCount = Math.max(1, differenceInDays(dateRange.to, dateRange.from));
+
   const optionsTotal = selectedOptions.reduce((acc, optId) => {
     const opt = optionsList.find(o => o.id === optId);
     return acc + (opt?.price || 0);
   }, 0);
 
-  const totalPrice = (displayData.price * days) + optionsTotal;
+  const totalPrice = (displayData.price * daysCount) + optionsTotal;
 
   const toggleOption = (id: string) => {
     setSelectedOptions(prev => 
       prev.includes(id) ? prev.filter(o => o !== id) : [...prev, id]
     );
+  };
+
+  const openEditModal = () => {
+    setTempLocation(pickupLocation);
+    setTempDates({ from: dateRange.from, to: dateRange.to });
+    setIsEditingOpen(true);
+  };
+
+  const saveSearchChanges = () => {
+    if (tempLocation) setPickupLocation(tempLocation);
+    if (tempDates.from && tempDates.to) {
+      setDateRange({ from: tempDates.from, to: tempDates.to });
+    }
+    setIsEditingOpen(false);
   };
 
   return (
@@ -101,15 +150,21 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
           <div className="flex items-center gap-6 overflow-x-auto no-scrollbar w-full md:w-auto">
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Lieu de prise</span>
-              <span className="text-sm font-bold truncate">{displayData.location?.address}</span>
+              <span className="text-sm font-bold truncate">{pickupLocation || displayData.location?.address}</span>
             </div>
             <div className="h-8 w-px bg-white/10 hidden md:block" />
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Dates de location</span>
-              <span className="text-sm font-bold">12 Mars — 15 Mars (3 jours)</span>
+              <span className="text-sm font-bold">
+                {format(dateRange.from, "dd MMM", { locale: fr })} — {format(dateRange.to, "dd MMM", { locale: fr })} ({daysCount} jours)
+              </span>
             </div>
           </div>
-          <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white font-black h-10 px-6 rounded-full transition-all">
+          <Button 
+            onClick={openEditModal}
+            variant="outline" 
+            className="border-primary text-primary hover:bg-primary hover:text-white font-black h-10 px-6 rounded-full transition-all"
+          >
             Modifier la recherche
           </Button>
         </div>
@@ -236,8 +291,8 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
               <CardContent className="p-8 space-y-6">
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-500 font-medium">Prix location ({days}j)</span>
-                    <span className="font-bold">{formatPrice(displayData.price * days)}</span>
+                    <span className="text-slate-500 font-medium">Prix location ({daysCount}j)</span>
+                    <span className="font-bold">{formatPrice(displayData.price * daysCount)}</span>
                   </div>
                   {selectedOptions.length > 0 && (
                     <div className="flex justify-between text-sm text-primary">
@@ -261,7 +316,7 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
                 </div>
 
                 <Button className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 shadow-xl rounded-2xl" asChild>
-                  <Link href={`/cars/book?id=${id}&options=${selectedOptions.join(',')}`}>
+                  <Link href={`/cars/book?id=${id}&options=${selectedOptions.join(',')}&days=${daysCount}&pickup=${pickupLocation}`}>
                     Suivant <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -280,6 +335,71 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
 
         </div>
       </main>
+
+      {/* MODAL DE MODIFICATION DE LA RECHERCHE */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditingOpen}>
+        <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-8">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-slate-900 flex items-center gap-3">
+              <Search className="h-6 w-6 text-primary" /> Modifier la recherche
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-6">
+            <div className="space-y-2">
+              <Label className="font-black text-xs uppercase tracking-widest text-slate-400">Lieu de prise en charge</Label>
+              <div className="relative">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
+                <Input 
+                  value={tempLocation} 
+                  onChange={(e) => setTempLocation(e.target.value)}
+                  className="h-14 pl-12 rounded-xl bg-slate-50 border-slate-100 font-bold" 
+                  placeholder="Ex: Aéroport d'Alger..."
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-black text-xs uppercase tracking-widest text-slate-400">Dates de location</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full h-14 justify-start text-left font-bold rounded-xl border-slate-100 bg-slate-50">
+                    <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
+                    {tempDates.from && tempDates.to ? (
+                      <>
+                        {format(tempDates.from, "dd MMM", { locale: fr })} — {format(tempDates.to, "dd MMM", { locale: fr })}
+                      </>
+                    ) : (
+                      "Sélectionner des dates"
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 border-none shadow-2xl" align="center">
+                  <Calendar
+                    mode="range"
+                    selected={{ from: tempDates.from, to: tempDates.to }}
+                    onSelect={(range: any) => setTempDates({ from: range?.from, to: range?.to })}
+                    locale={fr}
+                    disabled={{ before: new Date() }}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-3 sm:gap-0">
+            <Button variant="ghost" onClick={() => setIsEditingOpen(false)} className="font-bold text-slate-400">
+              Annuler
+            </Button>
+            <Button 
+              onClick={saveSearchChanges}
+              className="bg-primary hover:bg-primary/90 text-white font-black px-8 h-14 rounded-xl shadow-xl shadow-primary/20"
+            >
+              Mettre à jour
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

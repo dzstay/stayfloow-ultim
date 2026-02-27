@@ -1,12 +1,12 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useState, useMemo } from 'react';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { 
   MapPin, Star, Share2, Heart, ShieldCheck, 
   ChevronLeft, Loader2, Info, Fuel, Gauge, Users, Calendar as CalendarIcon, 
-  ArrowRight, Check, CheckCircle
+  ArrowRight, Check, CheckCircle, Briefcase, Settings2, MessageSquare, AlertTriangle, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,6 +25,7 @@ import { useCurrency } from '@/context/currency-context';
 import { useLanguage } from '@/context/language-context';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function CarDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -33,8 +34,19 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
 
+  // State pour le prix dynamique
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [days] = useState(3); // Simulation durée
+
   const docRef = doc(db, 'listings', id);
   const { data: car, loading } = useDoc(docRef);
+
+  const optionsList = [
+    { id: 'insurance', label: 'Protection Complète (Zéro Franchise)', price: 2500 },
+    { id: 'gps', label: 'GPS Haute Précision', price: 800 },
+    { id: 'baby_seat', label: 'Siège Bébé / Enfant', price: 1200 },
+    { id: 'additional_driver', label: 'Conducteur Additionnel', price: 1500 }
+  ];
 
   if (loading) {
     return (
@@ -44,38 +56,62 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
     );
   }
 
-  // Fallback for mock cars or non-existent DB entries
   const displayData = car || {
     id: id,
     details: {
-      name: id === 'mock-car-1' ? 'Dacia Duster 4x4 Sahara' : 'Volkswagen Golf 8 GTI',
+      name: id === 'mock-car-1' ? 'Duster 4x4 Sahara' : 'Golf 8 GTI',
       brand: id === 'mock-car-1' ? 'Dacia' : 'Volkswagen',
-      description: "Véhicule haut de gamme entretenu avec soin. Parfait pour vos déplacements professionnels ou vos aventures en famille sur StayFloow.com. Inclut toutes les options de sécurité modernes.",
-      amenities: ["Climatisation", "Kilométrage illimité", "Assurance tous risques incluse", "Transmission automatique"],
+      description: "Véhicule premium parfaitement entretenu. Idéal pour vos déplacements sur StayFloow.com. Inclut toutes les options de confort et sécurité.",
+      amenities: ["Climatisation", "Kilométrage illimité", "Assurance tous risques", "Transmission automatique"],
       fuel: id === 'mock-car-1' ? 'Diesel' : 'Essence',
       transmission: id === 'mock-car-1' ? 'Manuelle' : 'Automatique',
-      seats: 5
+      seats: 5,
+      luggage: 3,
+      minAge: 21,
+      cancellation: "48h"
     },
-    location: { address: "Alger Centre, Algérie" },
+    location: { address: "Aéroport d'Alger (ALG), Algérie" },
     price: id === 'mock-car-1' ? 7500 : 12000,
     photos: [
       "https://images.unsplash.com/photo-1761320296536-38a4e068b37d?w=1200",
       "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=1200"
     ],
-    rating: 4.8
+    rating: 9.2,
+    reviewsCount: 156
+  };
+
+  const optionsTotal = selectedOptions.reduce((acc, optId) => {
+    const opt = optionsList.find(o => o.id === optId);
+    return acc + (opt?.price || 0);
+  }, 0);
+
+  const totalPrice = (displayData.price * days) + optionsTotal;
+
+  const toggleOption = (id: string) => {
+    setSelectedOptions(prev => 
+      prev.includes(id) ? prev.filter(o => o !== id) : [...prev, id]
+    );
   };
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] flex flex-col">
-      <div className="bg-white/80 backdrop-blur-md border-b sticky top-16 z-40 py-3 px-6">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Button variant="ghost" onClick={() => router.back()} className="font-bold text-slate-600 hover:text-primary">
-            <ChevronLeft className="mr-2 h-4 w-4" /> {t('back')}
-          </Button>
-          <div className="flex gap-3">
-            <Button variant="outline" size="icon" className="rounded-full"><Share2 className="h-4 w-4" /></Button>
-            <Button variant="outline" size="icon" className="rounded-full text-red-500"><Heart className="h-4 w-4" /></Button>
+      {/* Header Dates/Lieux Modifiable */}
+      <div className="bg-slate-900 text-white py-4 px-6 sticky top-16 z-40 shadow-xl border-b border-white/10">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-6 overflow-x-auto no-scrollbar w-full md:w-auto">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Lieu de prise</span>
+              <span className="text-sm font-bold truncate">{displayData.location?.address}</span>
+            </div>
+            <div className="h-8 w-px bg-white/10 hidden md:block" />
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Dates de location</span>
+              <span className="text-sm font-bold">12 Mars — 15 Mars (3 jours)</span>
+            </div>
           </div>
+          <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white font-black h-10 px-6 rounded-full transition-all">
+            Modifier la recherche
+          </Button>
         </div>
       </div>
 
@@ -83,23 +119,38 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           <div className="lg:col-span-2 space-y-8">
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                <Badge className="bg-primary text-white font-black">STAYFLOOW APPROVED</Badge>
-                <div className="flex items-center gap-1.5 bg-amber-50 text-amber-600 px-2 py-1 rounded-lg border border-amber-100">
-                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                  <span className="font-black text-sm">{displayData.rating?.toFixed(1) || '4.8'}</span>
+            {/* Titre & Rating */}
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-primary text-white font-black text-[10px] px-2 py-0.5">STAYFLOOW APPROVED</Badge>
+                  {displayData.details?.cancellation === "48h" && (
+                    <div className="flex items-center gap-1 text-green-600 font-bold text-xs">
+                      <CheckCircle className="h-3 w-3" /> Annulation gratuite (48h)
+                    </div>
+                  )}
+                </div>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                  {displayData.details?.brand} {displayData.details?.model || displayData.details?.name}
+                </h1>
+                <div className="flex items-center gap-2 text-slate-500 font-bold text-sm">
+                  <MapPin className="h-4 w-4 text-primary" /> {displayData.location?.address}
                 </div>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-                {displayData.details?.brand} {displayData.details?.model || displayData.details?.name}
-              </h1>
-              <div className="flex items-center gap-2 text-primary font-bold">
-                <MapPin className="h-5 w-5" />
-                <span className="text-lg">{displayData.location?.address}</span>
+              <div className="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div className="text-right">
+                  <p className="font-black text-slate-900 leading-none mb-1">
+                    {displayData.rating >= 9 ? "Fabuleux" : "Très Bien"}
+                  </p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">{displayData.reviewsCount} avis clients</p>
+                </div>
+                <div className="bg-primary text-white font-black text-xl w-12 h-12 flex items-center justify-center rounded-xl shadow-lg">
+                  {displayData.rating?.toFixed(1)}
+                </div>
               </div>
             </div>
 
+            {/* Photos */}
             <div className="rounded-[2.5rem] overflow-hidden shadow-2xl bg-slate-200 aspect-video relative group border-4 border-white">
               <Carousel className="w-full h-full">
                 <CarouselContent>
@@ -116,65 +167,111 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
               </Carousel>
             </div>
 
+            {/* Specs Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <SpecBox icon={<Users/>} label="Places" value={`${displayData.details?.seats || 5} Adultes`} />
-              <SpecBox icon={<Gauge/>} label="Boîte" value={displayData.details?.transmission || 'Manuelle'} />
-              <SpecBox icon={<Fuel/>} label="Énergie" value={displayData.details?.fuel || 'Diesel'} />
-              <SpecBox icon={<ShieldCheck/>} label="Assurance" value="Tous Risques" />
+              <SpecBox icon={<Users className="h-5 w-5"/>} label="Places" value={`${displayData.details?.seats || 5} Adultes`} />
+              <SpecBox icon={<Briefcase className="h-5 w-5"/>} label="Bagages" value={`${displayData.details?.luggage || 2} Valises`} />
+              <SpecBox icon={<Settings2 className="h-5 w-5"/>} label="Boîte" value={displayData.details?.transmission || 'Manuelle'} />
+              <SpecBox icon={<Fuel className="h-5 w-5"/>} label="Énergie" value={displayData.details?.fuel || 'Diesel'} />
             </div>
 
+            {/* Instructions Prise en Charge */}
             <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
-              <CardContent className="p-8 md:p-10 space-y-6">
-                <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-                  <Info className="h-6 w-6 text-primary" /> Présentation du véhicule
+              <CardContent className="p-8 space-y-6">
+                <h2 className="text-xl font-black text-slate-900 flex items-center gap-3">
+                  <MapPin className="h-6 w-6 text-primary" /> Instructions de prise en charge
                 </h2>
-                <p className="text-slate-600 leading-relaxed text-lg font-medium italic border-l-4 border-primary/20 pl-6">
-                  "{displayData.details?.description}"
-                </p>
+                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 italic text-slate-600 font-medium">
+                  "Navette gratuite disponible au Terminal 1 et 2. Un agent StayFloow vous accueillera avec une pancarte à votre nom à la sortie des bagages."
+                </div>
               </CardContent>
             </Card>
 
+            {/* Options Supplémentaires */}
             <div className="space-y-6">
-              <h2 className="text-2xl font-black text-slate-900">Ce qui est inclus dans le prix</h2>
+              <h2 className="text-2xl font-black text-slate-900">Options supplémentaires</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {displayData.details?.amenities?.map((opt: string) => (
-                  <div key={opt} className="flex items-center gap-3 p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                    <div className="bg-green-100 text-green-600 p-1.5 rounded-full"><Check className="h-4 w-4" /></div>
-                    <span className="font-bold text-slate-700 text-sm">{opt}</span>
+                {optionsList.map((opt) => (
+                  <div 
+                    key={opt.id} 
+                    onClick={() => toggleOption(opt.id)}
+                    className={cn(
+                      "flex items-center justify-between p-5 rounded-2xl border-2 transition-all cursor-pointer",
+                      selectedOptions.includes(opt.id) ? "border-primary bg-primary/5" : "border-white bg-white hover:border-slate-200"
+                    )}
+                  >
+                    <div className="flex items-center gap-4">
+                      <Checkbox checked={selectedOptions.includes(opt.id)} />
+                      <span className="font-bold text-slate-700 text-sm">{opt.label}</span>
+                    </div>
+                    <span className="font-black text-primary text-sm">+{formatPrice(opt.price)}</span>
                   </div>
                 ))}
               </div>
             </div>
+
+            {/* Avis Clients */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                <MessageSquare className="h-6 w-6 text-primary" /> Ce que disent les voyageurs
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <ReviewCard author="Sofiane B." content="Véhicule impeccable, propre et puissant. L'accueil à l'aéroport était parfait." rating={10} />
+                <ReviewCard author="Karima L." content="Service très professionnel. Je recommande vivement pour un séjour en Algérie." rating={9} />
+              </div>
+            </div>
           </div>
 
+          {/* Sidebar de Réservation */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-28 shadow-2xl border-none overflow-hidden rounded-[2.5rem] bg-white">
+            <Card className="sticky top-40 shadow-2xl border-none overflow-hidden rounded-[2.5rem] bg-white">
               <div className="bg-primary p-8 text-white">
-                <p className="text-xs font-bold opacity-80 mb-1 uppercase tracking-widest">Prix Location 24h</p>
+                <p className="text-[10px] font-black opacity-80 mb-1 uppercase tracking-widest">Récapitulatif Tarifaire</p>
                 <div className="flex justify-between items-baseline">
-                  <h3 className="text-4xl font-black">{formatPrice(displayData.price)}</h3>
-                  <p className="text-sm font-bold opacity-80">/ jour</p>
+                  <h3 className="text-4xl font-black">{formatPrice(totalPrice)}</h3>
+                  <p className="text-xs font-bold opacity-80">Total TTC</p>
                 </div>
               </div>
 
-              <CardContent className="p-8 space-y-8">
-                <div className="space-y-4">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vérifier disponibilités</p>
-                  <Button variant="outline" className="w-full h-14 justify-start font-bold border-slate-200 rounded-xl">
-                    <CalendarIcon className="mr-3 h-5 w-5 text-primary" /> Choisir vos dates
-                  </Button>
+              <CardContent className="p-8 space-y-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500 font-medium">Prix location ({days}j)</span>
+                    <span className="font-bold">{formatPrice(displayData.price * days)}</span>
+                  </div>
+                  {selectedOptions.length > 0 && (
+                    <div className="flex justify-between text-sm text-primary">
+                      <span className="font-medium">Options ({selectedOptions.length})</span>
+                      <span className="font-bold">+{formatPrice(optionsTotal)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500 font-medium">TVA Algérie (19%)</span>
+                    <span className="text-green-600 font-bold">Inclus</span>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+                  <p className="text-[10px] text-amber-700 font-bold leading-relaxed">
+                    Âge minimum requis : {displayData.details?.minAge || 21} ans. Permis de conduire valide depuis plus de 2 ans exigé.
+                  </p>
                 </div>
 
                 <Button className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 shadow-xl rounded-2xl" asChild>
-                  <Link href="/cars/book">Louer ce véhicule <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                  <Link href={`/cars/book?id=${id}&options=${selectedOptions.join(',')}`}>
+                    Suivant <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
                 </Button>
 
-                <div className="pt-6 border-t border-slate-50 space-y-4">
+                <div className="space-y-3 pt-4">
                   <div className="flex items-center gap-3 text-xs font-bold text-green-600">
-                    <CheckCircle className="h-4 w-4" /> Annulation gratuite (48h)
+                    <CheckCircle className="h-4 w-4" /> Aucun frais de réservation
                   </div>
                   <div className="flex items-center gap-3 text-xs font-bold text-slate-500">
-                    <ShieldCheck className="h-4 w-4" /> Certifié Partenaire StayFloow
+                    <ShieldCheck className="h-4 w-4" /> Garantie StayFloow Best Price
                   </div>
                 </div>
               </CardContent>
@@ -189,10 +286,22 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
 
 function SpecBox({ icon, label, value }: { icon: any, label: string, value: string }) {
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center gap-1">
-      <div className="text-primary mb-1">{icon}</div>
-      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</span>
+    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center gap-1 group hover:border-primary transition-all">
+      <div className="text-primary mb-1 group-hover:scale-110 transition-transform">{icon}</div>
+      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
       <span className="text-sm font-black text-slate-900">{value}</span>
+    </div>
+  );
+}
+
+function ReviewCard({ author, content, rating }: { author: string, content: string, rating: number }) {
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+      <div className="flex justify-between items-center">
+        <span className="font-black text-slate-900">{author}</span>
+        <Badge className="bg-primary/10 text-primary font-black">{rating}/10</Badge>
+      </div>
+      <p className="text-sm text-slate-500 italic leading-relaxed">"{content}"</p>
     </div>
   );
 }

@@ -138,50 +138,58 @@ export const cars = [
     id: "car-1", 
     brand: "Dacia", 
     name: "Duster 4x4 Sahara", 
-    rating: 4.8, 
+    rating: 9.2, 
     image: "https://images.unsplash.com/photo-1761320296536-38a4e068b37d?w=800", 
     pricePerDay: 7500, 
     transmission: "Manuelle", 
     fuel: "Diesel", 
     seats: 5, 
+    luggage: 3,
     category: "SUV & 4x4",
-    isBoosted: true
+    isBoosted: true,
+    reviewsCount: 342
   },
   { 
     id: "car-2", 
     brand: "Volkswagen", 
     name: "Golf 8 GTI Performance", 
-    rating: 4.9, 
+    rating: 9.8, 
     image: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800", 
     pricePerDay: 12000, 
     transmission: "Automatique", 
     fuel: "Essence", 
     seats: 5, 
-    category: "Luxe" 
+    luggage: 2,
+    category: "Luxe",
+    reviewsCount: 156
   },
   { 
     id: "car-3", 
     brand: "Renault", 
     name: "Symbol Elegance", 
-    rating: 4.5, 
+    rating: 8.5, 
     image: "https://picsum.photos/seed/car3/400/300", 
     pricePerDay: 4500, 
     transmission: "Manuelle", 
     fuel: "Essence", 
     seats: 5, 
-    category: "Économique" 
+    luggage: 2,
+    category: "Économique",
+    reviewsCount: 89
   },
   { 
     id: "car-4", 
     brand: "Toyota", 
     name: "Hilux Adventure", 
-    rating: 4.7, 
+    rating: 9.0, 
     image: "https://picsum.photos/seed/car2/400/300", 
     pricePerDay: 11500, 
     transmission: "Manuelle", 
     fuel: "Diesel", 
     seats: 5, 
-    category: "SUV & 4x4" 
+    luggage: 4,
+    category: "SUV & 4x4",
+    reviewsCount: 112
   },
 ];
 

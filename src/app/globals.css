@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 210 5% 98%;
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 142 76% 22%; /* StayFloow Green (Professional Emerald) */
-    --primary-foreground: 142 40% 98%;
-    --secondary: 84 100% 59%; /* StayFloow Neon Green */
+    --primary: 161 84% 39%; /* StayFloow Green #10B981 */
+    --primary-foreground: 161 40% 98%;
+    --secondary: 43 99% 50%; /* StayFloow Yellow #FEBA02 */
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 84 100% 95%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 161 84% 95%;
+    --accent-foreground: 161 84% 30%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 142 76% 22%;
-    --radius: 1rem;
+    --ring: 161 84% 39%;
+    --radius: 0.5rem;
   }
 
   .dark {
@@ -33,7 +33,7 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 142 70% 45%;
+    --primary: 161 84% 39%;
     --primary-foreground: 222.2 47.4% 11.2%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -45,7 +45,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 142 70% 45%;
+    --ring: 161 84% 39%;
   }
 }
 
@@ -54,22 +54,27 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background text-foreground font-sans text-[14px];
   }
-}
-
-.hero-gradient {
-  background: linear-gradient(180deg, rgba(20, 83, 45, 0.8) 0%, rgba(20, 83, 45, 0.4) 100%);
 }
 
 .booking-card-shadow {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.step-indicator-active {
-  @apply bg-primary text-primary-foreground;
+.text-stayfloow-dark {
+  color: #059669;
 }
 
-.step-indicator-inactive {
-  @apply bg-muted text-muted-foreground;
+.bg-stayfloow-light {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

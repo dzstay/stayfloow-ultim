@@ -1,168 +1,167 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
-import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { 
-  LayoutGrid, List, Map as MapIcon, 
-  Search as SearchIcon, Loader2, ChevronRight, Zap
+  Search as SearchIcon, Loader2, Map as MapIcon, 
+  Star, ChevronRight, Grid, List as ListIcon, 
+  Info, SlidersHorizontal
 } from 'lucide-react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import AdvancedSearchBar from '@/components/search/AdvancedSearchBar';
-import { cn } from '@/lib/utils';
-import { useCurrency } from '@/context/currency-context';
-import { useLanguage } from '@/context/language-context';
-import { properties as initialProperties, type Property } from '@/lib/data';
 import { PropertyCard } from '@/components/property-card';
 import { FilterSidebar } from '@/components/filter-sidebar';
-import { PropertiesMap } from '@/components/properties-map';
-import { EmailRetargetingCard } from '@/components/email-retargeting-card';
+import AdvancedSearchBar from '@/components/search/AdvancedSearchBar';
+import { properties as mockProperties, type Property } from '@/lib/data';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 function SearchResultsContent() {
   const searchParams = useSearchParams();
-  const { formatPrice } = useCurrency();
-  const { t } = useLanguage();
+  const db = useFirestore();
   
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  const [showMap, setShowMap] = useState(false);
-  const [filteredResults, setFilteredResults] = useState<Property[]>([]);
+  const [results, setResults] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
-  // Paramètres de recherche
-  const locationParam = searchParams.get('dest') || searchParams.get('location') || '';
+  const locationParam = searchParams.get('dest') || '';
 
   useEffect(() => {
-    const fetchResults = () => {
+    const fetchApprovedListings = async () => {
       setLoading(true);
       try {
-        // Simulation de la récupération des propriétés approuvées
-        const localApproved = JSON.parse(localStorage.getItem('approvedProperties') || '[]');
+        // Query Firestore for approved listings
+        const listingsRef = collection(db, 'listings');
+        const q = query(listingsRef, where('status', '==', 'approved'));
+        const querySnapshot = await getDocs(q);
         
-        const combined = [...initialProperties, ...localApproved];
+        const dbListings = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.details?.name || 'Hébergement',
+            location: data.location?.address || 'Non spécifié',
+            price: data.price || 0,
+            rating: data.rating || 8.0,
+            description: data.details?.description || '',
+            images: data.photos || [],
+            amenities: data.details?.amenities || [],
+            type: data.details?.type || 'Hôtel',
+            isBoosted: data.isBoosted || false,
+          } as Property;
+        });
+
+        // Combine with mock properties for demo purposes
+        const allResults = [...mockProperties, ...dbListings];
         
-        // Déduplication par ID
-        const propertyMap = new Map();
-        combined.forEach(p => propertyMap.set(p.id, p));
-        const allProperties = Array.from(propertyMap.values()) as Property[];
+        // Filter by location if provided
+        const filtered = allResults.filter(p => 
+          locationParam ? p.location.toLowerCase().includes(locationParam.toLowerCase()) : true
+        );
 
-        // Filtrage par localisation
-        const results = allProperties
-          .filter(p => {
-            const matchesLocation = locationParam ? 
-              (p.location?.toLowerCase().includes(locationParam.toLowerCase()) || 
-               p.name?.toLowerCase().includes(locationParam.toLowerCase())) : true;
-            return matchesLocation;
-          })
-          .sort((a, b) => (b.isBoosted ? 1 : 0) - (a.isBoosted ? 1 : 0));
-
-        setFilteredResults(results);
+        setResults(filtered);
       } catch (error) {
-        console.error("Erreur lors du filtrage des résultats:", error);
+        console.error("Error fetching listings:", error);
+        setResults(mockProperties); // Fallback to mock on error
       } finally {
-        // Simulation délai de recherche
-        setTimeout(() => setLoading(false), 800);
+        setTimeout(() => setLoading(false), 600);
       }
     };
 
-    fetchResults();
-  }, [locationParam]);
+    fetchApprovedListings();
+  }, [locationParam, db]);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
-      {/* Search Header - Simplified to only show search bar */}
-      <div className="bg-primary pt-8 pb-12 px-6 shadow-xl">
-        <div className="max-w-5xl mx-auto w-full">
+    <div className="min-h-screen bg-white">
+      {/* Header Search Bar */}
+      <div className="bg-[#10B981] pt-6 pb-10 px-4">
+        <div className="max-w-[1100px] mx-auto">
           <AdvancedSearchBar />
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 flex flex-col lg:flex-row gap-8">
+      <div className="max-w-[1100px] mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
         
-        {/* Sidebar Filters */}
-        <aside className="w-full lg:w-72 shrink-0 space-y-6">
-          <FilterSidebar resultCount={filteredResults.length} />
-
-          {/* Map Preview */}
-          <div 
-            className="relative h-48 rounded-3xl overflow-hidden cursor-pointer shadow-2xl group border-4 border-white"
-            onClick={() => setShowMap(!showMap)}
-          >
-            <PropertiesMap properties={filteredResults} />
-            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors flex flex-col items-center justify-center gap-2 p-4 text-center">
-              <MapIcon className="h-8 w-8 text-white mb-2" />
-              <div className="bg-primary text-white px-6 py-2 rounded-full font-black text-xs shadow-lg">
-                {t('expand_map') || 'AGRANDIR LA CARTE'}
-              </div>
+        {/* SIDEBAR (25%) */}
+        <aside className="w-full lg:w-[280px] shrink-0 space-y-4">
+          <div className="relative h-24 rounded-lg overflow-hidden border shadow-sm cursor-pointer group">
+            <div className="absolute inset-0 bg-slate-200 animate-pulse" />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+              <Button size="sm" className="bg-[#10B981] hover:bg-[#059669] text-white font-bold h-8">
+                <MapIcon className="mr-2 h-4 w-4" /> Voir sur la carte
+              </Button>
             </div>
           </div>
 
-          <EmailRetargetingCard />
+          <FilterSidebar resultCount={results.length} />
         </aside>
 
-        {/* Results */}
-        <main className="flex-grow space-y-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+        {/* MAIN CONTENT (75%) */}
+        <main className="flex-1 space-y-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                {locationParam ? `${t('accommodations') || 'Hébergements'} à "${locationParam}"` : t('all_offers') || 'Toutes les offres'}
-                <span className="bg-primary/10 text-primary text-xs px-3 py-1 rounded-full">{filteredResults.length} {t('results') || 'résultats'}</span>
-              </h2>
-              <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">{t('best_price_guaranteed') || 'Meilleurs prix garantis sur StayFloow.com'}</p>
+              <h1 className="text-2xl font-bold text-slate-900">
+                {locationParam || 'Toutes les destinations'} : {results.length} établissements trouvés
+              </h1>
             </div>
-            <div className="flex items-center gap-3">
-               <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 p-1.5 rounded-2xl">
-                  <Button 
-                    variant={viewMode === 'list' ? 'default' : 'ghost'} 
-                    size="sm" 
-                    className={cn("h-10 px-4 rounded-xl font-black", viewMode === 'list' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-primary")}
-                    onClick={() => setViewMode('list')}
-                  >
-                    <List className="h-4 w-4 mr-2" /> {t('list') || 'Liste'}
-                  </Button>
-                  <Button 
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'} 
-                    size="sm" 
-                    className={cn("h-10 px-4 rounded-xl font-black", viewMode === 'grid' ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-primary")}
-                    onClick={() => setViewMode('grid')}
-                  >
-                    <LayoutGrid className="h-4 w-4 mr-2" /> {t('grid') || 'Grille'}
-                  </Button>
-               </div>
+            <div className="flex items-center gap-2">
+              <div className="flex border rounded-full p-1 bg-slate-50">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`rounded-full h-8 px-4 ${viewMode === 'list' ? 'bg-white shadow-sm text-[#10B981]' : 'text-slate-400'}`}
+                  onClick={() => setViewMode('list')}
+                >
+                  <ListIcon className="h-4 w-4 mr-2" /> Liste
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`rounded-full h-8 px-4 ${viewMode === 'grid' ? 'bg-white shadow-sm text-[#10B981]' : 'text-slate-400'}`}
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid className="h-4 w-4 mr-2" /> Mosaïque
+                </Button>
+              </div>
             </div>
           </div>
 
+          <Alert className="bg-slate-50 border-slate-200">
+            <Info className="h-4 w-4 text-slate-400" />
+            <AlertDescription className="text-xs text-slate-600">
+              Le montant de la commission payée et d'autres facteurs peuvent affecter le classement d'un hébergement. <span className="text-[#10B981] cursor-pointer font-medium">En savoir plus.</span>
+            </AlertDescription>
+          </Alert>
+
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center text-primary bg-white rounded-3xl border border-slate-200">
-              <Loader2 className="h-12 w-12 animate-spin mb-4" />
-              <p className="font-black animate-pulse tracking-widest text-xs uppercase">{t('searching_deals') || 'RECHERCHE DES MEILLEURES OFFRES...'}</p>
+            <div className="py-20 flex flex-col items-center justify-center space-y-4">
+              <Loader2 className="h-10 w-10 animate-spin text-[#10B981]" />
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Recherche des meilleures offres StayFloow...</p>
+            </div>
+          ) : results.length > 0 ? (
+            <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "flex flex-col gap-4"}>
+              {results.map((property) => (
+                <PropertyCard key={property.id} property={property} viewMode={viewMode} />
+              ))}
             </div>
           ) : (
-            <>
-              {showMap && (
-                <div className="h-[500px] w-full animate-in zoom-in-95 duration-500">
-                  <PropertiesMap properties={filteredResults} />
-                </div>
-              )}
-              
-              <div className={cn(
-                "grid gap-8",
-                viewMode === 'grid' ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
-              )}>
-                {filteredResults.map((property) => (
-                  <PropertyCard key={property.id} property={property} viewMode={viewMode} isGenius={Math.random() > 0.7} />
-                ))}
+            <div className="py-32 text-center bg-slate-50 rounded-xl border-2 border-dashed">
+              <div className="mx-auto w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+                <SearchIcon className="h-8 w-8 text-slate-200" />
               </div>
-            </>
+              <h3 className="text-xl font-bold text-slate-400">Aucun hébergement trouvé</h3>
+              <p className="text-slate-500 mt-2">Essayez de modifier vos dates ou d'élargir votre zone de recherche.</p>
+            </div>
           )}
 
-          {!loading && filteredResults.length === 0 && (
-            <div className="py-24 text-center bg-white rounded-3xl border-2 border-dashed border-slate-200 shadow-inner">
-               <div className="bg-slate-50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <SearchIcon className="h-10 w-10 text-slate-200" />
-               </div>
-               <h3 className="text-2xl font-black text-slate-400">{t('no_results') || 'Aucun résultat trouvé'}</h3>
-               <p className="text-slate-500 max-w-xs mx-auto mt-4 font-medium">{t('no_results_desc') || "Essayez de modifier votre recherche ou d'explorer nos destinations populaires."}</p>
+          {results.length > 0 && (
+            <div className="flex justify-center pt-10 pb-20">
+              <div className="flex gap-1">
+                {[1, 2, 3].map(n => (
+                  <Button key={n} variant={n === 1 ? "outline" : "ghost"} className={`w-10 h-10 rounded-md ${n === 1 ? 'border-[#10B981] text-[#10B981]' : ''}`}>{n}</Button>
+                ))}
+                <Button variant="ghost" className="w-10 h-10 rounded-md"><ChevronRight className="h-4 w-4" /></Button>
+              </div>
             </div>
           )}
         </main>
@@ -173,12 +172,7 @@ function SearchResultsContent() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <p className="font-bold text-slate-400">Chargement...</p>
-      </div>
-    }>
+    <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[#10B981]" /></div>}>
       <SearchResultsContent />
     </Suspense>
   );

@@ -11,11 +11,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { 
   Building, Car, Compass, MapPin, Upload, CheckCircle2, 
-  ChevronRight, ChevronLeft, Loader2, Wand2, X, Plus, Minus, Info, TrendingUp, Star, Users, Home, Clock, Globe, Bed, Bath, Utensils
+  Loader2, Wand2, X, Plus, Minus, Users, Home, Bed, Bath, Utensils, Fuel, Gauge, Calendar as CalendarIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generatePartnerDescription } from '@/ai/flows/partner-description-generator';
-import { getPriceRecommendation, type PriceRecommendationOutput } from '@/ai/flows/price-recommendation-flow';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -32,7 +31,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
   const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   
@@ -46,15 +44,21 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     listingName: '',
     description: '',
     price: '',
+    // Accommodation fields
     propertyType: 'hotel',
-    roomType: 'double',
     roomsCount: 1,
     bathroomsCount: 1,
     kitchensCount: 0,
     toiletsCount: 1,
+    // Car fields
+    brand: '',
+    model: '',
+    year: '2023',
+    transmission: 'Manuelle',
+    fuel: 'Essence',
+    seats: 5,
+    // Shared
     amenities: [] as string[],
-    languages: ['Français', 'Arabe'],
-    availableDates: [] as string[],
   });
 
   const steps = [
@@ -97,7 +101,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     setIsSubmitting(true);
     try {
       const listingId = `list_${Date.now()}`;
-      await setDoc(doc(db, 'listings', listingId), {
+      const finalData = {
         category: initialCategory,
         status: 'pending',
         partnerInfo: {
@@ -110,19 +114,29 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         details: {
           name: formData.listingName,
           description: formData.description,
-          propertyType: formData.propertyType,
-          roomType: formData.roomType,
-          roomsCount: formData.roomsCount,
-          bathroomsCount: formData.bathroomsCount,
-          kitchensCount: formData.kitchensCount,
-          toiletsCount: formData.toiletsCount,
           amenities: formData.amenities,
+          ...(initialCategory === 'accommodation' ? {
+            propertyType: formData.propertyType,
+            roomsCount: formData.roomsCount,
+            bathroomsCount: formData.bathroomsCount,
+            kitchensCount: formData.kitchensCount,
+            toiletsCount: formData.toiletsCount,
+          } : initialCategory === 'car_rental' ? {
+            brand: formData.brand,
+            model: formData.model,
+            year: formData.year,
+            transmission: formData.transmission,
+            fuel: formData.fuel,
+            seats: formData.seats,
+          } : {})
         },
         price: parseFloat(formData.price) || 0,
         photos: photos,
         rating: 8.0,
         createdAt: serverTimestamp()
-      });
+      };
+
+      await setDoc(doc(db, 'listings', listingId), finalData);
       setCurrentStep(5);
     } catch (error) {
       console.error(error);
@@ -154,7 +168,17 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
           </div>
         </div>
       </div>
-      <div className="space-y-2"><Label className="font-bold">Nom commercial de l'annonce *</Label><Input value={formData.listingName} onChange={e => setFormData({...formData, listingName: e.target.value})} placeholder="Ex: Riad Alger Luxury" className="h-12" /></div>
+      <div className="space-y-2">
+        <Label className="font-bold">
+          {initialCategory === 'car_rental' ? 'Nom du véhicule / Flotte *' : "Nom commercial de l'annonce *"}
+        </Label>
+        <Input 
+          value={formData.listingName} 
+          onChange={e => setFormData({...formData, listingName: e.target.value})} 
+          placeholder={initialCategory === 'car_rental' ? "Ex: Dacia Duster 4x4 Premium" : "Ex: Riad Alger Luxury"} 
+          className="h-12" 
+        />
+      </div>
     </div>
   );
 
@@ -166,6 +190,91 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
   );
 
   const renderStep3 = () => {
+    if (initialCategory === 'car_rental') {
+      const carOptions = [
+        "Transmission automatique", "Climatisation", "Kilométrage illimité",
+        "Assurance tous risques incluse", "Voiture avec GPS intégré",
+        "Siège bébé / rehausseur", "4x4 / SUV", "Essence / Diesel / Électrique",
+        "Âge minimum du conducteur", "Boîte manuelle", "Nombre de places (5+ ou 7+)",
+        "Annulation gratuite", "Payez sur place", "Voiture récente (moins de 5 ans)",
+        "Fournisseur bien noté (rating 8+)"
+      ];
+
+      return (
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <Label className="font-bold">Marque du véhicule *</Label>
+              <Input value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} placeholder="Ex: Toyota" className="h-12" />
+            </div>
+            <div className="space-y-2">
+              <Label className="font-bold">Modèle *</Label>
+              <Input value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} placeholder="Ex: Corolla" className="h-12" />
+            </div>
+            <div className="space-y-2">
+              <Label className="font-bold">Année *</Label>
+              <Input value={formData.year} onChange={e => setFormData({...formData, year: e.target.value})} placeholder="Ex: 2023" className="h-12" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+            <CounterField icon={<Users/>} label="Places" value={formData.seats} onChange={v => setFormData({...formData, seats: v})} />
+            <div className="flex flex-col items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+              <div className="bg-primary/5 p-3 rounded-xl text-primary"><Gauge/></div>
+              <span className="text-[10px] font-black text-slate-400 uppercase">Boîte</span>
+              <RadioGroup value={formData.transmission} onValueChange={v => setFormData({...formData, transmission: v})} className="flex gap-2">
+                <div className="flex items-center space-x-2"><RadioGroupItem value="Manuelle" id="m"/><Label htmlFor="m" className="text-xs font-bold">M</Label></div>
+                <div className="flex items-center space-x-2"><RadioGroupItem value="Automatique" id="a"/><Label htmlFor="a" className="text-xs font-bold">A</Label></div>
+              </RadioGroup>
+            </div>
+            <div className="flex flex-col items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+              <div className="bg-primary/5 p-3 rounded-xl text-primary"><Fuel/></div>
+              <span className="text-[10px] font-black text-slate-400 uppercase">Énergie</span>
+              <RadioGroup value={formData.fuel} onValueChange={v => setFormData({...formData, fuel: v})} className="flex gap-2">
+                <div className="flex items-center space-x-2"><RadioGroupItem value="Essence" id="ess"/><Label htmlFor="ess" className="text-[10px]">Essence</Label></div>
+                <div className="flex items-center space-x-2"><RadioGroupItem value="Diesel" id="die"/><Label htmlFor="die" className="text-[10px]">Diesel</Label></div>
+              </RadioGroup>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label className="font-black text-lg">Équipements & Options populaires *</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {carOptions.map(option => (
+                <div key={option} className={cn(
+                  "flex items-center space-x-3 p-4 rounded-xl border transition-all cursor-pointer",
+                  formData.amenities.includes(option) ? "border-primary bg-primary/5" : "border-slate-100 hover:border-slate-200"
+                )}>
+                  <Checkbox 
+                    id={option} 
+                    checked={formData.amenities.includes(option)}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, amenities: checked ? [...prev.amenities, option] : prev.amenities.filter(a => a !== option) }))}
+                  />
+                  <label htmlFor={option} className="text-sm font-bold text-slate-700 cursor-pointer flex-1">{option}</label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <Label className="font-black text-lg">Description commerciale</Label>
+              <Button variant="outline" size="sm" onClick={handleAIEnhance} disabled={isGenerating} className="text-primary border-primary rounded-full font-bold">
+                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4 mr-2" />}
+                {t('ai_improve_btn')}
+              </Button>
+            </div>
+            <Textarea 
+              value={formData.description} 
+              onChange={e => setFormData({...formData, description: e.target.value})} 
+              placeholder="Décrivez l'état du véhicule, les conditions de remise des clés..."
+              className="min-h-[150px] rounded-2xl"
+            />
+          </div>
+        </div>
+      );
+    }
+
     const amenitiesList = [
       "Wi-Fi gratuit", "Climatisation", "Parking gratuit", "Petit-déjeuner inclus",
       "Piscine", "Restaurant sur place", "Réception 24h/24", "Animaux domestiques acceptés",
@@ -283,7 +392,9 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
           />
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">DA</div>
         </div>
-        <p className="text-xs text-slate-400 font-medium">Prix par nuit pour l'ensemble du logement ou par chambre selon le type.</p>
+        <p className="text-xs text-slate-400 font-medium">
+          {initialCategory === 'car_rental' ? 'Prix de location par jour (24h).' : 'Prix par nuit pour l\'ensemble du logement ou par chambre.'}
+        </p>
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -114,7 +113,7 @@ export function CarResultCard({ car, viewMode = "list" }: CarResultCardProps) {
           <p className="text-[22px] font-bold text-[#10B981] leading-none">{formatPrice(car.pricePerDay)} / jour</p>
           <p className="text-[11px] text-slate-500 mt-1">Taxes et frais compris</p>
         </div>
-        <Link href={`/cars/${car.id}/book`} className="w-full">
+        <Link href={`/cars/${car.id}`} className="w-full">
           <Button className="w-full bg-[#10B981] hover:bg-[#059669] text-white font-bold h-10 rounded-md group/btn flex items-center justify-between px-4">
             Voir l'offre
             <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />

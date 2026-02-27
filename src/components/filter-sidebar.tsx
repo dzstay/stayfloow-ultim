@@ -1,32 +1,47 @@
+
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Star, Search, ChevronDown } from "lucide-react";
-import { useLanguage } from "@/context/language-context";
+import { Star, ChevronDown } from "lucide-react";
 
-export function FilterSidebar({ resultCount }: { resultCount: number }) {
-  const { t } = useLanguage();
+export type FilterStats = {
+  ratings: Record<string, number>;
+  amenities: Record<string, number>;
+};
 
-  const equipments = [
-    { label: "Wi-Fi gratuit", count: 124, id: "eq-wifi" },
-    { label: "Climatisation", count: 89, id: "eq-ac" },
-    { label: "Parking gratuit", count: 67, id: "eq-parking" },
-    { label: "Petit-déjeuner inclus", count: 54, id: "eq-bf" },
-    { label: "Piscine", count: 32, id: "eq-pool" },
-    { label: "Restaurant sur place", count: 41, id: "eq-rest" },
-    { label: "Réception 24h/24", count: 76, id: "eq-rec" },
-    { label: "Animaux domestiques acceptés", count: 28, id: "eq-pets" },
-    { label: "Terrasse / balcon / vue", count: 45, id: "eq-view" },
-    { label: "Cuisine / coin cuisine", count: 38, id: "eq-kitchen" },
-    { label: "Prises électriques près du lit", count: 92, id: "eq-plugs" },
-    { label: "Salle de bain privée", count: 110, id: "eq-bath" },
-    { label: "Lit bébé / lit supplémentaire", count: 15, id: "eq-baby" },
-    { label: "Ascenseur", count: 48, id: "eq-elev" },
-    { label: "Accessibilité PMR", count: 12, id: "eq-handi" },
+interface FilterSidebarProps {
+  resultCount: number;
+  stats: FilterStats;
+  selectedAmenities: string[];
+  selectedRatings: string[];
+  onToggleAmenity: (amenity: string) => void;
+  onToggleRating: (rating: string) => void;
+}
+
+export function FilterSidebar({ 
+  resultCount, 
+  stats, 
+  selectedAmenities, 
+  selectedRatings,
+  onToggleAmenity,
+  onToggleRating
+}: FilterSidebarProps) {
+  
+  const amenitiesList = [
+    "Wi-Fi gratuit", "Climatisation", "Parking gratuit", "Petit-déjeuner inclus",
+    "Piscine", "Restaurant sur place", "Réception 24h/24", "Animaux domestiques acceptés",
+    "Terrasse / balcon / vue", "Cuisine / coin cuisine", "Prises électriques près du lit",
+    "Salle de bain privée", "Lit bébé / lit supplémentaire", "Ascenseur", "Accessibilité PMR"
+  ];
+
+  const ratingOptions = [
+    { label: "Fabuleux : 9+", value: "9" },
+    { label: "Très bien : 8+", value: "8" },
+    { label: "Bien : 7+", value: "7" },
+    { label: "Agréable : 6+", value: "6" },
   ];
 
   return (
@@ -58,19 +73,32 @@ export function FilterSidebar({ resultCount }: { resultCount: number }) {
       <div className="space-y-4 pt-4 border-t">
         <h3 className="text-[16px] font-bold text-slate-900">Note des commentaires</h3>
         <div className="space-y-3">
-          <FilterRow label="Fabuleux : 9+" count={16} id="rate-9" />
-          <FilterRow label="Très bien : 8+" count={71} id="rate-8" />
-          <FilterRow label="Bien : 7+" count={82} id="rate-7" />
-          <FilterRow label="Agréable : 6+" count={86} id="rate-6" />
+          {ratingOptions.map((opt) => (
+            <FilterRow 
+              key={opt.value} 
+              label={opt.label} 
+              count={stats.ratings[`${opt.value}+`] || 0} 
+              id={`rate-${opt.value}`} 
+              checked={selectedRatings.includes(opt.value)}
+              onChange={() => onToggleRating(opt.value)}
+            />
+          ))}
         </div>
       </div>
 
-      {/* NEW: Popular Equipments Section */}
+      {/* Popular Equipments Section */}
       <div className="space-y-4 pt-4 border-t">
         <h3 className="text-[16px] font-bold text-[#10B981]">Équipements populaires</h3>
         <div className="space-y-3">
-          {equipments.map((eq) => (
-            <FilterRow key={eq.id} label={eq.label} count={eq.count} id={eq.id} />
+          {amenitiesList.map((amenity) => (
+            <FilterRow 
+              key={amenity} 
+              label={amenity} 
+              count={stats.amenities[amenity] || 0} 
+              id={`eq-${amenity}`} 
+              checked={selectedAmenities.includes(amenity)}
+              onChange={() => onToggleAmenity(amenity)}
+            />
           ))}
         </div>
       </div>
@@ -78,12 +106,31 @@ export function FilterSidebar({ resultCount }: { resultCount: number }) {
   );
 }
 
-function FilterRow({ label, count, id }: { label: string, count: number, id: string }) {
+function FilterRow({ 
+  label, 
+  count, 
+  id, 
+  checked, 
+  onChange 
+}: { 
+  label: string, 
+  count: number, 
+  id: string, 
+  checked: boolean, 
+  onChange: () => void 
+}) {
   return (
-    <div className="flex items-center justify-between group cursor-pointer">
+    <div className="flex items-center justify-between group cursor-pointer" onClick={onChange}>
       <div className="flex items-center space-x-3">
-        <Checkbox id={id} className="h-5 w-5 rounded-sm border-slate-300 data-[state=checked]:bg-[#10B981] data-[state=checked]:border-[#10B981]" />
-        <Label htmlFor={id} className="text-sm font-medium text-slate-900 group-hover:text-[#10B981] transition-colors cursor-pointer">
+        <Checkbox 
+          id={id} 
+          checked={checked}
+          className="h-5 w-5 rounded-sm border-slate-300 data-[state=checked]:bg-[#10B981] data-[state=checked]:border-[#10B981]" 
+        />
+        <Label 
+          htmlFor={id} 
+          className="text-sm font-medium text-slate-900 group-hover:text-[#10B981] transition-colors cursor-pointer"
+        >
           {label}
         </Label>
       </div>

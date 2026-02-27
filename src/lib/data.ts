@@ -1,3 +1,4 @@
+
 /**
  * @fileOverview Données mockées pour les circuits et établissements de StayFloow.com
  */
@@ -29,7 +30,7 @@ export const properties: Property[] = [
     price: 12500,
     description: "Niché au cœur de la médina, ce riad historique offre une expérience immersive unique. Entièrement restauré par des artisans locaux.",
     images: ["https://picsum.photos/seed/riad1/800/600", "https://picsum.photos/seed/riad2/800/600"],
-    amenities: ["WiFi gratuit", "Petit-déjeuner inclus", "Climatisation", "Navette aéroport"],
+    amenities: ["Wi-Fi gratuit", "Petit-déjeuner inclus", "Climatisation", "Réception 24h/24", "Salle de bain privée"],
     type: "Riad",
     stars: 5,
     reviewsCount: 124,
@@ -45,7 +46,7 @@ export const properties: Property[] = [
     price: 8500,
     description: "Un séjour insolite au flanc des collines du M'zab. Architecture troglodyte moderne avec tout le confort nécessaire.",
     images: ["https://picsum.photos/seed/cave1/800/600", "https://picsum.photos/seed/cave2/800/600"],
-    amenities: ["Vue panoramique", "Restaurant", "WiFi gratuit"],
+    amenities: ["Wi-Fi gratuit", "Restaurant sur place", "Climatisation", "Terrasse / balcon / vue"],
     type: "Hôtel Insolite",
     stars: 4,
     reviewsCount: 89,
@@ -59,7 +60,7 @@ export const properties: Property[] = [
     price: 22000,
     description: "Villa luxueuse avec piscine privée et jardin luxuriant aux portes du désert.",
     images: ["https://picsum.photos/seed/villa1/800/600"],
-    amenities: ["Piscine privée", "Jardin", "Parking gratuit", "WiFi"],
+    amenities: ["Wi-Fi gratuit", "Piscine", "Parking gratuit", "Cuisine / coin cuisine", "Climatisation"],
     type: "Villa",
     stars: 5,
     reviewsCount: 45
@@ -72,7 +73,7 @@ export const properties: Property[] = [
     price: 15000,
     description: "Dormez sur le Nil à bord d'un palais flottant traditionnel (Dahabiya).",
     images: ["https://picsum.photos/seed/nile1/800/600"],
-    amenities: ["Pont soleil", "Cuisine locale", "Excursions guidées"],
+    amenities: ["Wi-Fi gratuit", "Restaurant sur place", "Climatisation", "Réception 24h/24"],
     type: "Bateau-Hôtel",
     stars: 5,
     reviewsCount: 210,
@@ -86,7 +87,7 @@ export const properties: Property[] = [
     price: 18000,
     description: "Appartement de standing au coeur du centre d'affaires d'Alger.",
     images: ["https://picsum.photos/seed/tower1/800/600"],
-    amenities: ["Conciergerie", "Salle de sport", "WiFi gratuit"],
+    amenities: ["Wi-Fi gratuit", "Ascenseur", "Climatisation", "Parking gratuit", "Réception 24h/24"],
     type: "Appartement",
     stars: 4,
     reviewsCount: 67
@@ -99,7 +100,7 @@ export const properties: Property[] = [
     price: 14000,
     description: "Un havre de paix absolu à quelques minutes de la place Jemaa el-Fna.",
     images: ["https://picsum.photos/seed/marrakech1/800/600"],
-    amenities: ["Spa", "Piscine", "Cuisine gastronomique", "WiFi gratuit"],
+    amenities: ["Wi-Fi gratuit", "Piscine", "Restaurant sur place", "Climatisation", "Petit-déjeuner inclus"],
     type: "Riad",
     stars: 5,
     reviewsCount: 342,
@@ -113,7 +114,7 @@ export const properties: Property[] = [
     price: 9500,
     description: "Réveillez-vous avec le bruit des vagues de la Méditerranée.",
     images: ["https://picsum.photos/seed/alex1/800/600"],
-    amenities: ["Vue mer", "Balcon", "WiFi gratuit"],
+    amenities: ["Wi-Fi gratuit", "Terrasse / balcon / vue", "Climatisation", "Salle de bain privée"],
     type: "Hôtel ★★★★",
     stars: 4,
     reviewsCount: 156
@@ -126,7 +127,7 @@ export const properties: Property[] = [
     price: 11000,
     description: "Une expérience de camping de luxe sous les étoiles du Hoggar.",
     images: ["https://picsum.photos/seed/camp1/800/600"],
-    amenities: ["Dîner au feu de camp", "Guide local", "Transfert 4x4"],
+    amenities: ["Wi-Fi gratuit", "Restaurant sur place", "Animaux domestiques acceptés", "Parking gratuit"],
     type: "Glamping",
     stars: 3,
     reviewsCount: 42
@@ -222,7 +223,7 @@ export const circuits = [
 
 export const pendingCircuits = [];
 
-export const popularFilters = ["WiFi gratuit", "Piscine", "Petit-déjeuner inclus", "Parking gratuit", "Climatisation", "Vue mer", "Cuisine équipée"];
+export const popularFilters = ["Wi-Fi gratuit", "Piscine", "Petit-déjeuner inclus", "Parking gratuit", "Climatisation", "Vue mer", "Cuisine équipée"];
 export const propertyTypesList = ["Hôtel ★★★", "Hôtel ★★★★", "Hôtel ★★★★★", "Riad", "Villa", "Appartement", "Studio", "Glamping"];
 export const circuitThemes = ["Désert", "Culturel", "Nature", "Aventure", "Gastronomie"];
 

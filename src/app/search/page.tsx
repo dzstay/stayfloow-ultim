@@ -1,17 +1,18 @@
+
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { 
   Search as SearchIcon, Loader2, Map as MapIcon, 
-  Star, ChevronRight, Grid, List as ListIcon, 
-  Info, SlidersHorizontal
+  Grid, List as ListIcon, 
+  Info, ChevronRight
 } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { PropertyCard } from '@/components/property-card';
-import { FilterSidebar } from '@/components/filter-sidebar';
+import { FilterSidebar, type FilterStats } from '@/components/filter-sidebar';
 import AdvancedSearchBar from '@/components/search/AdvancedSearchBar';
 import { properties as mockProperties, type Property } from '@/lib/data';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -20,9 +21,13 @@ function SearchResultsContent() {
   const searchParams = useSearchParams();
   const db = useFirestore();
   
-  const [results, setResults] = useState<Property[]>([]);
+  const [allApproved, setAllApproved] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  
+  // States pour les filtres sélectionnés
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [selectedRatings, setSelectedRatings] = useState<string[]>([]);
 
   const locationParam = searchParams.get('dest') || '';
 
@@ -30,7 +35,6 @@ function SearchResultsContent() {
     const fetchApprovedListings = async () => {
       setLoading(true);
       try {
-        // Query Firestore for approved listings
         const listingsRef = collection(db, 'listings');
         const q = query(listingsRef, where('status', '==', 'approved'));
         const querySnapshot = await getDocs(q);
@@ -48,28 +52,90 @@ function SearchResultsContent() {
             amenities: data.details?.amenities || [],
             type: data.details?.type || 'Hôtel',
             isBoosted: data.isBoosted || false,
+            stars: data.details?.stars ? parseInt(data.details.stars) : undefined
           } as Property;
         });
 
-        // Combine with mock properties for demo purposes
-        const allResults = [...mockProperties, ...dbListings];
-        
-        // Filter by location if provided
-        const filtered = allResults.filter(p => 
-          locationParam ? p.location.toLowerCase().includes(locationParam.toLowerCase()) : true
-        );
-
-        setResults(filtered);
+        setAllApproved([...mockProperties, ...dbListings]);
       } catch (error) {
         console.error("Error fetching listings:", error);
-        setResults(mockProperties); // Fallback to mock on error
+        setAllApproved(mockProperties);
       } finally {
         setTimeout(() => setLoading(false), 600);
       }
     };
 
     fetchApprovedListings();
-  }, [locationParam, db]);
+  }, [db]);
+
+  // Calcul des statistiques pour la sidebar (basé sur tous les approuvés correspondant à la destination)
+  const stats = useMemo<FilterStats>(() => {
+    const s: FilterStats = {
+      ratings: { "9+": 0, "8+": 0, "7+": 0, "6+": 0 },
+      amenities: {}
+    };
+
+    const amenitiesList = [
+      "Wi-Fi gratuit", "Climatisation", "Parking gratuit", "Petit-déjeuner inclus",
+      "Piscine", "Restaurant sur place", "Réception 24h/24", "Animaux domestiques acceptés",
+      "Terrasse / balcon / vue", "Cuisine / coin cuisine", "Prises électriques près du lit",
+      "Salle de bain privée", "Lit bébé / lit supplémentaire", "Ascenseur", "Accessibilité PMR"
+    ];
+    amenitiesList.forEach(a => s.amenities[a] = 0);
+
+    // Pour les compteurs, on regarde les items qui matchent la destination
+    const itemsForStats = allApproved.filter(p => 
+      locationParam ? p.location.toLowerCase().includes(locationParam.toLowerCase()) : true
+    );
+
+    itemsForStats.forEach(p => {
+      if (p.rating >= 9) s.ratings["9+"]++;
+      if (p.rating >= 8) s.ratings["8+"]++;
+      if (p.rating >= 7) s.ratings["7+"]++;
+      if (p.rating >= 6) s.ratings["6+"]++;
+
+      p.amenities?.forEach(a => {
+        if (s.amenities[a] !== undefined) s.amenities[a]++;
+      });
+    });
+
+    return s;
+  }, [allApproved, locationParam]);
+
+  // Filtrage final pour l'affichage
+  const filteredResults = useMemo(() => {
+    return allApproved.filter(p => {
+      // Filtre Destination
+      const matchDest = locationParam ? p.location.toLowerCase().includes(locationParam.toLowerCase()) : true;
+      if (!matchDest) return false;
+
+      // Filtre Equipements
+      if (selectedAmenities.length > 0) {
+        const hasAll = selectedAmenities.every(a => p.amenities?.includes(a));
+        if (!hasAll) return false;
+      }
+
+      // Filtre Note
+      if (selectedRatings.length > 0) {
+        const minRating = Math.min(...selectedRatings.map(r => parseInt(r)));
+        if (p.rating < minRating) return false;
+      }
+
+      return true;
+    });
+  }, [allApproved, locationParam, selectedAmenities, selectedRatings]);
+
+  const handleToggleAmenity = (amenity: string) => {
+    setSelectedAmenities(prev => 
+      prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
+    );
+  };
+
+  const handleToggleRating = (rating: string) => {
+    setSelectedRatings(prev => 
+      prev.includes(rating) ? prev.filter(r => r !== rating) : [...prev, rating]
+    );
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -93,7 +159,14 @@ function SearchResultsContent() {
             </div>
           </div>
 
-          <FilterSidebar resultCount={results.length} />
+          <FilterSidebar 
+            resultCount={filteredResults.length} 
+            stats={stats}
+            selectedAmenities={selectedAmenities}
+            selectedRatings={selectedRatings}
+            onToggleAmenity={handleToggleAmenity}
+            onToggleRating={handleToggleRating}
+          />
         </aside>
 
         {/* MAIN CONTENT (75%) */}
@@ -101,7 +174,7 @@ function SearchResultsContent() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold text-slate-900">
-                {locationParam || 'Toutes les destinations'} : {results.length} établissements trouvés
+                {locationParam || 'Toutes les destinations'} : {filteredResults.length} établissements trouvés
               </h1>
             </div>
             <div className="flex items-center gap-2">
@@ -138,9 +211,9 @@ function SearchResultsContent() {
               <Loader2 className="h-10 w-10 animate-spin text-[#10B981]" />
               <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Recherche des meilleures offres StayFloow...</p>
             </div>
-          ) : results.length > 0 ? (
+          ) : filteredResults.length > 0 ? (
             <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "flex flex-col gap-4"}>
-              {results.map((property) => (
+              {filteredResults.map((property) => (
                 <PropertyCard key={property.id} property={property} viewMode={viewMode} />
               ))}
             </div>
@@ -150,11 +223,18 @@ function SearchResultsContent() {
                 <SearchIcon className="h-8 w-8 text-slate-200" />
               </div>
               <h3 className="text-xl font-bold text-slate-400">Aucun hébergement trouvé</h3>
-              <p className="text-slate-500 mt-2">Essayez de modifier vos dates ou d'élargir votre zone de recherche.</p>
+              <p className="text-slate-500 mt-2">Essayez de modifier vos critères ou d'élargir votre zone de recherche.</p>
+              <Button 
+                variant="outline" 
+                className="mt-6 border-primary text-primary"
+                onClick={() => { setSelectedAmenities([]); setSelectedRatings([]); }}
+              >
+                Réinitialiser les filtres
+              </Button>
             </div>
           )}
 
-          {results.length > 0 && (
+          {filteredResults.length > 0 && (
             <div className="flex justify-center pt-10 pb-20">
               <div className="flex gap-1">
                 {[1, 2, 3].map(n => (

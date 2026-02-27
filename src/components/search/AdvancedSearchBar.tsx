@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Calendar as CalendarIcon, Users, Building, Car, Compass, Minus, Plus, Clock, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -11,11 +11,15 @@ import { fr, enUS, es, arDZ } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import { useLanguage } from '@/context/language-context';
+import { useRouter, usePathname } from 'next/navigation';
 
 type Category = 'accommodations' | 'cars' | 'circuits';
 
 export default function AdvancedSearchBar() {
   const { t, locale } = useLanguage();
+  const router = useRouter();
+  const pathname = usePathname();
+  
   const [activeCategory, setActiveCategory] = useState<Category>('accommodations');
   const [destination, setDestination] = useState('');
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -25,12 +29,34 @@ export default function AdvancedSearchBar() {
   const [occupancy, setOccupancy] = useState({ adults: 2, children: 0, rooms: 1 });
   const [times, setTimes] = useState({ pickup: "10:00", return: "10:00" });
 
+  // Synchroniser l'onglet actif avec l'URL actuelle
+  useEffect(() => {
+    if (pathname.startsWith('/cars')) {
+      setActiveCategory('cars');
+    } else if (pathname.startsWith('/circuits')) {
+      setActiveCategory('circuits');
+    } else {
+      setActiveCategory('accommodations');
+    }
+  }, [pathname]);
+
   const getDateLocale = () => {
     switch (locale) {
       case 'en': return enUS;
       case 'es': return es;
       case 'ar': return arDZ;
       default: return fr;
+    }
+  };
+
+  const handleTabClick = (category: Category) => {
+    setActiveCategory(category);
+    if (category === 'accommodations') {
+      router.push('/');
+    } else if (category === 'cars') {
+      router.push('/cars');
+    } else if (category === 'circuits') {
+      router.push('/circuits');
     }
   };
 
@@ -45,7 +71,7 @@ export default function AdvancedSearchBar() {
       url += `&pickup_time=${times.pickup}&return_time=${times.return}`;
     }
     
-    window.location.href = url;
+    router.push(url);
   };
 
   const hours = Array.from({ length: 24 * 2 }, (_, i) => {
@@ -55,23 +81,23 @@ export default function AdvancedSearchBar() {
   });
 
   return (
-    <div className="w-full space-y-1">
+    <div className="w-full space-y-1 overflow-hidden">
       <div className="flex gap-2 mb-2 overflow-x-auto no-scrollbar py-1">
         <CategoryTab 
           active={activeCategory === 'accommodations'} 
-          onClick={() => setActiveCategory('accommodations')}
+          onClick={() => handleTabClick('accommodations')}
           icon={<Building className="h-4 w-4" />}
           label={t("accommodations")}
         />
         <CategoryTab 
           active={activeCategory === 'cars'} 
-          onClick={() => setActiveCategory('cars')}
+          onClick={() => handleTabClick('cars')}
           icon={<Car className="h-4 w-4" />}
           label={t("car_rental")}
         />
         <CategoryTab 
           active={activeCategory === 'circuits'} 
-          onClick={() => setActiveCategory('circuits')}
+          onClick={() => handleTabClick('circuits')}
           icon={<Compass className="h-4 w-4" />}
           label={t("tours")}
         />

@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   LayoutDashboard, Calendar, Building, Car, Compass, Users, 
   BarChart3, Settings, 
@@ -42,43 +41,46 @@ export default function AdminDashboardMaster() {
   const db = useFirestore();
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  // Fetch real listings for stats
-  const listingsRef = collection(db, 'listings');
+  // Fetch real listings for stats - Memoized query for performance
+  const listingsRef = useMemo(() => collection(db, 'listings'), [db]);
   const { data: listings, loading: listingsLoading } = useCollection(listingsRef);
 
-  // Protection stricte de la page Admin
+  // Protection ultra-rapide de la page Admin
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
-        router.push("/auth/login");
+        router.replace("/auth/login");
       } else if (user.email !== ADMIN_EMAIL) {
-        // Redirige les clients/partenaires vers leur profil s'ils tentent d'accéder à /admin
-        router.push("/profile");
+        router.replace("/profile");
       }
     }
   }, [user, authLoading, router]);
 
-  if (authLoading || listingsLoading) {
+  const stats = useMemo(() => {
+    if (!listings) return { total: 0, pending: 0, approved: 0, revenue: 0 };
+    return {
+      total: listings.length,
+      pending: listings.filter(l => l.status === 'pending').length,
+      approved: listings.filter(l => l.status === 'approved').length,
+      revenue: listings.filter(l => l.status === 'approved').reduce((acc, curr) => acc + (curr.price || 0), 0)
+    };
+  }, [listings]);
+
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="font-black uppercase tracking-widest animate-pulse">StayFloow Engine Loading...</p>
+          <p className="font-black uppercase tracking-widest animate-pulse">Vérification Admin...</p>
         </div>
       </div>
     );
   }
 
-  // Ne rien rendre si l'utilisateur n'est pas l'admin (en cours de redirection)
   if (!user || user.email !== ADMIN_EMAIL) return null;
 
-  const totalListings = listings?.length || 0;
-  const pendingCount = listings?.filter(l => l.status === 'pending').length || 0;
-  const approvedCount = listings?.filter(l => l.status === 'approved').length || 0;
-  const estimatedRevenue = listings?.filter(l => l.status === 'approved').reduce((acc, curr) => acc + (curr.price || 0), 0) || 0;
-
   return (
-    <div className="min-h-screen bg-[#F0F2F5] flex flex-col font-sans text-slate-700">
+    <div className="min-h-screen bg-[#F0F2F5] flex flex-col font-sans text-slate-700 page-fade-in">
       <header className="bg-slate-800 text-white flex items-center h-16 shadow-lg z-50">
         <div className="w-64 flex items-center justify-center border-r border-slate-700 h-full">
           <Link href="/" className="flex items-center gap-2">
@@ -117,15 +119,15 @@ export default function AdminDashboardMaster() {
 
         <main className="flex-1 overflow-y-auto p-8 space-y-8">
           {activeTab === 'dashboard' && (
-            <>
+            <div className="animate-in fade-in duration-300">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <KpiCard title="Total Annonces" value={totalListings.toString()} icon={<Building />} color="blue" sub="Gérer le parc" />
-                <KpiCard title="Revenus Est." value={`${estimatedRevenue.toLocaleString()} DA`} icon={<Euro />} color="dark-blue" sub="Voir Rapport" />
-                <KpiCard title="En attente" value={pendingCount.toString()} icon={<Clock />} color="orange" sub="Valider" />
-                <KpiCard title="Approuvées" value={approvedCount.toString()} icon={<CheckCircle2 />} color="green" sub="Analyses" />
+                <KpiCard title="Total Annonces" value={stats.total.toString()} icon={<Building />} color="blue" sub="Gérer le parc" loading={listingsLoading} />
+                <KpiCard title="Revenus Est." value={`${stats.revenue.toLocaleString()} DA`} icon={<Euro />} color="dark-blue" sub="Voir Rapport" loading={listingsLoading} />
+                <KpiCard title="En attente" value={stats.pending.toString()} icon={<Clock />} color="orange" sub="Valider" loading={listingsLoading} />
+                <KpiCard title="Approuvées" value={stats.approved.toString()} icon={<CheckCircle2 />} color="green" sub="Analyses" loading={listingsLoading} />
               </div>
 
-              <Card className="border-none shadow-sm rounded-none">
+              <Card className="mt-8 border-none shadow-sm rounded-none overflow-hidden">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest">Performances Plateforme</CardTitle>
                   <Badge variant="outline" className="font-bold border-slate-200">Année 2026</Badge>
@@ -149,13 +151,13 @@ export default function AdminDashboardMaster() {
                 </CardContent>
               </Card>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
                 <ManagementBlock 
                   title="Gestion Hébergements" 
                   color="blue"
                   items={[
-                    { label: "Annonces à valider", count: pendingCount, link: "/admin/validate" },
-                    { label: "Propriétés actives", count: approvedCount, link: "/search" },
+                    { label: "Annonces à valider", count: stats.pending, link: "/admin/validate" },
+                    { label: "Propriétés actives", count: stats.approved, link: "/search" },
                     { label: "Signalements", count: 0, link: "#" }
                   ]}
                 />
@@ -178,7 +180,7 @@ export default function AdminDashboardMaster() {
                   ]}
                 />
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === 'extensions' && (
@@ -246,7 +248,7 @@ function SidebarItem({ icon, label, active = false, onClick }: { icon: any, labe
   );
 }
 
-function KpiCard({ title, value, icon, color, sub }: { title: string, value: string, icon: any, color: string, sub: string }) {
+function KpiCard({ title, value, icon, color, sub, loading = false }: { title: string, value: string, icon: any, color: string, sub: string, loading?: boolean }) {
   const colorClasses = {
     "blue": "text-blue-600",
     "dark-blue": "text-blue-900",
@@ -259,7 +261,11 @@ function KpiCard({ title, value, icon, color, sub }: { title: string, value: str
       <CardContent className="p-6 relative">
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-1">
-            <p className="text-3xl font-black text-slate-800 tracking-tight">{value}</p>
+            {loading ? (
+              <div className="h-8 w-24 bg-slate-100 animate-pulse rounded" />
+            ) : (
+              <p className="text-3xl font-black text-slate-800 tracking-tight">{value}</p>
+            )}
             <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{title}</p>
           </div>
           <div className={cn("p-2 bg-slate-50 rounded-lg", colorClasses[color as keyof typeof colorClasses])}>
@@ -293,7 +299,7 @@ function ManagementBlock({ title, items, color }: { title: string, items: any[],
               <span className="h-1 w-1 bg-white rounded-full" />
               {item.label} ({item.count})
             </span>
-            <Link href={item.link}>
+            <Link href={item.link} prefetch={true}>
               <button className="px-2 py-1 bg-white/10 hover:bg-white/20 text-[9px] font-black uppercase tracking-tighter rounded transition-all">
                 Gérer
               </button>

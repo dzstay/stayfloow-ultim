@@ -1,8 +1,7 @@
-
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { MapPin, Calendar as CalendarIcon, Users, Building, Car, Compass, Minus, Plus, Clock, X, Search } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { MapPin, Calendar as CalendarIcon, Users, Building, Car, Compass, Minus, Plus, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -31,33 +30,28 @@ export default function AdvancedSearchBar() {
   const [times, setTimes] = useState({ pickup: "10:00", return: "10:00" });
 
   useEffect(() => {
-    if (pathname === '/cars' || pathname.startsWith('/cars/')) {
+    if (pathname.startsWith('/cars')) {
       setActiveCategory('cars');
-    } else if (pathname === '/circuits' || pathname.startsWith('/circuits/')) {
+    } else if (pathname.startsWith('/circuits')) {
       setActiveCategory('circuits');
-    } else if (pathname === '/' || pathname.startsWith('/search') || pathname.startsWith('/properties')) {
+    } else {
       setActiveCategory('accommodations');
     }
   }, [pathname]);
 
-  const getDateLocale = () => {
+  const getDateLocale = useCallback(() => {
     switch (locale) {
       case 'en': return enUS;
       case 'es': return es;
       case 'ar': return arDZ;
       default: return fr;
     }
-  };
+  }, [locale]);
 
   const handleTabClick = (category: Category) => {
     setActiveCategory(category);
-    if (category === 'accommodations') {
-      router.push('/');
-    } else if (category === 'cars') {
-      router.push('/cars');
-    } else if (category === 'circuits') {
-      router.push('/circuits');
-    }
+    const path = category === 'accommodations' ? '/' : category === 'cars' ? '/cars' : '/circuits';
+    router.push(path);
   };
 
   const handleSearch = () => {
@@ -84,7 +78,7 @@ export default function AdvancedSearchBar() {
 
   return (
     <div className="w-full">
-      {/* TABS - STYLE PILLULES EXACT */}
+      {/* TABS - Optimized for speed */}
       <div className="flex gap-3 mb-6 overflow-x-auto no-scrollbar py-1">
         <CategoryTab 
           active={activeCategory === 'accommodations'} 
@@ -106,11 +100,11 @@ export default function AdvancedSearchBar() {
         />
       </div>
 
-      {/* CONTENEUR PRINCIPAL - BORDURE JAUNE STYLE SIGNATURE */}
+      {/* SEARCH CONTAINER - Signature Yellow */}
       <div className="bg-[#FEBA02] p-[2px] rounded-xl shadow-2xl flex flex-col md:flex-row items-stretch gap-0 border-2 border-[#FEBA02]">
         
-        {/* DESTINATION / LIEU DE PRISE */}
-        <div className="flex-[1.5] bg-white md:rounded-l-lg flex flex-col justify-center px-6 py-3 min-h-[85px] relative group border-r border-slate-100">
+        {/* DESTINATION */}
+        <div className="flex-[1.5] bg-white md:rounded-l-lg flex flex-col justify-center px-6 py-3 min-h-[85px] relative group border-r border-slate-100 transition-colors hover:bg-slate-50">
           <span className="text-[11px] font-black text-slate-400 uppercase tracking-tight mb-1.5">
             {activeCategory === 'cars' ? t('pickup_location') : t('where_to')}
           </span>
@@ -143,7 +137,7 @@ export default function AdvancedSearchBar() {
               </div>
             </div>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 border-none shadow-2xl" align="center">
+          <PopoverContent className="w-auto p-0 border-none shadow-2xl animate-in zoom-in-95 duration-200" align="center">
             <Calendar
               mode="range"
               selected={dateRange}
@@ -167,7 +161,7 @@ export default function AdvancedSearchBar() {
                     <SelectValue />
                   </div>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px]">
                   {hours.map(h => <SelectItem key={`p-${h}`} value={h}>{h}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -182,7 +176,7 @@ export default function AdvancedSearchBar() {
                     <SelectValue />
                   </div>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px]">
                   {hours.map(h => <SelectItem key={`r-${h}`} value={h}>{h}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -203,7 +197,7 @@ export default function AdvancedSearchBar() {
                 </div>
               </div>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-6 shadow-2xl bg-white rounded-2xl border border-slate-100">
+            <PopoverContent className="w-80 p-6 shadow-2xl bg-white rounded-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
               <div className="space-y-6">
                 <OccupancyRow label={t('adults')} value={occupancy.adults} onDec={() => setOccupancy({...occupancy, adults: Math.max(1, occupancy.adults - 1)})} onInc={() => setOccupancy({...occupancy, adults: occupancy.adults + 1})} />
                 <OccupancyRow label={t('children')} value={occupancy.children} onDec={() => setOccupancy({...occupancy, children: Math.max(0, occupancy.children - 1)})} onInc={() => setOccupancy({...occupancy, children: occupancy.children + 1})} />
@@ -213,12 +207,12 @@ export default function AdvancedSearchBar() {
           </Popover>
         )}
 
-        {/* BOUTON RECHERCHER - STYLE VERT INTÉGRÉ EXACT */}
+        {/* SEARCH BUTTON */}
         <button 
           onClick={handleSearch}
-          className="bg-primary hover:bg-[#059669] text-white md:rounded-r-lg px-12 py-4 flex items-center justify-center transition-all active:scale-95 min-h-[85px]"
+          className="bg-primary hover:bg-[#059669] text-white md:rounded-r-lg px-12 py-4 flex items-center justify-center transition-all active:scale-95 min-h-[85px] group"
         >
-          <span className="text-2xl font-black tracking-tight">
+          <span className="text-2xl font-black tracking-tight group-hover:scale-105 transition-transform">
             {t("search_btn")}
           </span>
         </button>

@@ -55,16 +55,18 @@
   }
   body {
     @apply bg-background text-foreground font-sans text-[14px] antialiased;
+    transition: opacity 0.2s ease-in-out;
   }
 }
 
-/* Animations de page fluides */
+/* Animations de page ultra-rapides */
 .page-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.25s ease-out forwards;
+  will-change: opacity, transform;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
+  from { opacity: 0; transform: translateY(3px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -78,4 +80,10 @@
 
 .booking-card-shadow {
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+}
+
+/* Sensation de vitesse au clic */
+button:active {
+  transform: scale(0.98);
+  transition: transform 0.1s;
 }

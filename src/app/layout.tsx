@@ -1,5 +1,6 @@
 
 import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
@@ -7,6 +8,13 @@ import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { ChatLoader } from '@/components/chat-loader';
 import ClientProviders from '@/components/client-providers';
+
+// Configuration de la police Inter via Next.js pour de meilleures performances
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.stayfloow.com'),
@@ -40,12 +48,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="fr" suppressHydrationWarning className={inter.variable}>
       <body className="font-body antialiased bg-background min-h-screen flex flex-col overflow-x-hidden">
         <FirebaseClientProvider>
           <ClientProviders>

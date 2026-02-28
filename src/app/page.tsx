@@ -1,15 +1,27 @@
+
 "use client";
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Star, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AdvancedSearchBar from '@/components/search/AdvancedSearchBar';
-import { AiRecommender } from '@/components/ai-recommender';
-import { PersonalizedRecommendations } from '@/components/personalized-recommendations';
 import { useLanguage } from '@/context/language-context';
 import { useCurrency } from '@/context/currency-context';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Chargement dynamique des composants lourds pour améliorer le temps de chargement initial
+const AiRecommender = dynamic(() => import('@/components/ai-recommender').then(mod => mod.AiRecommender), {
+  ssr: false,
+  loading: () => <Skeleton className="w-full h-[400px] rounded-[2.5rem]" />
+});
+
+const PersonalizedRecommendations = dynamic(() => import('@/components/personalized-recommendations').then(mod => mod.PersonalizedRecommendations), {
+  ssr: false,
+  loading: () => <div className="space-y-8 py-12"><Skeleton className="w-full h-[300px]" /><Skeleton className="w-full h-[300px]" /></div>
+});
 
 export default function Home() {
   const { t } = useLanguage();
@@ -34,13 +46,17 @@ export default function Home() {
     { id: 'prop-4', name: 'Royal Algerian Tent', location: 'Timimoun, Algérie', rating: 9.7, price: 11000, image: 'https://picsum.photos/seed/unique4/400/500' },
   ];
 
-  if (!isClient) return null;
+  if (!isClient) return (
+    <div className="flex flex-col min-h-screen bg-background animate-pulse">
+      <div className="bg-primary h-96 w-full" />
+    </div>
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="bg-primary text-white pt-16 pb-36 px-6">
-        <div className="max-w-7xl mx-auto space-y-6">
+      <section className="bg-primary text-white pt-16 pb-36 px-6 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto space-y-6 relative z-10">
           <h1 className="text-5xl md:text-6xl font-black tracking-tighter max-w-3xl leading-tight">
             {t("hero_title")}
           </h1>
@@ -53,9 +69,10 @@ export default function Home() {
             </Button>
           </div>
         </div>
+        <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
       </section>
 
-      {/* Container de la barre de recherche remonté sur la ligne verte */}
+      {/* Container de la barre de recherche */}
       <div className="max-w-7xl mx-auto w-full px-6 -mt-28 z-30 mb-12">
         <AdvancedSearchBar />
       </div>
@@ -68,7 +85,13 @@ export default function Home() {
             {propertyTypes.map((type) => (
               <Link key={type.name} href={`/search?type=${type.name.toLowerCase()}`} className="group space-y-3">
                 <div className="relative aspect-[4/3] rounded-lg overflow-hidden shadow-sm">
-                  <Image src={type.image} alt={type.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <Image 
+                    src={type.image} 
+                    alt={type.name} 
+                    fill 
+                    className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                    loading="lazy"
+                  />
                 </div>
                 <div>
                   <h3 className="font-bold text-base text-slate-900 group-hover:underline">{type.name}</h3>
@@ -89,7 +112,13 @@ export default function Home() {
             {uniqueStays.map((stay) => (
               <Link key={stay.id} href={`/properties/${stay.id}`} className="group block">
                 <div className="relative aspect-square rounded-xl overflow-hidden mb-3 shadow-md">
-                  <Image src={stay.image} alt={stay.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <Image 
+                    src={stay.image} 
+                    alt={stay.name} 
+                    fill 
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
                 </div>
                 <h3 className="font-bold text-slate-900 truncate group-hover:text-primary transition-colors">{stay.name}</h3>
                 <p className="text-xs text-slate-500 flex items-center gap-1 mb-2"><MapPin className="h-3 w-3" /> {stay.location}</p>
@@ -108,12 +137,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Section 3 : Recommandations Personnalisées */}
-        <PersonalizedRecommendations />
+        {/* Sections chargées de manière asynchrone pour la performance */}
+        <Suspense fallback={<Skeleton className="w-full h-[600px] rounded-[2.5rem]" />}>
+          <PersonalizedRecommendations />
+        </Suspense>
 
-        {/* Section 4 : Assistant Voyage IA (DÉPLACÉ EN BAS) */}
         <section className="mb-20 mt-32">
-          <AiRecommender />
+          <Suspense fallback={<Skeleton className="w-full h-[400px] rounded-[2.5rem]" />}>
+            <AiRecommender />
+          </Suspense>
         </section>
       </main>
     </div>

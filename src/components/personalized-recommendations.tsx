@@ -1,6 +1,5 @@
-"use client";
 
-console.log("DEBUG: PersonalizedRecommendations loaded");
+"use client";
 
 import { properties } from "@/lib/data";
 import { PropertyCard } from "./property-card";
@@ -12,7 +11,6 @@ import { cn } from "@/lib/utils";
 
 export function PersonalizedRecommendations() {
   const { t } = useLanguage();
-  // Slices ajustées pour correspondre aux nouvelles données dans data.ts
   const recentlyViewed = properties.slice(0, 4);
   const similarToLastViewed = properties.slice(4, 8);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');

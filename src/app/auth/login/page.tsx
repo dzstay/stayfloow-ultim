@@ -22,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, LogIn, ArrowLeft } from "lucide-react";
 
+const ADMIN_EMAIL = "stayflow2025@gmail.com";
+
 export default function LoginPage() {
   const router = useRouter();
   const auth = useAuth();
@@ -29,11 +31,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Redirection automatique si déjà connecté
+  // Redirection automatique basée sur le rôle si déjà connecté
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.push("/");
+        if (user.email === ADMIN_EMAIL) {
+          router.push("/admin");
+        } else {
+          router.push("/profile");
+        }
       } else {
         setCheckingAuth(false);
       }
@@ -52,21 +58,27 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password);
+      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
       toast({
         title: "Connexion réussie",
         description: "Bienvenue sur StayFloow.com !",
       });
-      router.push("/");
+
+      // Redirection spécifique au rôle
+      if (user.email === ADMIN_EMAIL) {
+        router.push("/admin");
+      } else {
+        router.push("/profile");
+      }
     } catch (error: any) {
       console.error("Login error:", error);
       
       let message = "Email ou mot de passe incorrect.";
       
       if (error.code === 'auth/operation-not-allowed') {
-        message = "La connexion par email n'est pas activée dans la console Firebase. Veuillez l'activer dans Authentication > Sign-in method.";
-      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        message = "Identifiants invalides.";
+        message = "La connexion par email n'est pas activée dans la console Firebase.";
       }
 
       toast({
@@ -105,7 +117,6 @@ export default function LoginPage() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* EMAIL */}
             <FormField
               control={form.control}
               name="email"
@@ -125,7 +136,6 @@ export default function LoginPage() {
               )}
             />
 
-            {/* PASSWORD */}
             <FormField
               control={form.control}
               name="password"

@@ -15,11 +15,14 @@ import {
   Clock, 
   ArrowLeft,
   Loader2,
-  Calendar
+  Calendar,
+  Sparkles,
+  ArrowRight
 } from "lucide-react";
 import Link from "next/link";
 import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
   const { user, loading } = useUser();
@@ -62,24 +65,23 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
       <header className="bg-primary text-white py-6 px-8 shadow-md">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link href="/" className="text-2xl font-black tracking-tight">
             StayFloow<span className="text-secondary">.com</span>
           </Link>
           <Button variant="ghost" className="text-white hover:bg-white/10" asChild>
-            <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Retour</Link>
+            <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Retour à l'accueil</Link>
           </Button>
         </div>
       </header>
 
-      <main className="flex-grow container mx-auto px-4 py-12 max-w-4xl">
+      <main className="flex-grow container mx-auto px-4 py-12 max-w-5xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
           {/* Sidebar Profil */}
           <div className="space-y-6">
-            <Card className="border-none shadow-xl overflow-hidden rounded-3xl">
+            <Card className="border-none shadow-xl overflow-hidden rounded-3xl bg-white">
               <div className="h-24 bg-primary" />
               <CardContent className="pt-0 text-center -mt-12">
                 <div className="inline-block p-1 bg-white rounded-full mb-4 shadow-lg">
@@ -88,7 +90,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <h2 className="text-xl font-black text-slate-900 truncate">
-                  {user.displayName || "Utilisateur StayFloow"}
+                  {user.displayName || "Voyageur StayFloow"}
                 </h2>
                 <p className="text-sm text-slate-500 font-medium truncate mb-6">{user.email}</p>
                 <Button 
@@ -103,17 +105,39 @@ export default function ProfilePage() {
 
             <nav className="space-y-2">
               <ProfileNavItem icon={<Settings />} label="Paramètres du compte" active />
-              <ProfileNavItem icon={<Shield />} label="Sécurité & Mot de passe" />
-              <ProfileNavItem icon={<Clock />} label="Historique des activités" />
+              <ProfileNavItem icon={<Clock />} label="Mes Réservations" />
+              <ProfileNavItem icon={<Shield />} label="Sécurité" />
             </nav>
           </div>
 
           {/* Contenu Principal */}
-          <div className="md:col-span-2 space-y-6">
-            <Card className="border-none shadow-xl rounded-3xl overflow-hidden">
+          <div className="md:col-span-2 space-y-8">
+            {/* CARTE SUGGESTION PARTENAIRE */}
+            <Card className="border-none shadow-2xl rounded-[2rem] overflow-hidden bg-slate-900 text-white relative group cursor-pointer hover:scale-[1.01] transition-all">
+              <CardContent className="p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+                <div className="space-y-4">
+                  <div className="bg-primary/20 text-primary w-fit px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                    <Sparkles className="h-3 w-3" /> Nouveau : Louez votre bien
+                  </div>
+                  <h3 className="text-3xl font-black tracking-tight leading-none">Vous avez un hébergement ou une voiture ?</h3>
+                  <p className="text-white/60 font-medium max-w-md">
+                    Devenez partenaire StayFloow et commencez à générer des revenus dès aujourd'hui en proposant vos services à notre communauté.
+                  </p>
+                  <Button className="bg-primary hover:bg-primary/90 text-white font-black px-8 h-14 rounded-xl shadow-xl shadow-primary/20" asChild>
+                    <Link href="/partners/join">Commencer maintenant <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                  </Button>
+                </div>
+                <div className="bg-primary/10 p-8 rounded-3xl group-hover:scale-110 transition-transform">
+                  <Sparkles className="h-20 w-20 text-primary opacity-50" />
+                </div>
+              </CardContent>
+              <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+            </Card>
+
+            <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
               <CardHeader className="bg-slate-50 border-b">
                 <CardTitle className="text-xl font-black text-slate-800">Détails personnels</CardTitle>
-                <CardDescription>Gérez vos informations de contact.</CardDescription>
+                <CardDescription>Gérez vos informations de contact et de sécurité.</CardDescription>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -128,18 +152,6 @@ export default function ProfilePage() {
                     <span className="text-sm font-bold">Compte vérifié et sécurisé</span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
-              <CardContent className="p-8 text-center space-y-4">
-                <div className="bg-primary/5 p-4 rounded-full w-fit mx-auto">
-                  <Settings className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-black text-slate-900">Bientôt plus d'options</h3>
-                <p className="text-slate-500 max-w-sm mx-auto">
-                  Nous travaillons sur la gestion des réservations et des préférences directement depuis votre profil.
-                </p>
               </CardContent>
             </Card>
           </div>
@@ -176,8 +188,4 @@ function InfoField({ label, value, icon }: { label: string, value: string, icon:
       </div>
     </div>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }

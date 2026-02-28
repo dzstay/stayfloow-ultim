@@ -1,8 +1,9 @@
+
 "use client";
 
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { LogOut, User as UserIcon, LayoutDashboard, HelpCircle, ChevronDown } from "lucide-react";
+import { LogOut, User as UserIcon, LayoutDashboard, HelpCircle, ChevronDown, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/context/language-context";
 import { useCurrency } from "@/context/currency-context";
 import { useEffect, useState } from "react";
@@ -18,6 +19,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+
+const ADMIN_EMAIL = "stayflow2025@gmail.com";
 
 export function Header() {
   const { t, locale, setLocale, getLocaleDetails, availableLocales } = useLanguage();
@@ -46,6 +49,7 @@ export function Header() {
   }
 
   const currencies = ["DZD", "EUR", "USD", "GBP", "CHF", "EGP"];
+  const isAdmin = user && user.email === ADMIN_EMAIL;
 
   return (
     <header className="sticky top-0 z-50 w-full bg-primary text-white shadow-md">
@@ -60,7 +64,6 @@ export function Header() {
         {/* Actions Droite */}
         <div className="flex items-center gap-2 md:gap-4">
           <div className="hidden md:flex items-center gap-2">
-            {/* DEVISE */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="text-sm font-bold hover:bg-white/10 px-3 py-2 rounded-md transition-colors flex items-center gap-2">
@@ -77,7 +80,6 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* LANGUE */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-1 hover:bg-white/10 px-2 py-2 rounded-md transition-colors">
@@ -97,12 +99,14 @@ export function Header() {
               <HelpCircle className="h-5 w-5" />
             </button>
 
-            {/* BOUTON PARTENAIRE DIRECT */}
-            <Button variant="ghost" className="text-sm font-bold hover:bg-white/10 px-3 py-2 rounded-md transition-colors" asChild>
-              <Link href="/partners/join">
-                {t("list_property")}
-              </Link>
-            </Button>
+            {/* BOUTON PARTENAIRE (Caché pour l'admin) */}
+            {!isAdmin && (
+              <Button variant="ghost" className="text-sm font-bold hover:bg-white/10 px-3 py-2 rounded-md transition-colors" asChild>
+                <Link href="/partners/join">
+                  {t("list_property")}
+                </Link>
+              </Button>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -113,8 +117,8 @@ export function Header() {
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 border-2 border-white/20 hover:border-white transition-colors">
                       <Avatar className="h-full w-full">
                         <AvatarImage src={user.photoURL || ""} />
-                        <AvatarFallback className="bg-white/10 text-white font-black">
-                          {user.displayName?.charAt(0) || "U"}
+                        <AvatarFallback className={cn("text-white font-black", isAdmin ? "bg-amber-500" : "bg-white/10")}>
+                          {user.displayName?.charAt(0) || user.email?.charAt(0).toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -122,17 +126,28 @@ export function Header() {
                   <DropdownMenuContent className="w-64 p-2 rounded-xl mt-2" align="end">
                     <DropdownMenuLabel className="font-normal p-4">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-black text-slate-900">{user.displayName || "Voyageur"}</p>
+                        <p className="text-sm font-black text-slate-900">{isAdmin ? "Administrateur" : (user.displayName || "Voyageur")}</p>
                         <p className="text-xs text-slate-400 truncate">{user.email}</p>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild className="font-bold py-2.5 cursor-pointer">
-                      <Link href="/profile"><UserIcon className="h-4 w-4 mr-3" /> {t("profile")}</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="font-bold py-2.5 cursor-pointer">
-                      <Link href="/partners/dashboard"><LayoutDashboard className="h-4 w-4 mr-3" /> {t("dashboard")}</Link>
-                    </DropdownMenuItem>
+                    
+                    {/* LIENS DÉPENDANT DU RÔLE */}
+                    {isAdmin ? (
+                      <DropdownMenuItem asChild className="font-bold py-2.5 cursor-pointer bg-primary/5 text-primary">
+                        <Link href="/admin"><ShieldCheck className="h-4 w-4 mr-3" /> Portail Admin</Link>
+                      </DropdownMenuItem>
+                    ) : (
+                      <>
+                        <DropdownMenuItem asChild className="font-bold py-2.5 cursor-pointer">
+                          <Link href="/profile"><UserIcon className="h-4 w-4 mr-3" /> Mon Profil</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="font-bold py-2.5 cursor-pointer">
+                          <Link href="/partners/dashboard"><LayoutDashboard className="h-4 w-4 mr-3" /> Espace Partenaire</Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="font-bold py-2.5 text-red-600 cursor-pointer">
                       <LogOut className="h-4 w-4 mr-3" /> {t("logout")}

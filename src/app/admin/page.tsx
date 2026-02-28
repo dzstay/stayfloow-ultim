@@ -4,26 +4,26 @@
 import React, { useState, useEffect } from "react";
 import { 
   LayoutDashboard, Calendar, Building, Car, Compass, Users, 
-  MessageSquare, BarChart3, Settings, Search, Bell, 
-  ArrowUpRight, ArrowDownRight, CheckCircle2, XCircle, 
-  Clock, Euro, Percent, UserPlus, ShieldCheck, Download,
-  ExternalLink, Trash2, Edit3, MoreVertical, Puzzle, Zap, ShieldAlert,
-  Loader2
+  BarChart3, Settings, 
+  CheckCircle2, 
+  Clock, Euro, Puzzle, 
+  Loader2,
+  TrendingUp,
+  Plus
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, Line 
+  Tooltip, ResponsiveContainer 
 } from 'recharts';
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useUser, useFirestore, useCollection } from "@/firebase";
-import { collection, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
-// Email autorisé pour l'admin (à changer par le vôtre)
 const ADMIN_EMAIL = "stayflow2025@gmail.com";
 
 const chartData = [
@@ -46,10 +46,15 @@ export default function AdminDashboardMaster() {
   const listingsRef = collection(db, 'listings');
   const { data: listings, loading: listingsLoading } = useCollection(listingsRef);
 
-  // Protection de la page
+  // Protection stricte de la page Admin
   useEffect(() => {
-    if (!authLoading && (!user || user.email !== ADMIN_EMAIL)) {
-      router.push("/auth/login");
+    if (!authLoading) {
+      if (!user) {
+        router.push("/auth/login");
+      } else if (user.email !== ADMIN_EMAIL) {
+        // Redirige les clients/partenaires vers leur profil s'ils tentent d'accéder à /admin
+        router.push("/profile");
+      }
     }
   }, [user, authLoading, router]);
 
@@ -64,7 +69,9 @@ export default function AdminDashboardMaster() {
     );
   }
 
-  // Calcul des statistiques réelles
+  // Ne rien rendre si l'utilisateur n'est pas l'admin (en cours de redirection)
+  if (!user || user.email !== ADMIN_EMAIL) return null;
+
   const totalListings = listings?.length || 0;
   const pendingCount = listings?.filter(l => l.status === 'pending').length || 0;
   const approvedCount = listings?.filter(l => l.status === 'approved').length || 0;
@@ -72,7 +79,6 @@ export default function AdminDashboardMaster() {
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex flex-col font-sans text-slate-700">
-      {/* HEADER TABS */}
       <header className="bg-slate-800 text-white flex items-center h-16 shadow-lg z-50">
         <div className="w-64 flex items-center justify-center border-r border-slate-700 h-full">
           <Link href="/" className="flex items-center gap-2">
@@ -87,35 +93,31 @@ export default function AdminDashboardMaster() {
           <HeaderTab icon={<Puzzle />} label="Extensions" active={activeTab === 'extensions'} onClick={() => setActiveTab('extensions')} />
         </nav>
         <div className="px-6 flex items-center gap-4 border-l border-slate-700 h-full">
-          <Badge className="bg-green-600 border-none font-black text-[10px]">SERVEUR ACTIF</Badge>
+          <Badge className="bg-green-600 border-none font-black text-[10px]">ADMIN CONNECTÉ</Badge>
           <div className="h-8 w-8 rounded-full bg-primary border-2 border-primary/20 flex items-center justify-center font-black text-xs">AD</div>
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* SIDEBAR */}
         <aside className="w-64 bg-slate-800 text-slate-300 flex flex-col border-r border-slate-700 shrink-0 shadow-2xl">
           <div className="flex-1 py-6">
             <SidebarItem icon={<LayoutDashboard />} label="Tableau de Bord" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
             <SidebarItem icon={<Calendar />} label="Réservations" active={activeTab === 'bookings'} onClick={() => setActiveTab('bookings')} />
             <SidebarItem icon={<Puzzle />} label="Extensions" active={activeTab === 'extensions'} onClick={() => setActiveTab('extensions')} />
             <div className="my-4 border-t border-slate-700 mx-4" />
-            <SidebarItem icon={<Users />} label="Utilisateurs" />
-            <SidebarItem icon={<UserPlus />} label="Partenaires" />
-            <SidebarItem icon={<BarChart3 />} label="Rapports" />
-            <SidebarItem icon={<Settings />} label="Paramètres" />
+            <SidebarItem icon={<Users />} label="Clients & Voyageurs" />
+            <SidebarItem icon={<Building />} label="Partenaires Hôtes" />
+            <SidebarItem icon={<BarChart3 />} label="Rapports Financiers" />
+            <SidebarItem icon={<Settings />} label="Paramètres Système" />
           </div>
           <div className="p-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center border-t border-slate-700">
             StayFloow Engine v3.2
           </div>
         </aside>
 
-        {/* MAIN CONTENT */}
         <main className="flex-1 overflow-y-auto p-8 space-y-8">
-          
           {activeTab === 'dashboard' && (
             <>
-              {/* KPI ROW */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KpiCard title="Total Annonces" value={totalListings.toString()} icon={<Building />} color="blue" sub="Gérer le parc" />
                 <KpiCard title="Revenus Est." value={`${estimatedRevenue.toLocaleString()} DA`} icon={<Euro />} color="dark-blue" sub="Voir Rapport" />
@@ -123,10 +125,9 @@ export default function AdminDashboardMaster() {
                 <KpiCard title="Approuvées" value={approvedCount.toString()} icon={<CheckCircle2 />} color="green" sub="Analyses" />
               </div>
 
-              {/* TRENDS CHART */}
               <Card className="border-none shadow-sm rounded-none">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest">Tendances de Réservation</CardTitle>
+                  <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest">Performances Plateforme</CardTitle>
                   <Badge variant="outline" className="font-bold border-slate-200">Année 2026</Badge>
                 </CardHeader>
                 <CardContent className="h-[300px] w-full pt-4">
@@ -148,7 +149,6 @@ export default function AdminDashboardMaster() {
                 </CardContent>
               </Card>
 
-              {/* MANAGEMENT GRIDS */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <ManagementBlock 
                   title="Gestion Hébergements" 
@@ -184,70 +184,37 @@ export default function AdminDashboardMaster() {
           {activeTab === 'extensions' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
               <div className="flex flex-col gap-2">
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight">StayFloow App Marketplace</h2>
-                <p className="text-slate-500 font-medium">Téléchargez et installez des extensions pour booster votre plateforme.</p>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">StayFloow Marketplace</h2>
+                <p className="text-slate-500 font-medium">Installez de nouveaux modules pour étendre les capacités de la plateforme.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <ExtensionCard 
-                  title="Paiement BaridiMob / CCP" 
-                  desc="Intégration native des paiements locaux algériens pour vos partenaires." 
+                  title="Paiement BaridiMob" 
+                  desc="Intégration native des paiements Algérie Poste pour vos partenaires locaux." 
                   status="installed"
                   icon={<Euro className="h-8 w-8" />}
                 />
                 <ExtensionCard 
                   title="Optimiseur SEO Pro" 
-                  desc="Générez automatiquement des balises méta pour chaque nouvelle annonce via l'IA." 
+                  desc="Générez automatiquement des méta-données via l'IA pour chaque annonce." 
                   status="available"
-                  icon={<Zap className="h-8 w-8" />}
+                  icon={<TrendingUp className="h-8 w-8" />}
                 />
                 <ExtensionCard 
-                  title="Analytics Avancé" 
-                  desc="Suivi précis des comportements utilisateurs et heatmaps thermiques." 
+                  title="Module Support 24/7" 
+                  desc="Activez le chat en direct entre clients et partenaires." 
                   status="available"
-                  icon={<BarChart3 className="h-8 w-8" />}
-                />
-                <ExtensionCard 
-                  title="Module Assurance Voyage" 
-                  desc="Proposez une assurance automatique lors de chaque réservation." 
-                  status="available"
-                  icon={<ShieldCheck className="h-8 w-8" />}
-                />
-                <ExtensionCard 
-                  title="Traducteur IA Automatique" 
-                  desc="Traduisez instantanément les annonces partenaires en 4 langues." 
-                  status="installed"
-                  icon={<Globe className="h-8 w-8" />}
+                  icon={<Users className="h-8 w-8" />}
                 />
               </div>
             </div>
           )}
-
-          {activeTab === 'bookings' && (
-            <div className="space-y-6 animate-in fade-in">
-               <Card className="border-none shadow-xl rounded-2xl">
-                  <CardHeader className="bg-slate-50 border-b">
-                    <CardTitle className="text-lg font-black">Historique Global des Réservations</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-300">
-                      <Calendar className="h-20 w-20 opacity-20 mb-4" />
-                      <p className="font-bold">Aucune réservation à afficher pour cette période.</p>
-                    </div>
-                  </CardContent>
-               </Card>
-            </div>
-          )}
-
         </main>
       </div>
     </div>
   );
 }
-
-/* ------------------------------------------------------------------
-   COMPOSANTS INTERNES
--------------------------------------------------------------------*/
 
 function HeaderTab({ icon, label, active = false, onClick }: { icon: any, label: string, active?: boolean, onClick: () => void }) {
   return (
@@ -349,7 +316,7 @@ function ExtensionCard({ title, desc, status, icon }: { title: string, desc: str
           {status === 'installed' ? (
             <Badge className="bg-green-600 border-none font-black text-[10px]">INSTALLÉ</Badge>
           ) : (
-            <Badge variant="outline" className="text-slate-400 border-slate-200 text-[10px]">MODULE</Badge>
+            <Badge variant="outline" className="text-slate-400 border-slate-200 text-[10px]">DISPONIBLE</Badge>
           )}
         </div>
         <div className="space-y-2">
@@ -360,7 +327,7 @@ function ExtensionCard({ title, desc, status, icon }: { title: string, desc: str
           "w-full h-12 font-black rounded-xl",
           status === 'installed' ? "bg-slate-100 text-slate-400" : "bg-primary hover:bg-primary/90 text-white"
         )}>
-          {status === 'installed' ? "Gérer l'application" : "Installer maintenant"}
+          {status === 'installed' ? "Gérer" : "Installer"}
         </Button>
       </CardContent>
     </Card>

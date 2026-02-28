@@ -3,15 +3,16 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin } from 'lucide-react';
+import { MapPin, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AdvancedSearchBar from '@/components/search/AdvancedSearchBar';
 import { useLanguage } from '@/context/language-context';
 import { useCurrency } from '@/context/currency-context';
 import { useEffect, useState, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { properties } from '@/lib/data';
 
-// Chargement dynamique des composants lourds
+// Chargement dynamique pour la performance
 const AiRecommender = dynamic(() => import('@/components/ai-recommender').then(mod => mod.AiRecommender), {
   ssr: false,
   loading: () => <Skeleton className="w-full h-[400px] rounded-[2.5rem]" />
@@ -38,111 +39,126 @@ export function HomeClient() {
     { name: 'Villas', image: 'https://picsum.photos/seed/villa/400/300', count: '450,123' },
   ];
 
-  const uniqueStays = [
-    { id: 'prop-1', name: 'Riad Dar Al-Andalus', location: 'Fès, Maroc', rating: 9.8, price: 12500, image: 'https://picsum.photos/seed/unique1/400/500' },
-    { id: 'prop-2', name: 'Desert Cave Hotel', location: 'Ghardaïa, Algérie', rating: 9.5, price: 8500, image: 'https://picsum.photos/seed/unique2/400/500' },
-    { id: 'prop-3', name: 'Nile Floating Palace', location: 'Louxor, Égypte', rating: 9.6, price: 15000, image: 'https://picsum.photos/seed/unique3/400/500' },
-    { id: 'prop-4', name: 'Royal Algerian Tent', location: 'Timimoun, Algérie', rating: 9.7, price: 11000, image: 'https://picsum.photos/seed/unique4/400/500' },
-  ];
+  const uniqueStays = properties.slice(0, 4);
 
-  if (!isClient) return (
-    <div className="flex flex-col min-h-screen bg-background animate-pulse">
-      <div className="bg-primary h-96 w-full" />
-    </div>
-  );
+  if (!isClient) return <div className="min-h-screen bg-slate-50 animate-pulse" />;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="bg-primary text-white pt-16 pb-36 px-6 relative overflow-hidden">
+      {/* Hero Section Premium */}
+      <section className="bg-primary text-white pt-16 pb-40 px-6 relative overflow-hidden">
         <div className="max-w-7xl mx-auto space-y-6 relative z-10">
-          <h1 className="text-5xl md:text-6xl font-black tracking-tighter max-w-3xl leading-tight">
+          <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest backdrop-blur-sm">
+            <Sparkles className="h-4 w-4 text-secondary" /> {t("exclusive_offers") || "Offres Exclusives 2026"}
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black tracking-tighter max-w-4xl leading-[0.95]">
             {t("hero_title")}
           </h1>
-          <p className="text-xl md:text-2xl font-medium opacity-90 max-w-2xl">
+          <p className="text-xl md:text-2xl font-medium opacity-90 max-w-2xl leading-relaxed">
             {t("hero_subtitle")}
           </p>
-          <div className="pt-4">
-            <Button size="lg" className="bg-white text-primary hover:bg-slate-100 font-bold px-8 h-14 rounded-md shadow-xl border-none" asChild>
-              <Link href="/auth/login">{t("hero_cta")}</Link>
+          <div className="pt-6 flex flex-wrap gap-4">
+            <Button size="lg" className="bg-white text-primary hover:bg-slate-100 font-black px-10 h-16 rounded-xl shadow-2xl border-none text-lg transition-all active:scale-95" asChild>
+              <Link href="/auth/register">{t("hero_cta")}</Link>
+            </Button>
+            <Button size="lg" variant="ghost" className="text-white hover:bg-white/10 font-black px-8 h-16 rounded-xl text-lg" asChild>
+              <Link href="/circuits">Explorer les circuits</Link>
             </Button>
           </div>
         </div>
-        <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+        {/* Décoration de fond */}
+        <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[120px]" />
+        <div className="absolute top-20 left-1/2 w-96 h-96 bg-white/5 rounded-full blur-[100px]" />
       </section>
 
-      {/* Container de la barre de recherche */}
-      <div className="max-w-7xl mx-auto w-full px-6 -mt-28 z-30 mb-12">
-        <AdvancedSearchBar />
+      {/* Barre de Recherche Avancée */}
+      <div className="max-w-7xl mx-auto w-full px-6 -mt-20 z-30 mb-20">
+        <div className="bg-white p-2 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-4 border-white">
+          <AdvancedSearchBar />
+        </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-6 pb-20 w-full">
-        {/* Section 1 : Types d'hébergement */}
-        <section className="mb-20">
-          <h2 className="text-2xl font-black mb-6 text-slate-900 tracking-tight">{t("property_types_title")}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <main className="max-w-7xl mx-auto px-6 pb-24 w-full">
+        {/* Types d'hébergement */}
+        <section className="mb-24">
+          <div className="flex justify-between items-end mb-10">
+            <div>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">{t("property_types_title")}</h2>
+              <p className="text-slate-500 font-medium mt-2">Découvrez l'Afrique sous toutes ses formes</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {propertyTypes.map((type) => (
-              <Link key={type.name} href={`/search?type=${type.name.toLowerCase()}`} className="group space-y-3">
-                <div className="relative aspect-[4/3] rounded-lg overflow-hidden shadow-sm">
+              <Link key={type.name} href={`/search?type=${type.name.toLowerCase()}`} className="group block">
+                <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden shadow-xl border-4 border-white mb-4 transition-all group-hover:shadow-2xl group-hover:-translate-y-2">
                   <Image 
                     src={type.image} 
                     alt={type.name} 
                     fill 
-                    className="object-cover group-hover:scale-105 transition-transform duration-500" 
-                    loading="lazy"
+                    className="object-cover group-hover:scale-110 transition-transform duration-700" 
                   />
                 </div>
-                <div>
-                  <h3 className="font-bold text-base text-slate-900 group-hover:underline">{type.name}</h3>
-                  <p className="text-xs text-slate-500">{type.count} établissements</p>
-                </div>
+                <h3 className="font-black text-xl text-slate-900 group-hover:text-primary transition-colors">{type.name}</h3>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{type.count} établissements</p>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* Section 2 : Hébergements uniques */}
-        <section className="mb-20">
-          <div className="mb-8">
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">{t("unique_stays_title")}</h2>
-            <p className="text-slate-500 font-medium mt-1">{t("unique_stays_desc")}</p>
+        {/* Hébergements uniques */}
+        <section className="mb-24">
+          <div className="bg-slate-900 rounded-[3rem] p-12 text-white relative overflow-hidden mb-12 shadow-2xl">
+            <div className="relative z-10">
+              <h2 className="text-4xl font-black tracking-tight">{t("unique_stays_title")}</h2>
+              <p className="text-white/60 font-medium mt-2 max-w-xl text-lg">{t("unique_stays_desc")}</p>
+            </div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -mr-20 -mt-20" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
             {uniqueStays.map((stay) => (
-              <Link key={stay.id} href={`/properties/${stay.id}`} className="group block">
-                <div className="relative aspect-square rounded-xl overflow-hidden mb-3 shadow-md">
+              <Link key={stay.id} href={`/properties/${stay.id}`} className="group block bg-white p-4 rounded-[2.5rem] shadow-lg border border-slate-100 hover:shadow-2xl transition-all">
+                <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden mb-6 shadow-inner">
                   <Image 
-                    src={stay.image} 
+                    src={stay.images[0]} 
                     alt={stay.name} 
                     fill 
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
+                    className="object-cover group-hover:scale-110 transition-transform duration-700"
                   />
+                  <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg">STAYFLOOW SELECTION</div>
                 </div>
-                <h3 className="font-bold text-slate-900 truncate group-hover:text-primary transition-colors">{stay.name}</h3>
-                <p className="text-xs text-slate-500 flex items-center gap-1 mb-2"><MapPin className="h-3 w-3" /> {stay.location}</p>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="bg-primary text-white text-[10px] font-black h-6 w-6 flex items-center justify-center rounded">
-                    {stay.rating}
+                <div className="px-2">
+                  <h3 className="font-black text-xl text-slate-900 truncate group-hover:text-primary transition-colors">{stay.name}</h3>
+                  <p className="text-sm text-slate-400 font-bold flex items-center gap-1.5 mt-1 mb-4 uppercase tracking-tighter">
+                    <MapPin className="h-3.5 w-3.5 text-primary" /> {stay.location}
+                  </p>
+                  
+                  <div className="flex justify-between items-end pt-4 border-t border-slate-50">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-primary text-white text-xs font-black h-8 w-8 flex items-center justify-center rounded-xl shadow-md">
+                        {stay.rating}
+                      </div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase">Top</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-slate-400 font-black uppercase">{t("from_price")}</p>
+                      <p className="text-2xl font-black text-primary tracking-tighter">{formatPrice(stay.price)}</p>
+                    </div>
                   </div>
-                  <span className="text-xs font-bold text-slate-700">Exceptionnel</span>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-slate-400 font-bold uppercase">{t("from_price")}</p>
-                  <p className="text-xl font-black text-slate-900">{formatPrice(stay.price)}</p>
                 </div>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* Sections chargées de manière asynchrone */}
-        <Suspense fallback={<Skeleton className="w-full h-[600px] rounded-[2.5rem]" />}>
+        {/* Recommandations Personnalisées IA */}
+        <Suspense fallback={<Skeleton className="w-full h-[600px] rounded-[3rem]" />}>
           <PersonalizedRecommendations />
         </Suspense>
 
-        <section className="mb-20 mt-32">
-          <Suspense fallback={<Skeleton className="w-full h-[400px] rounded-[2.5rem]" />}>
+        {/* L'Expert IA Recommender */}
+        <section className="mt-32">
+          <Suspense fallback={<Skeleton className="w-full h-[450px] rounded-[3rem]" />}>
             <AiRecommender />
           </Suspense>
         </section>

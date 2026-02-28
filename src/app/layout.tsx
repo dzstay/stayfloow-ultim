@@ -1,4 +1,3 @@
-
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -9,7 +8,7 @@ import { Header } from '@/components/Header';
 import { ChatLoader } from '@/components/chat-loader';
 import ClientProviders from '@/components/client-providers';
 
-// Configuration de la police Inter via Next.js pour de meilleures performances
+// Optimisation des polices locale via Next.js
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
@@ -28,9 +27,6 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'default',
     title: 'StayFloow',
-  },
-  formatDetection: {
-    telephone: true,
   },
 };
 

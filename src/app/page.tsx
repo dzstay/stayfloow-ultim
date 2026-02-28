@@ -1,9 +1,8 @@
 import { HomeClient } from '@/components/home-client';
 
 /**
- * Page racine de StayFloow.com.
- * Implémentée en tant que Server Component pour un routage et un SEO optimisés.
- * Les interactions sont gérées par le composant client HomeClient.
+ * Page racine de StayFloow.com (Version Locale Master).
+ * Implémentée en tant que Server Component pour un SEO et une vitesse de build optimisés.
  */
 export default function Home() {
   return <HomeClient />;

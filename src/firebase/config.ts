@@ -1,9 +1,9 @@
 
 export const firebaseConfig = {
-  apiKey: "placeholder-api-key",
-  authDomain: "stayfloow-app.firebaseapp.com",
-  projectId: "stayfloow-app",
-  storageBucket: "stayfloow-app.appspot.com",
-  messagingSenderId: "placeholder-id",
-  appId: "placeholder-app-id"
+  apiKey: "AIzaSyDLdtOPl-gsVa6zcF1w09qVViYVXJMa-Sk",
+  authDomain: "studio-6933176808-a0512.firebaseapp.com",
+  projectId: "studio-6933176808-a0512",
+  storageBucket: "studio-6933176808-a0512.firebasestorage.app",
+  messagingSenderId: "100515649484",
+  appId: "1:100515649484:web:ad8073cf17e05af4dcef69"
 };

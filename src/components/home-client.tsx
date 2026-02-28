@@ -1,4 +1,3 @@
-
 "use client";
 
 import dynamic from 'next/dynamic';
@@ -13,7 +12,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { properties } from '@/lib/data';
 
-// Chargement dynamique pour la performance
+// Optimisation : Chargement différé des composants non critiques
 const AiRecommender = dynamic(() => import('@/components/ai-recommender').then(mod => mod.AiRecommender), {
   ssr: false,
   loading: () => <Skeleton className="w-full h-[400px] rounded-[2.5rem]" />
@@ -21,7 +20,7 @@ const AiRecommender = dynamic(() => import('@/components/ai-recommender').then(m
 
 const PersonalizedRecommendations = dynamic(() => import('@/components/personalized-recommendations').then(mod => mod.PersonalizedRecommendations), {
   ssr: false,
-  loading: () => <div className="space-y-8 py-12"><Skeleton className="w-full h-[300px]" /><Skeleton className="w-full h-[300px]" /></div>
+  loading: () => <div className="space-y-12 py-12"><Skeleton className="w-full h-[300px]" /><Skeleton className="w-full h-[300px]" /></div>
 });
 
 export function HomeClient() {
@@ -45,7 +44,7 @@ export function HomeClient() {
   if (!isClient) return <div className="min-h-screen bg-slate-50 animate-pulse" />;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background page-fade-in">
       {/* Hero Section Premium */}
       <section className="bg-primary text-white pt-16 pb-48 px-6 relative overflow-hidden">
         <div className="max-w-7xl mx-auto space-y-6 relative z-10 text-center md:text-left">
@@ -59,7 +58,7 @@ export function HomeClient() {
             {t("hero_subtitle")}
           </p>
         </div>
-        {/* Décoration de fond */}
+        {/* Décoration de fond optimisée */}
         <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[120px]" />
         <div className="absolute top-20 left-1/2 w-96 h-96 bg-white/5 rounded-full blur-[100px]" />
       </section>
@@ -88,6 +87,7 @@ export function HomeClient() {
                     src={type.image} 
                     alt={type.name} 
                     fill 
+                    sizes="(max-width: 768px) 50vw, 25vw"
                     className="object-cover group-hover:scale-110 transition-transform duration-700" 
                   />
                 </div>
@@ -116,6 +116,7 @@ export function HomeClient() {
                     src={stay.images[0]} 
                     alt={stay.name} 
                     fill 
+                    sizes="(max-width: 768px) 100vw, 25vw"
                     className="object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg">STAYFLOOW SELECTION</div>
@@ -144,12 +145,12 @@ export function HomeClient() {
           </div>
         </section>
 
-        {/* Recommandations Personnalisées IA */}
+        {/* Recommandations Personnalisées IA - Lazy Loaded */}
         <Suspense fallback={<Skeleton className="w-full h-[600px] rounded-[3rem]" />}>
           <PersonalizedRecommendations />
         </Suspense>
 
-        {/* L'Expert IA Recommender */}
+        {/* L'Expert IA Recommender - Lazy Loaded */}
         <section className="mt-32">
           <Suspense fallback={<Skeleton className="w-full h-[450px] rounded-[3rem]" />}>
             <AiRecommender />

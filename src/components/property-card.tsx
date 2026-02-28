@@ -23,12 +23,13 @@ export function PropertyCard({ property, viewMode = "list" }: PropertyCardProps)
 
   if (viewMode === "grid") {
     return (
-      <div className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow group flex flex-col">
+      <div className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow group flex flex-col page-fade-in">
         <div className="relative aspect-[4/3] w-full">
           <Image 
             src={property.images[0] || 'https://picsum.photos/seed/stay/400/300'} 
             alt={property.name} 
             fill 
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
             className="object-cover"
           />
           <button 
@@ -67,13 +68,14 @@ export function PropertyCard({ property, viewMode = "list" }: PropertyCardProps)
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-md overflow-hidden flex flex-col md:flex-row hover:shadow-md transition-shadow group p-4 gap-4">
+    <div className="bg-white border border-slate-200 rounded-md overflow-hidden flex flex-col md:flex-row hover:shadow-md transition-shadow group p-4 gap-4 page-fade-in">
       {/* Photo (Exact 200x150 sur desktop) */}
       <div className="relative w-full md:w-[240px] h-[180px] shrink-0 rounded-md overflow-hidden">
         <Image 
           src={property.images[0] || 'https://picsum.photos/seed/stay/400/300'} 
           alt={property.name} 
           fill 
+          sizes="(max-width: 768px) 100vw, 240px"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <button 
@@ -144,7 +146,7 @@ export function PropertyCard({ property, viewMode = "list" }: PropertyCardProps)
           <p className="text-[11px] text-slate-500 mt-1">Taxes et frais compris</p>
         </div>
         <Link href={`/properties/${property.id}`} className="w-full">
-          <Button className="w-full bg-[#10B981] hover:bg-[#059669] text-white font-bold h-10 rounded-md group/btn flex items-center justify-between px-4">
+          <Button className="w-full bg-[#10B981] hover:bg-[#059669] text-white font-black h-10 rounded-md group/btn flex items-center justify-between px-4">
             Voir les disponibilités
             <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
           </Button>

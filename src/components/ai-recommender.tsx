@@ -41,9 +41,12 @@ export function AiRecommender() {
         details.bathroomsCount ? `${details.bathroomsCount} SDB` : null,
         details.livingRoomsCount ? `${details.livingRoomsCount} salons` : null,
         details.gardensCount ? `${details.gardensCount} jardins` : null,
+        details.singleRoomsCount ? `${details.singleRoomsCount} chambres seules` : null,
+        details.parentalSuitesCount ? `${details.parentalSuitesCount} suites parentales King Size` : null,
+        details.doubleRoomsCount ? `${details.doubleRoomsCount} chambres doubles` : null,
       ].filter(Boolean).join(', ');
 
-      return `- ${details.name} (${l.category}): ${details.description}. Composition: ${composition || 'Non spécifiée'}. Prix: ${l.price} DZD. Lieu: ${l.location?.address}`;
+      return `- ${details.name} (${l.category}/${details.propertyType}): ${details.description}. Composition: ${composition || 'Non spécifiée'}. Prix: ${l.price} DZD. Lieu: ${l.location?.address}`;
     }).join('\n');
   }, [listings]);
 
@@ -97,11 +100,11 @@ export function AiRecommender() {
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-4">
             <Label htmlFor="preferences" className="font-black text-slate-700 uppercase text-xs tracking-widest ml-2">
-              Décrivez vos envies (ex: "Une villa pour 6 avec piscine et 2 jardins à Alger")
+              Décrivez vos envies (ex: "Un hôtel avec une suite King Size et petit-déjeuner à Alger")
             </Label>
             <Textarea
               id="preferences"
-              placeholder="Je cherche un circuit dans le désert avec guide parlant français et un hébergement typique avec salon et jardin..."
+              placeholder="Je cherche un hôtel avec des suites parentales King Size et un jardin..."
               value={userPreferences}
               onChange={(e) => setUserPreferences(e.target.value)}
               className="min-h-[150px] rounded-3xl border-slate-200 focus:border-primary transition-all text-lg p-6 shadow-inner bg-slate-50/50"

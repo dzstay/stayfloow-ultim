@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { 
   Building, Car, Compass, MapPin, Upload, CheckCircle2, 
-  Loader2, Wand2, X, Plus, Minus, Users, Home, Bed, Bath, Utensils, Fuel, Gauge, Calendar as CalendarIcon, Clock, Globe, Sofa, Trees
+  Loader2, Wand2, X, Plus, Minus, Users, Home, Bed, Bath, Utensils, Fuel, Gauge, Calendar as CalendarIcon, Clock, Globe, Sofa, Trees, Star
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generatePartnerDescription } from '@/ai/flows/partner-description-generator';
@@ -52,6 +52,10 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     toiletsCount: 1,
     livingRoomsCount: 0,
     gardensCount: 0,
+    // Hotel specific room types
+    singleRoomsCount: 0,
+    parentalSuitesCount: 0,
+    doubleRoomsCount: 0,
     // Car fields
     brand: '',
     model: '',
@@ -129,6 +133,11 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
             toiletsCount: formData.toiletsCount,
             livingRoomsCount: formData.livingRoomsCount,
             gardensCount: formData.gardensCount,
+            ...(formData.propertyType === 'hotel' ? {
+              singleRoomsCount: formData.singleRoomsCount,
+              parentalSuitesCount: formData.parentalSuitesCount,
+              doubleRoomsCount: formData.doubleRoomsCount,
+            } : {})
           } : initialCategory === 'car_rental' ? {
             brand: formData.brand,
             model: formData.model,
@@ -398,7 +407,21 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
           </RadioGroup>
         </div>
 
-        {/* Composition du logement */}
+        {/* Configuration des chambres (HÔTEL UNIQUEMENT) */}
+        {formData.propertyType === 'hotel' && (
+          <div className="space-y-6 animate-in zoom-in-95">
+            <Label className="font-black text-lg flex items-center gap-2 text-primary">
+              <Star className="h-5 w-5 fill-primary" /> Configuration des chambres disponibles
+            </Label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-8 rounded-[2rem] border border-primary/10">
+              <CounterField icon={<Bed/>} label={t('single_rooms')} value={formData.singleRoomsCount} onChange={v => setFormData({...formData, singleRoomsCount: v})} />
+              <CounterField icon={<Star/>} label={t('parental_suites')} value={formData.parentalSuitesCount} onChange={v => setFormData({...formData, parentalSuitesCount: v})} />
+              <CounterField icon={<Users/>} label={t('double_rooms')} value={formData.doubleRoomsCount} onChange={v => setFormData({...formData, doubleRoomsCount: v})} />
+            </div>
+          </div>
+        )}
+
+        {/* Composition du logement (GÉNÉRAL) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
           <CounterField icon={<Bed/>} label={t('chambers')} value={formData.roomsCount} onChange={v => setFormData({...formData, roomsCount: v})} />
           <CounterField icon={<Bath/>} label={t('bathrooms')} value={formData.bathroomsCount} onChange={v => setFormData({...formData, bathroomsCount: v})} />

@@ -23,7 +23,7 @@ const translations: Record<string, Record<Locale, string>> = {
     "register": { fr: "S'inscrire", en: "Sign Up", ar: "إنشاء حساب", es: "Registrarse" },
     "profile": { fr: "Profil", en: "Profile", ar: "الملف الشخصي", es: "Perfil" },
     "dashboard": { fr: "Tableau de bord", en: "Dashboard", ar: "لوحة التحكم", es: "Panel" },
-    "logout": { fr: "Déconnexion", en: "Log Out", ar: "تسجيل الخروج", es: "Cerrar sesión" },
+    "logout": { fr: "Déconnexion", en: "Log Out", ar: "تسجيل الخروج", es: "Cerrار sesión" },
     "back": { fr: "Retour", en: "Back", ar: "رجوع", es: "Volver" },
     "continue": { fr: "Continuer", en: "Continue", ar: "استمرار", es: "Continuar" },
     "start": { fr: "Commencer", en: "Start", ar: "ابدأ", es: "Empezar" },
@@ -36,6 +36,9 @@ const translations: Record<string, Record<Locale, string>> = {
     "toilets": { fr: "Toilettes", en: "Toilets", ar: "مراحيض", es: "Aseos" },
     "living_rooms": { fr: "Salons", en: "Living Rooms", ar: "صالات", es: "Salones" },
     "gardens": { fr: "Jardins", en: "Gardens", ar: "حدائق", es: "Jardines" },
+    "single_rooms": { fr: "Chambres seules", en: "Single Rooms", ar: "غرف فردية", es: "Habitaciones individuales" },
+    "parental_suites": { fr: "Suites parentales King Size", en: "King Size Parental Suites", ar: "أجنحة ملكية", es: "Suites parentales King Size" },
+    "double_rooms": { fr: "Chambres doubles", en: "Double Rooms", ar: "غرف مزدوجة", es: "Habitaciones dobles" },
 
     // Circuit Specific Filters
     "Guide inclus (local arabe/français)": { fr: "Guide inclus (local arabe/français)", en: "Guide included (local Arabic/French)", ar: "دليل سياحي (عربي/فرنسي)", es: "Guía incluido (local árabe/francés)" },
@@ -67,7 +70,7 @@ const translations: Record<string, Record<Locale, string>> = {
     "Climatisation": { fr: "Climatisation", en: "Air Conditioning", ar: "تكييف هواء", es: "Aire acondicionado" },
     "Parking gratuit": { fr: "Parking gratuit", en: "Free Parking", ar: "موقف سيارات مجاني", es: "Parking gratis" },
     "Petit-déjeuner inclus": { fr: "Petit-déjeuner inclus", en: "Breakfast included", ar: "فطور شامل", es: "Desayuno incluido" },
-    "Piscine": { fr: "Piscine", en: "Swimming Pool", ar: "مسبح", es: "Piscina" },
+    "Piscine": { fr: "Piscine", en: "Swimming Pool", ar: "مسبح", es: "مسبح" },
     "Restaurant sur place": { fr: "Restaurant sur place", en: "On-site Restaurant", ar: "مطعم في الموقع", es: "Restaurante en el sitio" },
     "Réception 24h/24": { fr: "Réception 24h/24", en: "24-hour Front Desk", ar: "استقبال على مدار 24 ساعة", es: "Recepción 24 horas" },
     "Animaux domestiques acceptés": { fr: "Animaux domestiques acceptés", en: "Pets allowed", ar: "يسمح باصطحاب الحيوانات الأليفة", es: "Se admiten mascotas" },
@@ -144,7 +147,7 @@ const translations: Record<string, Record<Locale, string>> = {
     "contact": { fr: "Contact", en: "Contact", ar: "اتصل", es: "Contacto" },
     "legal": { fr: "Légal", en: "Legal", ar: "قانوني", es: "Legal" },
     "terms": { fr: "Conditions d'utilisation", en: "Terms of use", ar: "شروط الاستخدام", es: "Condiciones de uso" },
-    "privacy": { fr: "Confidentialité", en: "Privacy", ar: "الخصوصية", es: "Privacidad" },
+    "privacy": { fr: "Confidentialité", en: "Privacy", ar: "الخصوصية", es: "الخصوصية" },
     "partner_cta_title": { fr: "Référencez votre établissement sur StayFloow.com", en: "List your property on StayFloow.com", ar: "أدرج عقارك على StayFloow.com", es: "Registra tu establecimiento en StayFloow.com" },
     "partner_cta_desc": { fr: "Rejoignez des milliers de partenaires en Afrique et commencez à recevoir des réservations dès aujourd'hui.", en: "Join thousands of partners in Africa and start receiving bookings today.", ar: "انضم إلى آلاف الشركاء في إفريقيا وابدأ في تلقي الحجوزات اليوم.", es: "Únase a miles de socios en África y comience a recibir reservas hoy." },
 };

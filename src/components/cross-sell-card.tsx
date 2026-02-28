@@ -46,8 +46,8 @@ export function CrossSellCard({
     {
       type: "property" as const,
       title: `Trouver un hébergement`,
-      description: `Découvrez les meilleurs hôtels, appartements et villas à ${location} pour vous reposer.`,
-      href: `/search?location=${location}`,
+      description: `Découvrez les meilleurs hôtels, appartements et villas à ${location} pour vous reposer après vos aventures.`,
+      href: `/search?dest=${encodeURIComponent(location)}`,
       image: "https://picsum.photos/seed/cross-sell-property/800/600",
       imageHint: "hotel room interior",
       icon: BedDouble,
@@ -55,7 +55,7 @@ export function CrossSellCard({
     {
       type: "car" as const,
       title: "Louer une voiture",
-      description: `Déplacez-vous en toute liberté et découvrez ${location} et ses alentours à votre propre rythme.`,
+      description: `Déplacez-vous en toute liberté et découvrez ${location} et ses alentours à votre propre rythme avec StayFloow.`,
       href: "/cars",
       image: "https://picsum.photos/seed/cross-sell-car/800/600",
       imageHint: "car driving scenic road",
@@ -65,7 +65,7 @@ export function CrossSellCard({
       type: "circuit" as const,
       title: "Réserver un circuit ou une activité",
       description:
-        "Laissez-vous guider par des experts locaux pour une expérience immersive et inoubliable.",
+        "Laissez-vous guider par des experts locaux certifiés StayFloow pour une expérience immersive inoubliable.",
       href: "/circuits",
       image: "https://picsum.photos/seed/cross-sell-tour/800/600",
       imageHint: "group hiking landscape",
@@ -79,63 +79,63 @@ export function CrossSellCard({
 
   const getCircuitLink = () => {
     const params = new URLSearchParams();
+    params.set("dest", location);
     if (circuitDates?.from) params.set("from", circuitDates.from.toISOString());
     if (circuitDates?.to) params.set("to", circuitDates.to.toISOString());
     if (participants > 0) params.set("participants", String(participants));
-    return `/circuits?${params.toString()}`;
+    return `/circuits/results?${params.toString()}`;
   };
 
   return (
-    <div className="space-y-8 mt-12 text-center border-t border-slate-100 pt-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+    <div className="space-y-10 mt-16 text-center border-t border-slate-100 pt-16 animate-in fade-in slide-in-from-bottom-8 duration-1000">
       <div className="space-y-3">
-        <h2 className="font-headline text-3xl font-black text-slate-900 tracking-tight">
+        <h2 className="font-headline text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
           Complétez Votre Séjour à {location}
         </h2>
-        <p className="text-slate-500 max-w-2xl mx-auto font-medium">
-          Maintenant que votre réservation est confirmée, pourquoi ne pas explorer
-          les environs avec ces offres exclusives ?
+        <p className="text-slate-500 max-w-2xl mx-auto font-medium text-lg">
+          Maintenant que votre réservation est confirmée, optimisez votre voyage avec nos offres exclusives.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto px-4">
         {filteredSuggestions.map((suggestion) => {
           const Icon = suggestion.icon;
 
           return (
             <Card
               key={suggestion.type}
-              className="overflow-hidden group text-left border-none shadow-xl rounded-3xl bg-white"
+              className="overflow-hidden group text-left border-none shadow-2xl rounded-[2.5rem] bg-white transition-all hover:shadow-primary/5"
             >
-              <div className="relative h-56 w-full overflow-hidden">
+              <div className="relative h-64 w-full overflow-hidden">
                 <Image
                   src={suggestion.image}
                   alt={suggestion.title}
                   fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="object-cover transition-transform duration-1000 group-hover:scale-110"
                   data-ai-hint={suggestion.imageHint}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-4 left-6 flex items-center gap-3 text-white">
-                   <div className="bg-primary p-2 rounded-xl shadow-lg">
-                      <Icon className="h-6 w-6 text-white" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                <div className="absolute bottom-6 left-8 flex items-center gap-4 text-white">
+                   <div className="bg-primary p-3 rounded-2xl shadow-xl">
+                      <Icon className="h-7 w-7 text-white" />
                    </div>
-                   <h3 className="font-headline text-xl font-black tracking-tight">
+                   <h3 className="font-headline text-2xl font-black tracking-tight leading-tight">
                     {suggestion.title}
                   </h3>
                 </div>
               </div>
 
-              <CardContent className="p-8 space-y-6">
-                <p className="text-slate-500 text-sm leading-relaxed font-medium">
+              <CardContent className="p-8 md:p-10 space-y-8">
+                <p className="text-slate-500 text-base leading-relaxed font-medium">
                   {suggestion.description}
                 </p>
 
                 {suggestion.type === "circuit" ? (
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Dates */}
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dates souhaitées</Label>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dates souhaitées</Label>
                         <Popover
                           open={isDatePopoverOpen}
                           onOpenChange={setIsDatePopoverOpen}
@@ -144,11 +144,11 @@ export function CrossSellCard({
                             <Button
                               variant="outline"
                               className={cn(
-                                "w-full h-12 justify-start text-left font-bold border-slate-200 rounded-xl",
+                                "w-full h-14 justify-start text-left font-bold border-slate-100 bg-slate-50 rounded-2xl transition-all hover:bg-white hover:border-primary",
                                 !circuitDates && "text-slate-400"
                               )}
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                              <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
                               {circuitDates?.from ? (
                                 circuitDates.to ? (
                                   <>
@@ -185,10 +185,10 @@ export function CrossSellCard({
                       </div>
 
                       {/* Participants */}
-                      <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Participants</Label>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombre de voyageurs</Label>
                         <div className="relative">
-                          <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                          <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
                           <Input
                             type="number"
                             value={participants}
@@ -196,23 +196,23 @@ export function CrossSellCard({
                               setParticipants(Math.max(1, Number(e.target.value)))
                             }
                             min={1}
-                            className="pl-10 h-12 border-slate-200 rounded-xl font-bold"
+                            className="pl-12 h-14 border-slate-100 bg-slate-50 rounded-2xl font-black text-lg focus:bg-white"
                           />
                         </div>
                       </div>
                     </div>
 
                     {/* CTA */}
-                    <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-black rounded-xl shadow-lg" asChild>
-                      <Link href={getCircuitLink()} className="flex items-center justify-center gap-2">
-                        Découvrir les circuits <ArrowRight className="h-4 w-4" />
+                    <Button className="w-full h-16 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95" asChild>
+                      <Link href={getCircuitLink()} className="flex items-center justify-center gap-3">
+                        Voir les disponibilités <ArrowRight className="h-5 w-5" />
                       </Link>
                     </Button>
                   </div>
                 ) : (
-                  <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-black rounded-xl shadow-lg" asChild>
-                    <Link href={suggestion.href} className="flex items-center justify-center gap-2">
-                      Explorer les offres <ArrowRight className="h-4 w-4" />
+                  <Button className="w-full h-16 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95" asChild>
+                    <Link href={suggestion.href} className="flex items-center justify-center gap-3">
+                      Explorer les offres <ArrowRight className="h-5 w-5" />
                     </Link>
                   </Button>
                 )}

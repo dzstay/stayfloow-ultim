@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -19,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CrossSellCard } from "@/components/cross-sell-card";
 
 export default function BookCarPage() {
   const router = useRouter();
@@ -32,10 +34,11 @@ export default function BookCarPage() {
   const [phone, setPhone] = useState("");
 
   const carId = searchParams.get('id') || 'mock';
+  const pickupLocation = searchParams.get('pickup') || "Alger, Algérie";
   const options = searchParams.get('options')?.split(',') || [];
 
   const basePrice = carId === 'mock-car-1' ? 7500 : 12000;
-  const days = 3;
+  const days = parseInt(searchParams.get('days') || '3');
   const optionsCost = options.length * 1500; // Simulation
   const total = (basePrice * days) + optionsCost;
 
@@ -46,23 +49,31 @@ export default function BookCarPage() {
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsSubmitting(false);
     setIsSuccess(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <Card className="max-w-md w-full border-none shadow-2xl rounded-[2.5rem] p-12 text-center bg-white animate-in zoom-in-95">
-          <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8">
-            <CheckCircle className="h-16 w-16 text-primary" />
-          </div>
-          <h1 className="text-3xl font-black text-slate-900 mb-4">Réservation Confirmée !</h1>
-          <p className="text-slate-500 mb-10 leading-relaxed">
-            Votre véhicule est réservé. Un email de confirmation contenant votre QR Code de retrait a été envoyé.
-          </p>
-          <Button className="w-full h-14 bg-primary text-white font-black rounded-xl text-lg shadow-xl" onClick={() => router.push('/')}>
-            Retour à l'accueil
-          </Button>
-        </Card>
+      <div className="min-h-screen bg-slate-50 py-20 px-6">
+        <div className="max-w-5xl mx-auto space-y-12">
+          <Card className="max-w-md w-full mx-auto border-none shadow-2xl rounded-[2.5rem] p-12 text-center bg-white animate-in zoom-in-95">
+            <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8">
+              <CheckCircle className="h-16 w-16 text-primary" />
+            </div>
+            <h1 className="text-3xl font-black text-slate-900 mb-4">Réservation Confirmée !</h1>
+            <p className="text-slate-500 mb-10 leading-relaxed text-lg font-medium">
+              Votre véhicule est réservé. Un email de confirmation contenant votre QR Code de retrait a été envoyé.
+            </p>
+            <Button className="w-full h-14 bg-primary text-white font-black rounded-xl text-lg shadow-xl" onClick={() => router.push('/')}>
+              Retour à l'accueil
+            </Button>
+          </Card>
+
+          <CrossSellCard 
+            location={pickupLocation.split(',')[0].trim()} 
+            bookedItemType="car" 
+          />
+        </div>
       </div>
     );
   }

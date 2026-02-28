@@ -57,14 +57,6 @@ export function HomeClient() {
           <p className="text-xl md:text-2xl font-medium opacity-90 max-w-2xl leading-relaxed">
             {t("hero_subtitle")}
           </p>
-          <div className="pt-6 flex flex-wrap gap-4">
-            <Button size="lg" className="bg-white text-primary hover:bg-slate-100 font-black px-10 h-16 rounded-xl shadow-2xl border-none text-lg transition-all active:scale-95" asChild>
-              <Link href="/auth/register">{t("hero_cta")}</Link>
-            </Button>
-            <Button size="lg" variant="ghost" className="text-white hover:bg-white/10 font-black px-8 h-16 rounded-xl text-lg" asChild>
-              <Link href="/circuits">Explorer les circuits</Link>
-            </Button>
-          </div>
         </div>
         {/* Décoration de fond */}
         <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[120px]" />

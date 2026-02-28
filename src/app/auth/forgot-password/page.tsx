@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import Link from 'link';
+import Link from 'next/link';
 import { KeyRound, Loader2, ArrowLeft } from 'lucide-react';
 import { sendPasswordResetEmail } from '@/lib/mail';
 import { useState } from 'react';

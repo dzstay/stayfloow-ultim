@@ -18,6 +18,7 @@ import { Loader2, Sparkles, Send, BrainCircuit } from "lucide-react";
 import { useCollection } from "@/firebase";
 import { collection, query, where, limit } from "firebase/firestore";
 import { getFirestore } from "@/firebase";
+import { Badge } from "./ui/badge";
 
 export function AiRecommender() {
   const [isPending, startTransition] = useTransition();
@@ -33,9 +34,17 @@ export function AiRecommender() {
 
   const siteContext = useMemo(() => {
     if (!listings) return "Aucune donnée disponible pour le moment.";
-    return listings.map(l => 
-      `- ${l.details?.name} (${l.category}): ${l.details?.description}. Composition: ${l.details?.roomsCount} chambres, ${l.details?.bathroomsCount} SDB. Prix: ${l.price} DZD. Lieu: ${l.location?.address}`
-    ).join('\n');
+    return listings.map(l => {
+      const details = l.details || {};
+      const composition = [
+        details.roomsCount ? `${details.roomsCount} chambres` : null,
+        details.bathroomsCount ? `${details.bathroomsCount} SDB` : null,
+        details.livingRoomsCount ? `${details.livingRoomsCount} salons` : null,
+        details.gardensCount ? `${details.gardensCount} jardins` : null,
+      ].filter(Boolean).join(', ');
+
+      return `- ${details.name} (${l.category}): ${details.description}. Composition: ${composition || 'Non spécifiée'}. Prix: ${l.price} DZD. Lieu: ${l.location?.address}`;
+    }).join('\n');
   }, [listings]);
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -88,11 +97,11 @@ export function AiRecommender() {
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-4">
             <Label htmlFor="preferences" className="font-black text-slate-700 uppercase text-xs tracking-widest ml-2">
-              Décrivez vos envies (ex: "Une villa pour 6 avec piscine à Alger")
+              Décrivez vos envies (ex: "Une villa pour 6 avec piscine et 2 jardins à Alger")
             </Label>
             <Textarea
               id="preferences"
-              placeholder="Je cherche un circuit dans le désert avec guide parlant français et un hébergement typique..."
+              placeholder="Je cherche un circuit dans le désert avec guide parlant français et un hébergement typique avec salon et jardin..."
               value={userPreferences}
               onChange={(e) => setUserPreferences(e.target.value)}
               className="min-h-[150px] rounded-3xl border-slate-200 focus:border-primary transition-all text-lg p-6 shadow-inner bg-slate-50/50"

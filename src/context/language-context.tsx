@@ -18,7 +18,7 @@ const translations: Record<string, Record<Locale, string>> = {
     "tours": { fr: "Circuits", en: "Tours & Activities", ar: "الجولات والأنشطة", es: "Tours y Actividades" },
     "tours_title": { fr: "Nos Circuits & Excursions", en: "Our Tours & Excursions", ar: "جولاتنا ورحلاتنا", es: "Nuestros Tours y Excursiones" },
     "tours_subtitle": { fr: "Explorez les merveilles de l'Afrique avec nos guides certifiés StayFloow.", en: "Explore the wonders of Africa with our certified StayFloow guides.", ar: "استكشف عجائب أفريقيا مع مرشدينا المعتمدين.", es: "Explore las maravillas de África con nuestros guías certificados." },
-    "list_property": { fr: "Listez votre bien", en: "List your property", ar: "أضف عقارك", es: "Publica tu propiedad" },
+    "list_property": { fr: "Listez votre bien", en: "List your property", ar: "أضف عقارك", es: "Publica tu propriété" },
     "login": { fr: "Se connecter", en: "Log In", ar: "تسجيل الدخول", es: "Iniciar sesión" },
     "register": { fr: "S'inscrire", en: "Sign Up", ar: "إنشاء حساب", es: "Registrarse" },
     "profile": { fr: "Profil", en: "Profile", ar: "الملف الشخصي", es: "Perfil" },
@@ -28,6 +28,14 @@ const translations: Record<string, Record<Locale, string>> = {
     "continue": { fr: "Continuer", en: "Continue", ar: "استمرار", es: "Continuar" },
     "start": { fr: "Commencer", en: "Start", ar: "ابدأ", es: "Empezar" },
     "help": { fr: "Aide", en: "Help", ar: "مساعدة", es: "Ayuda" },
+
+    // Composition
+    "chambers": { fr: "Chambres", en: "Bedrooms", ar: "غرف نوم", es: "Dormitorios" },
+    "bathrooms": { fr: "Salles de bain", en: "Bathrooms", ar: "حمامات", es: "Baños" },
+    "kitchens": { fr: "Cuisines", en: "Kitchens", ar: "مابخ", es: "Cocinas" },
+    "toilets": { fr: "Toilettes", en: "Toilets", ar: "مراحيض", es: "Aseos" },
+    "living_rooms": { fr: "Salons", en: "Living Rooms", ar: "صالات", es: "Salones" },
+    "gardens": { fr: "Jardins", en: "Gardens", ar: "حدائق", es: "Jardines" },
 
     // Circuit Specific Filters
     "Guide inclus (local arabe/français)": { fr: "Guide inclus (local arabe/français)", en: "Guide included (local Arabic/French)", ar: "دليل سياحي (عربي/فرنسي)", es: "Guía incluido (local árabe/francés)" },
@@ -110,7 +118,7 @@ const translations: Record<string, Record<Locale, string>> = {
     "pro_email": { fr: "Email professionnel", en: "Professional Email", ar: "البريد الإلكتروني المهني", es: "Email profesional" },
     "phone_whatsapp": { fr: "Numéro de téléphone (WhatsApp)", en: "Phone Number (WhatsApp)", ar: "رقم الهاتف (واتساب)", es: "Número de téléphone (WhatsApp)" },
     "commercial_name": { fr: "Nom commercial de l'annonce", en: "Listing Commercial Name", ar: "الاسم التجari للإعلان", es: "Nombre comercial del anuncio" },
-    "full_address": { fr: "Adresse complète", en: "Full Address", ar: "العنوان الكامل", es: "Dirección completa" },
+    "full_address": { fr: "Adresse complète", en: "Full Address", ar: "العنوان الكامل", es: "Dirección complète" },
     "map_preview": { fr: "Aperçu de la localisation", en: "Location Preview", ar: "معاينة الموقع", es: "Vista previa del mapa" },
     "map_hint": { fr: "* La carte s'ajuste automatiquement en fonction de la ville saisie.", en: "* Map adjusts automatically based on the city entered.", ar: "* الخريطة تتعدل تلقائياً حسب المدينة المدخلة.", es: "* El mapa se ajusta automáticamente según la ciudad introducida." },
     "listing_type_label": { fr: "Type d'offre", en: "Offer Type", ar: "نوع العرض", es: "Tipo de oferta" },

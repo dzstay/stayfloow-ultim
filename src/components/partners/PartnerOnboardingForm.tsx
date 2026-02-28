@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { 
   Building, Car, Compass, MapPin, Upload, CheckCircle2, 
-  Loader2, Wand2, X, Plus, Minus, Users, Home, Bed, Bath, Utensils, Fuel, Gauge, Calendar as CalendarIcon, Clock, Globe
+  Loader2, Wand2, X, Plus, Minus, Users, Home, Bed, Bath, Utensils, Fuel, Gauge, Calendar as CalendarIcon, Clock, Globe, Sofa, Trees
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generatePartnerDescription } from '@/ai/flows/partner-description-generator';
@@ -50,6 +50,8 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     bathroomsCount: 1,
     kitchensCount: 0,
     toiletsCount: 1,
+    livingRoomsCount: 0,
+    gardensCount: 0,
     // Car fields
     brand: '',
     model: '',
@@ -125,6 +127,8 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
             bathroomsCount: formData.bathroomsCount,
             kitchensCount: formData.kitchensCount,
             toiletsCount: formData.toiletsCount,
+            livingRoomsCount: formData.livingRoomsCount,
+            gardensCount: formData.gardensCount,
           } : initialCategory === 'car_rental' ? {
             brand: formData.brand,
             model: formData.model,
@@ -395,11 +399,13 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         </div>
 
         {/* Composition du logement */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
-          <CounterField icon={<Bed/>} label="Chambres" value={formData.roomsCount} onChange={v => setFormData({...formData, roomsCount: v})} />
-          <CounterField icon={<Bath/>} label="Salles de bain" value={formData.bathroomsCount} onChange={v => setFormData({...formData, bathroomsCount: v})} />
-          <CounterField icon={<Utensils/>} label="Cuisines" value={formData.kitchensCount} onChange={v => setFormData({...formData, kitchensCount: v})} />
-          <CounterField icon={<Users/>} label="Toilettes" value={formData.toiletsCount} onChange={v => setFormData({...formData, toiletsCount: v})} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+          <CounterField icon={<Bed/>} label={t('chambers')} value={formData.roomsCount} onChange={v => setFormData({...formData, roomsCount: v})} />
+          <CounterField icon={<Bath/>} label={t('bathrooms')} value={formData.bathroomsCount} onChange={v => setFormData({...formData, bathroomsCount: v})} />
+          <CounterField icon={<Utensils/>} label={t('kitchens')} value={formData.kitchensCount} onChange={v => setFormData({...formData, kitchensCount: v})} />
+          <CounterField icon={<Users/>} label={t('toilets')} value={formData.toiletsCount} onChange={v => setFormData({...formData, toiletsCount: v})} />
+          <CounterField icon={<Sofa/>} label={t('living_rooms')} value={formData.livingRoomsCount} onChange={v => setFormData({...formData, livingRoomsCount: v})} />
+          <CounterField icon={<Trees/>} label={t('gardens')} value={formData.gardensCount} onChange={v => setFormData({...formData, gardensCount: v})} />
         </div>
 
         {/* Équipements */}

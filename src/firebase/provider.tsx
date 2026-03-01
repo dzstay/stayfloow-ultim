@@ -4,7 +4,7 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
-import { db as firestoreInstance, auth as authInstance } from './init';
+import { db as firestoreInstance, auth as authInstance, app as appInstance } from './init';
 
 interface FirebaseContextType {
   app: FirebaseApp;
@@ -34,7 +34,7 @@ export function FirebaseProvider({
 
 export function useFirebase() {
   const context = useContext(FirebaseContext);
-  if (!context) throw new Error('useFirebase must be used within a LanguageProvider');
+  if (!context) throw new Error('useFirebase must be used within a FirebaseProvider');
   return context;
 }
 
@@ -50,11 +50,14 @@ export function useAuth() {
   return useFirebase().auth;
 }
 
-// Helper for non-hook usage in client components or server routes
 export function getFirestore() {
   return firestoreInstance;
 }
 
 export function getAuth() {
   return authInstance;
+}
+
+export function getFirebaseApp() {
+  return appInstance;
 }

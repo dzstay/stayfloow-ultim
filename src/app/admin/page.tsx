@@ -8,7 +8,8 @@ import {
   Clock, Euro, Puzzle, 
   Loader2,
   TrendingUp,
-  Plus
+  Plus,
+  ArrowRight
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,18 +41,19 @@ export default function AdminDashboardMaster() {
   const router = useRouter();
   const db = useFirestore();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isReady, setIsReady] = useState(false);
 
-  // Fetch real listings for stats - Memoized query for performance
   const listingsRef = useMemo(() => collection(db, 'listings'), [db]);
   const { data: listings, loading: listingsLoading } = useCollection(listingsRef);
 
-  // Protection ultra-rapide de la page Admin
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
         router.replace("/auth/login");
       } else if (user.email !== ADMIN_EMAIL) {
         router.replace("/profile");
+      } else {
+        setIsReady(true);
       }
     }
   }, [user, authLoading, router]);
@@ -66,18 +68,16 @@ export default function AdminDashboardMaster() {
     };
   }, [listings]);
 
-  if (authLoading) {
+  if (authLoading || !isReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="font-black uppercase tracking-widest animate-pulse">Vérification Admin...</p>
+          <p className="font-black uppercase tracking-widest animate-pulse">StayFloow Engine Loading...</p>
         </div>
       </div>
     );
   }
-
-  if (!user || user.email !== ADMIN_EMAIL) return null;
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex flex-col font-sans text-slate-700 page-fade-in">
@@ -91,7 +91,7 @@ export default function AdminDashboardMaster() {
         <nav className="flex-1 flex h-full">
           <HeaderTab icon={<LayoutDashboard />} label="Tableau de Bord" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
           <HeaderTab icon={<Calendar />} label="Réservations" active={activeTab === 'bookings'} onClick={() => setActiveTab('bookings')} />
-          <HeaderTab icon={<Building />} label="Hébergements" active={activeTab === 'hotels'} onClick={() => setActiveTab('hotels')} />
+          <HeaderTab icon={<Building />} label="Catalogue" active={activeTab === 'catalog'} onClick={() => setActiveTab('catalog')} />
           <HeaderTab icon={<Puzzle />} label="Extensions" active={activeTab === 'extensions'} onClick={() => setActiveTab('extensions')} />
         </nav>
         <div className="px-6 flex items-center gap-4 border-l border-slate-700 h-full">
@@ -110,7 +110,7 @@ export default function AdminDashboardMaster() {
             <SidebarItem icon={<Users />} label="Clients & Voyageurs" />
             <SidebarItem icon={<Building />} label="Partenaires Hôtes" />
             <SidebarItem icon={<BarChart3 />} label="Rapports Financiers" />
-            <SidebarItem icon={<Settings />} label="Paramètres Système" />
+            <SidebarItem icon={<Settings />} label="Paramètres Système" onClick={() => router.push('/admin/settings/seo')} />
           </div>
           <div className="p-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center border-t border-slate-700">
             StayFloow Engine v3.2
@@ -121,10 +121,10 @@ export default function AdminDashboardMaster() {
           {activeTab === 'dashboard' && (
             <div className="animate-in fade-in duration-300">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <KpiCard title="Total Annonces" value={stats.total.toString()} icon={<Building />} color="blue" sub="Gérer le parc" loading={listingsLoading} />
-                <KpiCard title="Revenus Est." value={`${stats.revenue.toLocaleString()} DA`} icon={<Euro />} color="dark-blue" sub="Voir Rapport" loading={listingsLoading} />
-                <KpiCard title="En attente" value={stats.pending.toString()} icon={<Clock />} color="orange" sub="Valider" loading={listingsLoading} />
-                <KpiCard title="Approuvées" value={stats.approved.toString()} icon={<CheckCircle2 />} color="green" sub="Analyses" loading={listingsLoading} />
+                <KpiCard title="Total Annonces" value={stats.total.toString()} icon={<Building />} color="blue" sub="Gérer le parc" onClick={() => setActiveTab('catalog')} loading={listingsLoading} />
+                <KpiCard title="Revenus Est." value={`${stats.revenue.toLocaleString()} DA`} icon={<Euro />} color="dark-blue" sub="Voir Rapport" onClick={() => {}} loading={listingsLoading} />
+                <KpiCard title="En attente" value={stats.pending.toString()} icon={<Clock />} color="orange" sub="Valider" onClick={() => router.push('/admin/validate')} loading={listingsLoading} />
+                <KpiCard title="Approuvées" value={stats.approved.toString()} icon={<CheckCircle2 />} color="green" sub="Analyses" onClick={() => {}} loading={listingsLoading} />
               </div>
 
               <Card className="mt-8 border-none shadow-sm rounded-none overflow-hidden">
@@ -165,7 +165,7 @@ export default function AdminDashboardMaster() {
                   title="Gestion Flotte" 
                   color="teal"
                   items={[
-                    { label: "Véhicules en attente", count: 0, link: "#" },
+                    { label: "Véhicules en attente", count: 0, link: "/admin/validate" },
                     { label: "Contrats d'assurance", count: 12, link: "#" },
                     { label: "Documents expirés", count: 2, link: "#" }
                   ]}
@@ -174,7 +174,7 @@ export default function AdminDashboardMaster() {
                   title="Gestion Circuits" 
                   color="orange"
                   items={[
-                    { label: "Nouveaux circuits", count: 0, link: "#" },
+                    { label: "Nouveaux circuits", count: 0, link: "/admin/validate" },
                     { label: "Guides certifiés", count: 8, link: "#" },
                     { label: "Calendriers", count: 15, link: "#" }
                   ]}
@@ -201,6 +201,7 @@ export default function AdminDashboardMaster() {
                   title="Optimiseur SEO Pro" 
                   desc="Générez automatiquement des méta-données via l'IA pour chaque annonce." 
                   status="available"
+                  onClick={() => router.push('/admin/settings/seo')}
                   icon={<TrendingUp className="h-8 w-8" />}
                 />
                 <ExtensionCard 
@@ -248,7 +249,7 @@ function SidebarItem({ icon, label, active = false, onClick }: { icon: any, labe
   );
 }
 
-function KpiCard({ title, value, icon, color, sub, loading = false }: { title: string, value: string, icon: any, color: string, sub: string, loading?: boolean }) {
+function KpiCard({ title, value, icon, color, sub, onClick, loading = false }: { title: string, value: string, icon: any, color: string, sub: string, onClick: () => void, loading?: boolean }) {
   const colorClasses = {
     "blue": "text-blue-600",
     "dark-blue": "text-blue-900",
@@ -272,7 +273,9 @@ function KpiCard({ title, value, icon, color, sub, loading = false }: { title: s
             {icon}
           </div>
         </div>
-        <Button className={cn("w-full h-8 text-[10px] font-black uppercase tracking-widest", 
+        <Button 
+          onClick={onClick}
+          className={cn("w-full h-8 text-[10px] font-black uppercase tracking-widest", 
           color === 'blue' ? "bg-blue-600" : 
           color === 'dark-blue' ? "bg-blue-900" : 
           color === 'green' ? "bg-green-600" : "bg-orange-600"
@@ -311,7 +314,7 @@ function ManagementBlock({ title, items, color }: { title: string, items: any[],
   );
 }
 
-function ExtensionCard({ title, desc, status, icon }: { title: string, desc: string, status: 'installed' | 'available', icon: any }) {
+function ExtensionCard({ title, desc, status, icon, onClick }: { title: string, desc: string, status: 'installed' | 'available', icon: any, onClick?: () => void }) {
   return (
     <Card className="border-none shadow-xl rounded-[2rem] overflow-hidden bg-white group hover:scale-[1.02] transition-all">
       <CardContent className="p-8 space-y-6">
@@ -329,10 +332,13 @@ function ExtensionCard({ title, desc, status, icon }: { title: string, desc: str
           <h3 className="text-xl font-black text-slate-900">{title}</h3>
           <p className="text-sm text-slate-500 leading-relaxed font-medium">{desc}</p>
         </div>
-        <Button className={cn(
-          "w-full h-12 font-black rounded-xl",
-          status === 'installed' ? "bg-slate-100 text-slate-400" : "bg-primary hover:bg-primary/90 text-white"
-        )}>
+        <Button 
+          onClick={onClick}
+          className={cn(
+            "w-full h-12 font-black rounded-xl",
+            status === 'installed' ? "bg-slate-100 text-slate-400" : "bg-primary hover:bg-primary/90 text-white"
+          )}
+        >
           {status === 'installed' ? "Gérer" : "Installer"}
         </Button>
       </CardContent>

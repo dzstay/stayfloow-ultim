@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    // Autorise les origines de développement spécifiques à Google Cloud Workstations et Firebase Studio
+    allowedDevOrigins: [
+      '*.cloudworkstations.dev',
+      '*.firebaseapp.com',
+      '*.web.app',
+      'localhost:9002'
+    ],
+  },
   images: {
     remotePatterns: [
       {

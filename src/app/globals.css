@@ -61,12 +61,14 @@
   }
 }
 
-/* Fix pour les clics bloqués dans Next.js 15 */
+/* Fix radical pour les clics bloqués dans l'environnement Studio */
 [data-nextjs-scroll-focus-boundary], 
 [data-radix-portal], 
 [role="region"],
-button, a {
+button, a, [role="button"], input, select {
   pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: auto;
 }
 
 .page-fade-in {
@@ -87,6 +89,6 @@ button, a {
 }
 
 button:active, a:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
   transition: transform 0.1s;
 }

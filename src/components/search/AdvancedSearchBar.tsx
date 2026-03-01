@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import { useLanguage } from '@/context/language-context';
 import { useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,6 @@ export default function AdvancedSearchBar() {
     to: undefined,
   });
 
-  // State pour l'occupation
   const [occupancy, setOccupancy] = useState({
     adults: 2,
     children: 0,
@@ -85,16 +83,11 @@ export default function AdvancedSearchBar() {
   const updateOccupancy = (field: 'adults' | 'children' | 'rooms', delta: number) => {
     setOccupancy(prev => {
       const newVal = Math.max(field === 'adults' ? 1 : field === 'rooms' ? 1 : 0, prev[field] + delta);
-      
       let newAges = [...prev.childrenAges];
       if (field === 'children') {
-        if (delta > 0) {
-          newAges.push(0);
-        } else if (delta < 0) {
-          newAges.pop();
-        }
+        if (delta > 0) newAges.push(0);
+        else if (delta < 0) newAges.pop();
       }
-
       return { ...prev, [field]: newVal, childrenAges: newAges };
     });
   };
@@ -102,9 +95,7 @@ export default function AdvancedSearchBar() {
   const getOccupancySummary = () => {
     const parts = [];
     parts.push(`${occupancy.adults} ${occupancy.adults > 1 ? t('adults_plural') : t('adult_singular')}`);
-    if (occupancy.children > 0) {
-      parts.push(`${occupancy.children} ${occupancy.children > 1 ? t('children_plural') : t('child_singular')}`);
-    }
+    if (occupancy.children > 0) parts.push(`${occupancy.children} ${occupancy.children > 1 ? t('children_plural') : t('child_singular')}`);
     parts.push(`${occupancy.rooms} ${occupancy.rooms > 1 ? t('rooms_plural') : t('room_singular')}`);
     return parts.join(' · ');
   };
@@ -114,28 +105,27 @@ export default function AdvancedSearchBar() {
   return (
     <div className="w-full">
       <div className="flex gap-3 mb-6 overflow-x-auto no-scrollbar py-1">
-        <TabLink 
-          href="/" 
+        <TabButton 
           active={activeCategory === 'accommodations'} 
           icon={<Building className="h-5 w-5" />} 
           label={t("accommodations")} 
+          onClick={() => router.push('/')}
         />
-        <TabLink 
-          href="/cars" 
+        <TabButton 
           active={activeCategory === 'cars'} 
           icon={<Car className="h-5 w-5" />} 
           label={t("car_rental")} 
+          onClick={() => router.push('/cars')}
         />
-        <TabLink 
-          href="/circuits" 
+        <TabButton 
           active={activeCategory === 'circuits'} 
           icon={<Compass className="h-5 w-5" />} 
           label={t("tours")} 
+          onClick={() => router.push('/circuits')}
         />
       </div>
 
-      <form onSubmit={handleSearch} className="bg-[#FEBA02] p-[2px] rounded-xl shadow-2xl flex flex-col md:flex-row items-stretch gap-0 border-2 border-[#FEBA02]">
-        {/* Colonne 1 : Destination */}
+      <form onSubmit={handleSearch} className="bg-[#FEBA02] p-[2px] rounded-xl shadow-2xl flex flex-col md:flex-row items-stretch gap-0 border-2 border-[#FEBA02] relative z-40">
         <div className={cn(
           "flex-[1.2] bg-white flex flex-col justify-center px-6 py-3 min-h-[85px] relative group border-slate-100 transition-colors hover:bg-slate-50",
           locale === 'ar' ? "md:rounded-r-lg border-l" : "md:rounded-l-lg border-r"
@@ -154,7 +144,6 @@ export default function AdvancedSearchBar() {
           </div>
         </div>
 
-        {/* Colonne 2 : Dates */}
         <Popover>
           <PopoverTrigger asChild>
             <div className="flex-[1.2] bg-white flex flex-col justify-center px-6 py-3 min-h-[85px] cursor-pointer hover:bg-slate-50 transition-colors border-r border-slate-100">
@@ -185,7 +174,6 @@ export default function AdvancedSearchBar() {
           </PopoverContent>
         </Popover>
 
-        {/* Colonne 3 : Occupation */}
         {activeCategory === 'accommodations' && (
           <Popover open={isOccupancyOpen} onOpenChange={setIsOccupancyOpen}>
             <PopoverTrigger asChild>
@@ -208,82 +196,47 @@ export default function AdvancedSearchBar() {
               <div className="flex items-center justify-between">
                 <Label className="font-bold text-slate-700 text-base">{t('adults')}</Label>
                 <div className="flex items-center gap-4 bg-slate-50 rounded-lg p-1 border border-slate-200">
-                  <button type="button" onClick={() => updateOccupancy('adults', -1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary disabled:opacity-20" disabled={occupancy.adults <= 1}>
-                    <Minus className="h-4 w-4" />
-                  </button>
+                  <button type="button" onClick={() => updateOccupancy('adults', -1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary" disabled={occupancy.adults <= 1}><Minus className="h-4 w-4" /></button>
                   <span className="w-6 text-center font-black text-slate-800">{occupancy.adults}</span>
-                  <button type="button" onClick={() => updateOccupancy('adults', 1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary">
-                    <Plus className="h-4 w-4" />
-                  </button>
+                  <button type="button" onClick={() => updateOccupancy('adults', 1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary"><Plus className="h-4 w-4" /></button>
                 </div>
               </div>
-
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label className="font-bold text-slate-700 text-base">{t('children')}</Label>
                   <div className="flex items-center gap-4 bg-slate-50 rounded-lg p-1 border border-slate-200">
-                    <button type="button" onClick={() => updateOccupancy('children', -1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary disabled:opacity-20" disabled={occupancy.children <= 0}>
-                      <Minus className="h-4 w-4" />
-                    </button>
+                    <button type="button" onClick={() => updateOccupancy('children', -1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary" disabled={occupancy.children <= 0}><Minus className="h-4 w-4" /></button>
                     <span className="w-6 text-center font-black text-slate-800">{occupancy.children}</span>
-                    <button type="button" onClick={() => updateOccupancy('children', 1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary">
-                      <Plus className="h-4 w-4" />
-                    </button>
+                    <button type="button" onClick={() => updateOccupancy('children', 1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary"><Plus className="h-4 w-4" /></button>
                   </div>
                 </div>
-
                 {occupancy.children > 0 && (
                   <div className="grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-2">
                     {occupancy.childrenAges.map((age, idx) => (
                       <Select key={idx} defaultValue={age.toString()}>
-                        <SelectTrigger className="h-10 font-bold border-slate-200 rounded-md">
-                          <SelectValue placeholder="Âge" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 18 }).map((_, i) => (
-                            <SelectItem key={i} value={i.toString()}>
-                              {i} {t('age_label')}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
+                        <SelectTrigger className="h-10 font-bold border-slate-200 rounded-md"><SelectValue placeholder="Âge" /></SelectTrigger>
+                        <SelectContent>{Array.from({ length: 18 }).map((_, i) => (<SelectItem key={i} value={i.toString()}>{i} {t('age_label')}</SelectItem>))}</SelectContent>
                       </Select>
                     ))}
                   </div>
                 )}
               </div>
-
               <div className="flex items-center justify-between">
                 <Label className="font-bold text-slate-700 text-base">{t('rooms')}</Label>
                 <div className="flex items-center gap-4 bg-slate-50 rounded-lg p-1 border border-slate-200">
-                  <button type="button" onClick={() => updateOccupancy('rooms', -1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary disabled:opacity-20" disabled={occupancy.rooms <= 1}>
-                    <Minus className="h-4 w-4" />
-                  </button>
+                  <button type="button" onClick={() => updateOccupancy('rooms', -1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary" disabled={occupancy.rooms <= 1}><Minus className="h-4 w-4" /></button>
                   <span className="w-6 text-center font-black text-slate-800">{occupancy.rooms}</span>
-                  <button type="button" onClick={() => updateOccupancy('rooms', 1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary">
-                    <Plus className="h-4 w-4" />
-                  </button>
+                  <button type="button" onClick={() => updateOccupancy('rooms', 1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary"><Plus className="h-4 w-4" /></button>
                 </div>
               </div>
-
               <Separator />
-
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="pets" className="font-bold text-slate-700 text-sm">{t('travel_with_pet')}</Label>
-                  <Switch 
-                    id="pets" 
-                    checked={occupancy.pets} 
-                    onCheckedChange={(checked) => setOccupancy(prev => ({ ...prev, pets: checked }))} 
-                  />
+                  <Switch id="pets" checked={occupancy.pets} onCheckedChange={(checked) => setOccupancy(prev => ({ ...prev, pets: checked }))} />
                 </div>
               </div>
-
-              <Button 
-                onClick={() => setIsOccupancyOpen(false)}
-                className="w-full bg-white border border-primary text-primary hover:bg-slate-50 font-black h-12 rounded-lg"
-              >
-                {t('done')}
-              </Button>
+              <Button onClick={() => setIsOccupancyOpen(false)} className="w-full bg-white border border-primary text-primary hover:bg-slate-50 font-black h-12 rounded-lg">{t('done')}</Button>
             </PopoverContent>
           </Popover>
         )}
@@ -304,13 +257,12 @@ export default function AdvancedSearchBar() {
   );
 }
 
-function TabLink({ href, active, icon, label }: { href: string, active: boolean, icon: any, label: string }) {
+function TabButton({ active, icon, label, onClick }: { active: boolean, icon: any, label: string, onClick: () => void }) {
   return (
-    <Link 
-      href={href}
-      prefetch={true}
+    <button 
+      onClick={onClick}
       className={cn(
-        "flex items-center gap-3 px-8 py-4 rounded-full text-base font-black transition-all border-none whitespace-nowrap outline-none", 
+        "flex items-center gap-3 px-8 py-4 rounded-full text-base font-black transition-all border-none whitespace-nowrap outline-none cursor-pointer", 
         active 
           ? "bg-white text-primary shadow-xl scale-105" 
           : "bg-[#065f46] text-white hover:bg-[#044d35]"
@@ -318,6 +270,6 @@ function TabLink({ href, active, icon, label }: { href: string, active: boolean,
     >
       <span className={cn(active ? "text-primary" : "text-white")}>{icon}</span>
       {label}
-    </Link>
+    </button>
   );
 }

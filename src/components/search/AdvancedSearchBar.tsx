@@ -192,51 +192,72 @@ export default function AdvancedSearchBar() {
                 </div>
               </div>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-6 space-y-6 border-none shadow-2xl rounded-2xl bg-white z-[100]" align="center">
+            <PopoverContent className="w-[380px] p-6 space-y-6 border-none shadow-2xl rounded-xl bg-white z-[100]" align="center">
+              {/* ADULTES */}
               <div className="flex items-center justify-between">
-                <Label className="font-bold text-slate-700 text-base">{t('adults')}</Label>
-                <div className="flex items-center gap-4 bg-slate-50 rounded-lg p-1 border border-slate-200">
-                  <button type="button" onClick={() => updateOccupancy('adults', -1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary" disabled={occupancy.adults <= 1}><Minus className="h-4 w-4" /></button>
-                  <span className="w-6 text-center font-black text-slate-800">{occupancy.adults}</span>
-                  <button type="button" onClick={() => updateOccupancy('adults', 1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary"><Plus className="h-4 w-4" /></button>
-                </div>
+                <Label className="font-bold text-slate-800 text-[15px]">{t('adults')}</Label>
+                <CounterControl value={occupancy.adults} onMinus={() => updateOccupancy('adults', -1)} onPlus={() => updateOccupancy('adults', 1)} min={1} />
               </div>
+
+              {/* ENFANTS */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="font-bold text-slate-700 text-base">{t('children')}</Label>
-                  <div className="flex items-center gap-4 bg-slate-50 rounded-lg p-1 border border-slate-200">
-                    <button type="button" onClick={() => updateOccupancy('children', -1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary" disabled={occupancy.children <= 0}><Minus className="h-4 w-4" /></button>
-                    <span className="w-6 text-center font-black text-slate-800">{occupancy.children}</span>
-                    <button type="button" onClick={() => updateOccupancy('children', 1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary"><Plus className="h-4 w-4" /></button>
-                  </div>
+                  <Label className="font-bold text-slate-800 text-[15px]">{t('children')}</Label>
+                  <CounterControl value={occupancy.children} onMinus={() => updateOccupancy('children', -1)} onPlus={() => updateOccupancy('children', 1)} min={0} />
                 </div>
+                
                 {occupancy.children > 0 && (
-                  <div className="grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-2">
+                  <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2">
                     {occupancy.childrenAges.map((age, idx) => (
                       <Select key={idx} defaultValue={age.toString()}>
-                        <SelectTrigger className="h-10 font-bold border-slate-200 rounded-md"><SelectValue placeholder="Âge" /></SelectTrigger>
-                        <SelectContent>{Array.from({ length: 18 }).map((_, i) => (<SelectItem key={i} value={i.toString()}>{i} {t('age_label')}</SelectItem>))}</SelectContent>
+                        <SelectTrigger className="h-11 font-medium border-slate-400 rounded-md focus:ring-0">
+                          <SelectValue placeholder="Âge" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 18 }).map((_, i) => (
+                            <SelectItem key={i} value={i.toString()}>{i} {t('age_label')}</SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     ))}
                   </div>
                 )}
+                
+                <p className="text-[13px] text-slate-700 leading-tight">
+                  {t('children_age_info')}
+                </p>
               </div>
-              <div className="flex items-center justify-between">
-                <Label className="font-bold text-slate-700 text-base">{t('rooms')}</Label>
-                <div className="flex items-center gap-4 bg-slate-50 rounded-lg p-1 border border-slate-200">
-                  <button type="button" onClick={() => updateOccupancy('rooms', -1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary" disabled={occupancy.rooms <= 1}><Minus className="h-4 w-4" /></button>
-                  <span className="w-6 text-center font-black text-slate-800">{occupancy.rooms}</span>
-                  <button type="button" onClick={() => updateOccupancy('rooms', 1)} className="h-8 w-8 bg-white shadow-sm rounded-md flex items-center justify-center text-primary"><Plus className="h-4 w-4" /></button>
-                </div>
+
+              {/* CHAMBRES */}
+              <div className="flex items-center justify-between pt-2">
+                <Label className="font-bold text-slate-800 text-[15px]">{t('rooms')}</Label>
+                <CounterControl value={occupancy.rooms} onMinus={() => updateOccupancy('rooms', -1)} onPlus={() => updateOccupancy('rooms', 1)} min={1} />
               </div>
-              <Separator />
+
+              <Separator className="bg-slate-100" />
+
+              {/* ANIMAUX */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="pets" className="font-bold text-slate-700 text-sm">{t('travel_with_pet')}</Label>
+                  <Label htmlFor="pets" className="font-bold text-slate-800 text-[15px]">{t('travel_with_pet')}</Label>
                   <Switch id="pets" checked={occupancy.pets} onCheckedChange={(checked) => setOccupancy(prev => ({ ...prev, pets: checked }))} />
                 </div>
+                <div className="space-y-1">
+                  <p className="text-[12px] text-slate-800 leading-tight font-medium">
+                    {t('service_animal_info')}
+                  </p>
+                  <button type="button" className="text-[12px] text-primary font-bold hover:underline text-left">
+                    {t('learn_more_service_animal')}
+                  </button>
+                </div>
               </div>
-              <Button onClick={() => setIsOccupancyOpen(false)} className="w-full bg-white border border-primary text-primary hover:bg-slate-50 font-black h-12 rounded-lg">{t('done')}</Button>
+
+              <Button 
+                onClick={() => setIsOccupancyOpen(false)} 
+                className="w-full bg-white border border-primary text-primary hover:bg-slate-50 font-bold h-11 rounded-md mt-4"
+              >
+                {t('done')}
+              </Button>
             </PopoverContent>
           </Popover>
         )}
@@ -271,5 +292,30 @@ function TabButton({ active, icon, label, onClick }: { active: boolean, icon: an
       <span className={cn(active ? "text-primary" : "text-white")}>{icon}</span>
       {label}
     </button>
+  );
+}
+
+function CounterControl({ value, onMinus, onPlus, min }: { value: number, onMinus: () => void, onPlus: () => void, min: number }) {
+  return (
+    <div className="flex items-center border border-slate-400 rounded-md overflow-hidden h-11 w-32">
+      <button 
+        type="button" 
+        onClick={onMinus} 
+        disabled={value <= min}
+        className="flex-1 h-full flex items-center justify-center text-primary hover:bg-slate-50 disabled:opacity-30 border-r border-slate-200 transition-colors"
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+      <span className="w-10 text-center font-medium text-slate-900 text-sm">
+        {value}
+      </span>
+      <button 
+        type="button" 
+        onClick={onPlus} 
+        className="flex-1 h-full flex items-center justify-center text-primary hover:bg-slate-50 border-l border-slate-200 transition-colors"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
+    </div>
   );
 }

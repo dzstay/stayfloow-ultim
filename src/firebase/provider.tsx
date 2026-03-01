@@ -1,10 +1,10 @@
-
 'use client';
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
 import { Auth } from 'firebase/auth';
+import { db as firestoreInstance, auth as authInstance } from './init';
 
 interface FirebaseContextType {
   app: FirebaseApp;
@@ -34,7 +34,7 @@ export function FirebaseProvider({
 
 export function useFirebase() {
   const context = useContext(FirebaseContext);
-  if (!context) throw new Error('useFirebase must be used within a FirebaseProvider');
+  if (!context) throw new Error('useFirebase must be used within a LanguageProvider');
   return context;
 }
 
@@ -50,14 +50,11 @@ export function useAuth() {
   return useFirebase().auth;
 }
 
-// Helper for non-hook usage in client components
+// Helper for non-hook usage in client components or server routes
 export function getFirestore() {
-  // This is a simplified version, in a real app you'd get the instance from the initialized app
-  const { initializeFirebase } = require('./index');
-  return initializeFirebase().db;
+  return firestoreInstance;
 }
 
 export function getAuth() {
-  const { initializeFirebase } = require('./index');
-  return initializeFirebase().auth;
+  return authInstance;
 }

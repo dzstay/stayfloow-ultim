@@ -3,14 +3,8 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { 
-  LayoutDashboard, Calendar, Building, Car, Compass, Users, 
-  BarChart3, Settings, 
-  CheckCircle2, 
-  Clock, Euro, Puzzle, 
-  Loader2,
-  TrendingUp,
-  Tag,
-  Search
+  LayoutDashboard, Calendar, Building, Clock, 
+  CheckCircle2, Euro, Puzzle, Loader2, TrendingUp, Tag
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +19,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebas
 import { collection } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
-const ADMIN_EMAIL = "stayflow2025@gmail.com";
+const ADMIN_EMAILS = ["stayflow2025@gmail.com", "kiosque.du.passage@gmail.com"];
 
 const chartData = [
   { name: 'Jan', res: 400, rev: 2400 },
@@ -38,7 +32,7 @@ const chartData = [
 ];
 
 export default function AdminDashboardMaster() {
-  const { user, loading: authLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const db = useFirestore();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -48,16 +42,16 @@ export default function AdminDashboardMaster() {
   const { data: listings, isLoading: listingsLoading } = useCollection(listingsRef);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (!isUserLoading) {
       if (!user) {
         router.replace("/auth/login");
-      } else if (user.email !== ADMIN_EMAIL) {
+      } else if (!ADMIN_EMAILS.includes(user.email || "")) {
         router.replace("/profile");
       } else {
         setIsAuthorized(true);
       }
     }
-  }, [user, authLoading, router]);
+  }, [user, isUserLoading, router]);
 
   const stats = useMemo(() => {
     if (!listings) return { total: 0, pending: 0, approved: 0, revenue: 0 };
@@ -69,12 +63,12 @@ export default function AdminDashboardMaster() {
     };
   }, [listings]);
 
-  if (authLoading || isAuthorized === null) {
+  if (isUserLoading || isAuthorized === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="font-black uppercase tracking-widest animate-pulse">Accès Admin en cours...</p>
+          <p className="font-black uppercase tracking-widest animate-pulse">Vérification Admin...</p>
         </div>
       </div>
     );
@@ -91,7 +85,6 @@ export default function AdminDashboardMaster() {
         </div>
         <nav className="flex-1 flex h-full">
           <HeaderTab icon={<LayoutDashboard />} label="Tableau de Bord" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-          <HeaderTab icon={<Calendar />} label="Réservations" active={activeTab === 'bookings'} onClick={() => setActiveTab('bookings')} />
           <HeaderTab icon={<Building />} label="Catalogue" active={activeTab === 'catalog'} onClick={() => router.push('/admin/catalog')} />
           <HeaderTab icon={<Puzzle />} label="Extensions" active={activeTab === 'extensions'} onClick={() => setActiveTab('extensions')} />
         </nav>
@@ -105,14 +98,8 @@ export default function AdminDashboardMaster() {
         <aside className="w-64 bg-slate-800 text-slate-300 flex flex-col border-r border-slate-700 shrink-0">
           <div className="flex-1 py-6">
             <SidebarItem icon={<LayoutDashboard />} label="Tableau de Bord" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-            <SidebarItem icon={<Calendar />} label="Réservations" active={activeTab === 'bookings'} onClick={() => setActiveTab('bookings')} />
             <SidebarItem icon={<Tag />} label="Catalogue Maître" onClick={() => router.push('/admin/catalog')} />
             <SidebarItem icon={<Puzzle />} label="Extensions" active={activeTab === 'extensions'} onClick={() => setActiveTab('extensions')} />
-            <div className="my-4 border-t border-slate-700 mx-4" />
-            <SidebarItem icon={<Users />} label="Clients & Voyageurs" />
-            <SidebarItem icon={<Building />} label="Partenaires Hôtes" />
-            <SidebarItem icon={<BarChart3 />} label="Rapports Financiers" />
-            <SidebarItem icon={<Settings />} label="Paramètres Système" onClick={() => router.push('/admin/settings/seo')} />
           </div>
           <div className="p-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center border-t border-slate-700">
             StayFloow Engine v3.2
@@ -152,36 +139,6 @@ export default function AdminDashboardMaster() {
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-                <ManagementBlock 
-                  title="Gestion Hébergements" 
-                  color="blue"
-                  items={[
-                    { label: "Annonces à valider", count: stats.pending, link: "/admin/validate" },
-                    { label: "Propriétés actives", count: stats.approved, link: "/admin/catalog" },
-                    { label: "Signalements", count: 0, link: "#" }
-                  ]}
-                />
-                <ManagementBlock 
-                  title="Gestion Flotte" 
-                  color="teal"
-                  items={[
-                    { label: "Véhicules actifs", count: listings?.filter(l => l.category === 'car_rental' && l.status === 'approved').length || 0, link: "/admin/catalog" },
-                    { label: "Documents à vérifier", count: 2, link: "#" },
-                    { label: "Maintenance", count: 5, link: "#" }
-                  ]}
-                />
-                <ManagementBlock 
-                  title="Gestion Circuits" 
-                  color="orange"
-                  items={[
-                    { label: "Nouveaux circuits", count: listings?.filter(l => l.category === 'circuit' && l.status === 'pending').length || 0, link: "/admin/validate" },
-                    { label: "Guides certifiés", count: 8, link: "#" },
-                    { label: "Expériences actives", count: listings?.filter(l => l.category === 'circuit' && l.status === 'approved').length || 0, link: "/admin/catalog" }
-                  ]}
-                />
-              </div>
             </div>
           )}
 
@@ -205,12 +162,6 @@ export default function AdminDashboardMaster() {
                   status="available"
                   onClick={() => router.push('/admin/settings/seo')}
                   icon={<TrendingUp className="h-8 w-8" />}
-                />
-                <ExtensionCard 
-                  title="Module Support 24/7" 
-                  desc="Activez le chat en direct entre clients et partenaires." 
-                  status="available"
-                  icon={<Users className="h-8 w-8" />}
                 />
               </div>
             </div>
@@ -284,33 +235,6 @@ function KpiCard({ title, value, icon, color, sub, onClick, loading = false }: {
         )}>
           {sub}
         </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ManagementBlock({ title, items, color }: { title: string, items: any[], color: "blue" | "teal" | "orange" }) {
-  const bgColor = color === 'blue' ? "bg-[#34547A]" : color === 'teal' ? "bg-[#4A7C8C]" : "bg-[#E67E22]";
-  
-  return (
-    <Card className={cn("border-none shadow-lg rounded-none text-white overflow-hidden", bgColor)}>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-sm font-black uppercase tracking-tight opacity-90">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="px-4 pb-6 space-y-3">
-        {items.map((item, idx) => (
-          <div key={idx} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
-            <span className="text-[11px] font-bold opacity-80 flex items-center gap-2">
-              <span className="h-1 w-1 bg-white rounded-full" />
-              {item.label} ({item.count})
-            </span>
-            <Link href={item.link} prefetch={true}>
-              <button className="px-2 py-1 bg-white/10 hover:bg-white/20 text-[9px] font-black uppercase tracking-tighter rounded transition-all outline-none">
-                Gérer
-              </button>
-            </Link>
-          </div>
-        ))}
       </CardContent>
     </Card>
   );

@@ -1,13 +1,13 @@
 
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import React, { useState, useMemo, useEffect } from "react";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { 
-  Building, Car, Compass, Search, Filter, 
+  Search, 
   MoreVertical, Trash2, CheckCircle, XCircle, 
-  ArrowLeft, Loader2, ExternalLink, MapPin, Tag, AlertCircle
+  ArrowLeft, Loader2, ExternalLink, MapPin, Tag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,17 +24,31 @@ import Image from "next/image";
 import { useCurrency } from "@/context/currency-context";
 import { cn } from "@/lib/utils";
 
+const ADMIN_EMAILS = ["stayflow2025@gmail.com", "kiosque.du.passage@gmail.com"];
+
 export default function AdminCatalogPage() {
   const router = useRouter();
   const db = useFirestore();
+  const { user, isUserLoading } = useUser();
   const { formatPrice } = useCurrency();
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   
   const listingsRef = useMemoFirebase(() => collection(db, 'listings'), [db]);
-  const { data: listings, isLoading } = useCollection(listingsRef);
+  const { data: listings, isLoading: listingsLoading } = useCollection(listingsRef);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  useEffect(() => {
+    if (!isUserLoading) {
+      if (!user || !ADMIN_EMAILS.includes(user.email || "")) {
+        router.replace("/");
+      } else {
+        setIsAuthorized(true);
+      }
+    }
+  }, [user, isUserLoading, router]);
 
   const filteredListings = useMemo(() => {
     if (!listings) return [];
@@ -52,7 +66,7 @@ export default function AdminCatalogPage() {
   }, [listings, searchTerm, filterCategory, filterStatus]);
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Supprimer définitivement cette annonce ? Cette action est irréversible.")) {
+    if (window.confirm("Supprimer définitivement cette annonce ?")) {
       await deleteDoc(doc(db, 'listings', id));
     }
   };
@@ -61,7 +75,7 @@ export default function AdminCatalogPage() {
     await updateDoc(doc(db, 'listings', id), { status: newStatus });
   };
 
-  if (isLoading) return (
+  if (listingsLoading || isUserLoading || isAuthorized === null) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900">
       <Loader2 className="h-12 w-12 animate-spin text-primary" />
     </div>
@@ -77,7 +91,7 @@ export default function AdminCatalogPage() {
             </Button>
             <div>
               <h1 className="text-2xl font-black uppercase tracking-tight">Catalogue Maître</h1>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Gestion autonome des annonces StayFloow</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Gestion autonome StayFloow</p>
             </div>
           </div>
           <div className="flex items-center gap-2 bg-slate-700 p-1 rounded-xl border border-slate-600">
@@ -189,7 +203,6 @@ export default function AdminCatalogPage() {
             <div className="py-20 text-center bg-white rounded-3xl shadow-sm border-2 border-dashed border-slate-200">
               <Tag className="h-16 w-16 text-slate-200 mx-auto mb-4" />
               <h3 className="text-xl font-black text-slate-400 uppercase">Aucune annonce trouvée</h3>
-              <p className="text-slate-500 font-medium">Modifiez vos filtres ou attendez de nouvelles soumissions.</p>
             </div>
           )}
         </div>

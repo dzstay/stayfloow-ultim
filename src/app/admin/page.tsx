@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -7,7 +8,9 @@ import {
   CheckCircle2, 
   Clock, Euro, Puzzle, 
   Loader2,
-  TrendingUp
+  TrendingUp,
+  Tag,
+  Search
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -89,7 +92,7 @@ export default function AdminDashboardMaster() {
         <nav className="flex-1 flex h-full">
           <HeaderTab icon={<LayoutDashboard />} label="Tableau de Bord" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
           <HeaderTab icon={<Calendar />} label="Réservations" active={activeTab === 'bookings'} onClick={() => setActiveTab('bookings')} />
-          <HeaderTab icon={<Building />} label="Catalogue" active={activeTab === 'catalog'} onClick={() => setActiveTab('catalog')} />
+          <HeaderTab icon={<Building />} label="Catalogue" active={activeTab === 'catalog'} onClick={() => router.push('/admin/catalog')} />
           <HeaderTab icon={<Puzzle />} label="Extensions" active={activeTab === 'extensions'} onClick={() => setActiveTab('extensions')} />
         </nav>
         <div className="px-6 flex items-center gap-4 border-l border-slate-700 h-full">
@@ -103,6 +106,7 @@ export default function AdminDashboardMaster() {
           <div className="flex-1 py-6">
             <SidebarItem icon={<LayoutDashboard />} label="Tableau de Bord" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
             <SidebarItem icon={<Calendar />} label="Réservations" active={activeTab === 'bookings'} onClick={() => setActiveTab('bookings')} />
+            <SidebarItem icon={<Tag />} label="Catalogue Maître" onClick={() => router.push('/admin/catalog')} />
             <SidebarItem icon={<Puzzle />} label="Extensions" active={activeTab === 'extensions'} onClick={() => setActiveTab('extensions')} />
             <div className="my-4 border-t border-slate-700 mx-4" />
             <SidebarItem icon={<Users />} label="Clients & Voyageurs" />
@@ -119,10 +123,10 @@ export default function AdminDashboardMaster() {
           {activeTab === 'dashboard' && (
             <div className="animate-in fade-in duration-300">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <KpiCard title="Total Annonces" value={stats.total.toString()} icon={<Building />} color="blue" sub="Gérer le parc" onClick={() => setActiveTab('catalog')} loading={listingsLoading} />
+                <KpiCard title="Total Annonces" value={stats.total.toString()} icon={<Building />} color="blue" sub="Gérer le parc" onClick={() => router.push('/admin/catalog')} loading={listingsLoading} />
                 <KpiCard title="Revenus Est." value={`${stats.revenue.toLocaleString()} DA`} icon={<Euro />} color="dark-blue" sub="Voir Rapport" onClick={() => {}} loading={listingsLoading} />
                 <KpiCard title="En attente" value={stats.pending.toString()} icon={<Clock />} color="orange" sub="Valider" onClick={() => router.push('/admin/validate')} loading={listingsLoading} />
-                <KpiCard title="Approuvées" value={stats.approved.toString()} icon={<CheckCircle2 />} color="green" sub="Analyses" onClick={() => {}} loading={listingsLoading} />
+                <KpiCard title="Approuvées" value={stats.approved.toString()} icon={<CheckCircle2 />} color="green" sub="Analyses" onClick={() => router.push('/admin/catalog')} loading={listingsLoading} />
               </div>
 
               <Card className="mt-8 border-none shadow-sm rounded-none overflow-hidden bg-white">
@@ -155,7 +159,7 @@ export default function AdminDashboardMaster() {
                   color="blue"
                   items={[
                     { label: "Annonces à valider", count: stats.pending, link: "/admin/validate" },
-                    { label: "Propriétés actives", count: stats.approved, link: "/search" },
+                    { label: "Propriétés actives", count: stats.approved, link: "/admin/catalog" },
                     { label: "Signalements", count: 0, link: "#" }
                   ]}
                 />
@@ -163,18 +167,18 @@ export default function AdminDashboardMaster() {
                   title="Gestion Flotte" 
                   color="teal"
                   items={[
-                    { label: "Véhicules en attente", count: 0, link: "/admin/validate" },
-                    { label: "Contrats d'assurance", count: 12, link: "#" },
-                    { label: "Documents expirés", count: 2, link: "#" }
+                    { label: "Véhicules actifs", count: listings?.filter(l => l.category === 'car_rental' && l.status === 'approved').length || 0, link: "/admin/catalog" },
+                    { label: "Documents à vérifier", count: 2, link: "#" },
+                    { label: "Maintenance", count: 5, link: "#" }
                   ]}
                 />
                 <ManagementBlock 
                   title="Gestion Circuits" 
                   color="orange"
                   items={[
-                    { label: "Nouveaux circuits", count: 0, link: "/admin/validate" },
+                    { label: "Nouveaux circuits", count: listings?.filter(l => l.category === 'circuit' && l.status === 'pending').length || 0, link: "/admin/validate" },
                     { label: "Guides certifiés", count: 8, link: "#" },
-                    { label: "Calendriers", count: 15, link: "#" }
+                    { label: "Expériences actives", count: listings?.filter(l => l.category === 'circuit' && l.status === 'approved').length || 0, link: "/admin/catalog" }
                   ]}
                 />
               </div>

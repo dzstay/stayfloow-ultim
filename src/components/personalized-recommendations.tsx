@@ -1,19 +1,24 @@
-
 "use client";
 
 import { properties } from "@/lib/data";
 import { PropertyCard } from "./property-card";
 import { Eye, LayoutGrid, Lightbulb, List } from "lucide-react";
 import { useLanguage } from "@/context/language-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 
 export function PersonalizedRecommendations() {
   const { t } = useLanguage();
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isMounted, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const recentlyViewed = properties.slice(0, 4);
   const similarToLastViewed = properties.slice(4, 8);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const getButtonClass = (mode: 'grid' | 'list') =>
     `h-10 w-10 flex items-center justify-center rounded-xl border transition-all ${
@@ -21,6 +26,8 @@ export function PersonalizedRecommendations() {
         ? "bg-secondary text-primary border-secondary shadow-lg"
         : "bg-white text-slate-400 hover:text-primary border-slate-100 shadow-sm"
     }`;
+
+  if (!isMounted) return null;
 
   return (
     <div className="space-y-16 py-12">

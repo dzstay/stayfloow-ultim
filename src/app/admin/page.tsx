@@ -125,7 +125,7 @@ export default function AdminDashboardMaster() {
                 <KpiCard title="Approuvées" value={stats.approved.toString()} icon={<CheckCircle2 />} color="green" sub="Analyses" onClick={() => {}} loading={listingsLoading} />
               </div>
 
-              <Card className="mt-8 border-none shadow-sm rounded-none overflow-hidden">
+              <Card className="mt-8 border-none shadow-sm rounded-none overflow-hidden bg-white">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest">Performances Plateforme</CardTitle>
                   <Badge variant="outline" className="font-bold border-slate-200">Année 2026</Badge>
@@ -222,7 +222,7 @@ function HeaderTab({ icon, label, active = false, onClick }: { icon: any, label:
     <button 
       onClick={onClick}
       className={cn(
-        "px-6 flex items-center gap-3 font-bold text-sm transition-all border-b-4",
+        "px-6 flex items-center gap-3 font-bold text-sm transition-all border-b-4 outline-none",
         active ? "bg-slate-700/50 border-primary text-white" : "border-transparent text-slate-400 hover:bg-slate-700 hover:text-white"
       )}
     >
@@ -256,7 +256,7 @@ function KpiCard({ title, value, icon, color, sub, onClick, loading = false }: {
   };
   
   return (
-    <Card className="border-none shadow-sm rounded-none overflow-hidden group">
+    <Card className="border-none shadow-sm rounded-none overflow-hidden group bg-white">
       <CardContent className="p-6 relative">
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-1">
@@ -272,8 +272,8 @@ function KpiCard({ title, value, icon, color, sub, onClick, loading = false }: {
           </div>
         </div>
         <Button 
-          onClick={onClick}
-          className={cn("w-full h-8 text-[10px] font-black uppercase tracking-widest", 
+          onClick={(e) => { e.preventDefault(); onClick(); }}
+          className={cn("w-full h-8 text-[10px] font-black uppercase tracking-widest rounded-md", 
           color === 'blue' ? "bg-blue-600" : 
           color === 'dark-blue' ? "bg-blue-900" : 
           color === 'green' ? "bg-green-600" : "bg-orange-600"
@@ -301,7 +301,7 @@ function ManagementBlock({ title, items, color }: { title: string, items: any[],
               {item.label} ({item.count})
             </span>
             <Link href={item.link} prefetch={true}>
-              <button className="px-2 py-1 bg-white/10 hover:bg-white/20 text-[9px] font-black uppercase tracking-tighter rounded transition-all">
+              <button className="px-2 py-1 bg-white/10 hover:bg-white/20 text-[9px] font-black uppercase tracking-tighter rounded transition-all outline-none">
                 Gérer
               </button>
             </Link>

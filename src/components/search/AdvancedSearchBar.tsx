@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import { useLanguage } from '@/context/language-context';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 type Category = 'accommodations' | 'cars' | 'circuits';
 
@@ -73,26 +74,32 @@ export default function AdvancedSearchBar() {
 
   return (
     <div className="w-full">
-      {/* TABS */}
+      {/* TABS - Utilisation de Link pour une réponse instantanée */}
       <div className="flex gap-3 mb-6 overflow-x-auto no-scrollbar py-1">
-        <CategoryTab 
-          active={activeCategory === 'accommodations'} 
-          onClick={() => { setActiveCategory('accommodations'); router.push('/'); }}
-          icon={<Building className="h-5 w-5" />}
-          label={t("accommodations")}
-        />
-        <CategoryTab 
-          active={activeCategory === 'cars'} 
-          onClick={() => { setActiveCategory('cars'); router.push('/cars'); }}
-          icon={<Car className="h-5 w-5" />}
-          label={t("car_rental")}
-        />
-        <CategoryTab 
-          active={activeCategory === 'circuits'} 
-          onClick={() => { setActiveCategory('circuits'); router.push('/circuits'); }}
-          icon={<Compass className="h-5 w-5" />}
-          label={t("tours")}
-        />
+        <Link href="/" prefetch={true}>
+          <CategoryTab 
+            active={activeCategory === 'accommodations'} 
+            onClick={() => setActiveCategory('accommodations')}
+            icon={<Building className="h-5 w-5" />}
+            label={t("accommodations")}
+          />
+        </Link>
+        <Link href="/cars" prefetch={true}>
+          <CategoryTab 
+            active={activeCategory === 'cars'} 
+            onClick={() => setActiveCategory('cars')}
+            icon={<Car className="h-5 w-5" />}
+            label={t("car_rental")}
+          />
+        </Link>
+        <Link href="/circuits" prefetch={true}>
+          <CategoryTab 
+            active={activeCategory === 'circuits'} 
+            onClick={() => setActiveCategory('circuits')}
+            icon={<Compass className="h-5 w-5" />}
+            label={t("tours")}
+          />
+        </Link>
       </div>
 
       {/* SEARCH CONTAINER */}
@@ -205,7 +212,7 @@ export default function AdvancedSearchBar() {
         {/* SEARCH BUTTON */}
         <button 
           type="submit"
-          className="bg-primary hover:bg-[#059669] text-white md:rounded-r-lg px-12 py-4 flex items-center justify-center transition-all active:scale-95 min-h-[85px] group"
+          className="bg-primary hover:bg-[#059669] text-white md:rounded-r-lg px-12 py-4 flex items-center justify-center transition-all active:scale-95 min-h-[85px] group outline-none"
         >
           <span className="text-2xl font-black tracking-tight group-hover:scale-105 transition-transform">
             {t("search_btn")}
@@ -222,7 +229,7 @@ function CategoryTab({ active, onClick, icon, label }: { active: boolean, onClic
       type="button"
       onClick={onClick} 
       className={cn(
-        "flex items-center gap-3 px-8 py-4 rounded-full text-base font-black transition-all border-none whitespace-nowrap", 
+        "flex items-center gap-3 px-8 py-4 rounded-full text-base font-black transition-all border-none whitespace-nowrap outline-none", 
         active 
           ? "bg-white text-primary shadow-[0_10px_25px_rgba(0,0,0,0.12)] scale-105" 
           : "bg-[#065f46] text-white hover:bg-[#044d35]"
@@ -240,9 +247,9 @@ function OccupancyRow({ label, value, onDec, onInc }: { label: string, value: nu
     <div className="flex items-center justify-between">
       <span className="font-bold text-slate-700 text-sm capitalize">{label}</span>
       <div className="flex items-center gap-4">
-        <button type="button" onClick={onDec} className="h-8 w-8 rounded-full border border-primary text-primary flex items-center justify-center hover:bg-primary/5 transition-colors disabled:opacity-30" disabled={(value <= 0 && label !== t('adults')) || (label === t('adults') && value <= 1)}><Minus className="h-4 w-4" /></button>
+        <button type="button" onClick={(e) => { e.preventDefault(); onDec(); }} className="h-8 w-8 rounded-full border border-primary text-primary flex items-center justify-center hover:bg-primary/5 transition-colors disabled:opacity-30" disabled={(value <= 0 && label !== t('adults')) || (label === t('adults') && value <= 1)}><Minus className="h-4 w-4" /></button>
         <span className="w-4 text-center font-black text-base">{value}</span>
-        <button type="button" onClick={onInc} className="h-8 w-8 rounded-full border border-primary text-primary flex items-center justify-center hover:bg-primary/5 transition-colors"><Plus className="h-4 w-4" /></button>
+        <button type="button" onClick={(e) => { e.preventDefault(); onInc(); }} className="h-8 w-8 rounded-full border border-primary text-primary flex items-center justify-center hover:bg-primary/5 transition-colors"><Plus className="h-4 w-4" /></button>
       </div>
     </div>
   );

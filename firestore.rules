@@ -2,27 +2,29 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 1. ACCÈS MAÎTRE PRIORITAIRE (ADMINISTRATION GLOBALE)
-    // Cette règle garantit que l'administrateur a un accès total avant toute autre vérification.
-    match /{document=**} {
-      allow read, write: if request.auth != null && (
-        request.auth.uid == "G4d04MgUW4fguFOjmhQBbWezheB2" || 
-        request.auth.token.email.lower() in ["stayflow2025@gmail.com", "kiosque.du.passage@gmail.com"]
-      );
-    }
-
-    // 2. RÈGLES UTILISATEURS STANDARDS
-    
+    // 1. FONCTIONS DE SÉCURITÉ PARTAGÉES
     function isSignedIn() {
       return request.auth != null;
     }
     
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.uid == "G4d04MgUW4fguFOjmhQBbWezheB2" || 
+        request.auth.token.email.lower() == "stayflow2025@gmail.com" ||
+        request.auth.token.email.lower() == "kiosque.du.passage@gmail.com"
+      );
     }
 
+    // 2. ACCÈS MAÎTRE (ADMINISTRATION)
+    // Règle globale pour l'administrateur
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // 3. RÈGLES UTILISATEURS STANDARDS (NON-ADMINS)
+    
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read, write: if request.auth.uid == userId;
     }
 
     match /listings/{listingId} {
@@ -32,30 +34,35 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      // Les utilisateurs ne voient que leurs propres réservations (client ou hôte)
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid);
+      // Les admins ont déjà accès via la règle globale.
+      // Ici on gère les clients et les hôtes.
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.partnerId == request.auth.uid
+      );
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid);
+      allow update: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.partnerId == request.auth.uid
+      );
     }
 
     match /partners/{partnerId} {
-      allow read, write: if isOwner(partnerId);
+      allow read, write: if request.auth.uid == partnerId;
     }
 
     match /settings/{doc} {
       allow read: if true;
     }
 
-    match /adminLogs/{logId} {
-      // Uniquement admin (déjà couvert par le God Mode ci-dessus)
-    }
-
     match /conversations/{convId} {
-      // Accès réservé aux participants
+      // Un utilisateur peut lister les convs dont il est participant
+      // L'admin a accès à tout via la règle globale
       allow read, write: if isSignedIn() && request.auth.uid in resource.data.participants;
       
       match /messages/{msgId} {
-        allow read, create: if isSignedIn() && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid]);
+        allow read, create: if isSignedIn() && 
+          get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid]);
       }
     }
   }

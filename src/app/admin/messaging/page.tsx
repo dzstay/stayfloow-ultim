@@ -36,6 +36,13 @@ function AdminMessagingContent() {
     return ADMIN_UIDS.includes(user.uid) || ADMIN_EMAILS.includes(email);
   }, [user, isUserLoading]);
 
+  // Redirection si non-admin
+  useEffect(() => {
+    if (!isUserLoading && (!user || !isAdmin)) {
+      router.replace("/");
+    }
+  }, [user, isUserLoading, isAdmin, router]);
+
   // Toutes les conversations de la plateforme - Protégé par isAdmin local
   const convsRef = useMemoFirebase(() => {
     if (!isAdmin || !db || isUserLoading) return null;
@@ -58,7 +65,6 @@ function AdminMessagingContent() {
       setMessagesLoading(false);
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     }, async (err) => {
-      // On n'émet l'erreur que si on est admin mais que Firestore rejette la demande
       if (isAdmin) {
         const permissionError = new FirestorePermissionError({
           path: `conversations/${activeId}/messages`,
@@ -78,7 +84,7 @@ function AdminMessagingContent() {
     const msg = replyText;
     setReplyText("");
 
-    await addDoc(collection(db, "conversations", activeId, "messages"), {
+    addDoc(collection(db, "conversations", activeId, "messages"), {
       senderId: user.uid,
       text: `[SUPPORT ADMIN] ${msg}`,
       createdAt: serverTimestamp(),
@@ -93,15 +99,15 @@ function AdminMessagingContent() {
     });
   };
 
-  if (isUserLoading) {
-    return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
-  }
-
-  if (!user || !isAdmin) {
-    if (!isUserLoading) {
-      router.replace("/");
-    }
-    return null;
+  if (isUserLoading || !isAdmin) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-slate-900">
+        <div className="text-center space-y-4">
+          <Loader2 className="animate-spin text-primary h-12 w-12 mx-auto" />
+          <p className="text-white/50 font-black uppercase tracking-widest text-[10px]">Authentification Sécurisée...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

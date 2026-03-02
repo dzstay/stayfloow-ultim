@@ -30,10 +30,13 @@ export function initializeFirebase() {
   }
 
   // Côté client avec protection HMR stricte via globalThis
-  // Cela garantit qu'une seule instance de chaque service existe par cycle de vie de la page
   if (!globalThis.__firebaseApp) {
     const apps = getApps();
-    globalThis.__firebaseApp = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);
+    if (apps.length > 0) {
+      globalThis.__firebaseApp = apps[0];
+    } else {
+      globalThis.__firebaseApp = initializeApp(firebaseConfig);
+    }
   }
 
   if (!globalThis.__firebaseAuth) {

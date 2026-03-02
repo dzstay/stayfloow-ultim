@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser, updateDocumentNonBlocking } from "@/firebase";
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { 
@@ -34,11 +34,18 @@ export default function AdminBookingsPage() {
     return ADMIN_UIDS.includes(user.uid) || ADMIN_EMAILS.includes(email);
   }, [user, isUserLoading]);
 
-  // Chargement des données uniquement si admin et auth prête
+  // Sécurité de redirection
+  useEffect(() => {
+    if (!isUserLoading && (!user || !isAdmin)) {
+      router.replace("/");
+    }
+  }, [user, isUserLoading, isAdmin, router]);
+
+  // Chargement des données uniquement si admin confirmé
   const bookingsRef = useMemoFirebase(() => {
-    if (!isAdmin || !db) return null;
+    if (!isAdmin || !db || isUserLoading) return null;
     return query(collection(db, "bookings"), orderBy("createdAt", "desc"));
-  }, [db, isAdmin]);
+  }, [db, isAdmin, isUserLoading]);
   
   const { data: bookings, isLoading } = useCollection(bookingsRef);
 
@@ -47,13 +54,15 @@ export default function AdminBookingsPage() {
     updateDocumentNonBlocking(docRef, { status: newStatus });
   };
 
-  if (isUserLoading) return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
-
-  if (!user || !isAdmin) {
-    if (!isUserLoading) {
-      router.replace("/");
-    }
-    return null;
+  if (isUserLoading || !isAdmin) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-slate-900">
+        <div className="text-center space-y-4">
+          <Loader2 className="animate-spin text-primary h-12 w-12 mx-auto" />
+          <p className="text-white/50 font-black uppercase tracking-widest text-[10px]">Vérification des privilèges maître...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

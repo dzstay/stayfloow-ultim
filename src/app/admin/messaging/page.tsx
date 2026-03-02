@@ -29,11 +29,12 @@ function AdminMessagingContent() {
   const activeId = searchParams.get('id');
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Détection robuste de l'admin
   const isAdmin = useMemo(() => {
-    if (!user) return false;
+    if (!user || isUserLoading) return false;
     const email = user.email?.toLowerCase() || "";
     return ADMIN_UIDS.includes(user.uid) || ADMIN_EMAILS.includes(email);
-  }, [user]);
+  }, [user, isUserLoading]);
 
   // Toutes les conversations de la plateforme - Protégé par isAdmin local
   const convsRef = useMemoFirebase(() => {
@@ -57,11 +58,14 @@ function AdminMessagingContent() {
       setMessagesLoading(false);
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     }, async (err) => {
-      const permissionError = new FirestorePermissionError({
-        path: `conversations/${activeId}/messages`,
-        operation: 'list',
-      });
-      errorEmitter.emit('permission-error', permissionError);
+      // On n'émet l'erreur que si on est admin mais que Firestore rejette la demande
+      if (isAdmin) {
+        const permissionError = new FirestorePermissionError({
+          path: `conversations/${activeId}/messages`,
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      }
       setMessagesLoading(false);
     });
     return () => unsubscribe();
@@ -94,7 +98,9 @@ function AdminMessagingContent() {
   }
 
   if (!user || !isAdmin) {
-    router.replace("/");
+    if (!isUserLoading) {
+      router.replace("/");
+    }
     return null;
   }
 

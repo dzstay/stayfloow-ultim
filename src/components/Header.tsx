@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -16,12 +15,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { useUser, useAuth } from "@/firebase";
+import { useUser, useAuth, useFirestore } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/firebase/init";
+import { Badge } from "./ui/badge";
 
 const ADMIN_EMAIL = "stayflow2025@gmail.com";
 
@@ -30,6 +29,7 @@ export function Header() {
   const { currency, setCurrency, getCurrencyFlag } = useCurrency();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const db = useFirestore();
   const { toast } = useToast();
 
   const [mounted, setMounted] = useState(false);
@@ -37,17 +37,20 @@ export function Header() {
 
   useEffect(() => {
     setMounted(true);
-    if (user) {
-      // Récupérer le rôle réel depuis Firestore
+    if (user && db) {
       const fetchRole = async () => {
-        const docSnap = await getDoc(doc(db, 'users', user.uid));
-        if (docSnap.exists()) {
-          setUserRole(docSnap.data().role);
+        try {
+          const docSnap = await getDoc(doc(db, 'users', user.uid));
+          if (docSnap.exists()) {
+            setUserRole(docSnap.data().role);
+          }
+        } catch (e) {
+          // Erreur silencieuse pour les rôles
         }
       };
       fetchRole();
     }
-  }, [user]);
+  }, [user, db]);
 
   const handleLogout = async () => {
     try {

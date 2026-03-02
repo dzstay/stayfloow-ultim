@@ -29,14 +29,15 @@ function AdminMessagingContent() {
 
   const isAdmin = useMemo(() => {
     if (!user) return false;
-    return ADMIN_UIDS.includes(user.uid) || ADMIN_EMAILS.includes(user.email?.toLowerCase() || "");
+    const email = user.email?.toLowerCase() || "";
+    return ADMIN_UIDS.includes(user.uid) || ADMIN_EMAILS.includes(email);
   }, [user]);
 
   // Toutes les conversations de la plateforme - Protégé par isAdmin local pour éviter les requêtes inutiles
   const convsRef = useMemoFirebase(() => {
-    if (!isAdmin || !db) return null;
+    if (!isAdmin || !db || isUserLoading) return null;
     return query(collection(db, "conversations"), orderBy("lastAt", "desc"), limit(100));
-  }, [db, isAdmin]);
+  }, [db, isAdmin, isUserLoading]);
   const { data: conversations, isLoading: convsLoading } = useCollection(convsRef);
 
   // Messages de la conversation sélectionnée
@@ -165,7 +166,7 @@ function AdminMessagingContent() {
               <div className="flex-1 overflow-y-auto p-8 space-y-6">
                 <div className="flex justify-center mb-10">
                   <div className="bg-slate-900 text-white px-6 py-2 rounded-full shadow-2xl flex items-center gap-3">
-                    <ShieldCheck className="h-4 w-4 text-secondary" />
+                    <ShieldCheck className="h-4 w-4 text-[#39FF14]" />
                     <span className="text-[10px] font-black uppercase tracking-widest">Historique audité par StayFloow Modération</span>
                   </div>
                 </div>

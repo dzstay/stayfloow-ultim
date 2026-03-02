@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
 import { 
@@ -18,8 +17,9 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const ADMIN_EMAILS = ["stayflow2025@gmail.com", "kiosque.du.passage@gmail.com"];
+const ADMIN_UIDS = ["G4d04MgUW4fguFOjmhQBbWezheB2"];
 
-export default function AdminMessagingPage() {
+function AdminMessagingContent() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
@@ -27,11 +27,14 @@ export default function AdminMessagingPage() {
   const activeId = searchParams.get('id');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const isAdmin = useMemo(() => user && ADMIN_EMAILS.includes(user.email || ""), [user]);
+  const isAdmin = useMemo(() => {
+    if (!user) return false;
+    return ADMIN_UIDS.includes(user.uid) || ADMIN_EMAILS.includes(user.email?.toLowerCase() || "");
+  }, [user]);
 
-  // Toutes les conversations de la plateforme
+  // Toutes les conversations de la plateforme - Protégé par isAdmin local pour éviter les requêtes inutiles
   const convsRef = useMemoFirebase(() => {
-    if (!isAdmin) return null;
+    if (!isAdmin || !db) return null;
     return query(collection(db, "conversations"), orderBy("lastAt", "desc"), limit(100));
   }, [db, isAdmin]);
   const { data: conversations, isLoading: convsLoading } = useCollection(convsRef);
@@ -49,6 +52,9 @@ export default function AdminMessagingPage() {
       setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       setMessagesLoading(false);
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    }, (err) => {
+      console.error("Messages sync error:", err);
+      setMessagesLoading(false);
     });
     return () => unsubscribe();
   }, [activeId, isAdmin, db]);
@@ -68,8 +74,13 @@ export default function AdminMessagingPage() {
     });
   };
 
-  if (isUserLoading || !user || !isAdmin) {
-    return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary" /></div>;
+  if (isUserLoading) {
+    return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
+  }
+
+  if (!user || !isAdmin) {
+    router.replace("/");
+    return null;
   }
 
   return (
@@ -82,7 +93,7 @@ export default function AdminMessagingPage() {
           <h1 className="font-black uppercase tracking-tight text-lg">Support Global</h1>
         </div>
         <div className="flex-1 px-8 flex items-center gap-4">
-          <Badge className="bg-amber-500 text-slate-900 font-black text-[10px]">MODE MODÉRATION ACTIF</Badge>
+          <Badge className="bg-amber-50 text-amber-900 font-black text-[10px]">MODE MODÉRATION ACTIF</Badge>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Surveillance des échanges client ↔ partenaire</p>
         </div>
       </header>
@@ -96,7 +107,7 @@ export default function AdminMessagingPage() {
           <div className="p-4 border-b bg-slate-50/50">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input placeholder="Rechercher ID ou message..." className="pl-10 h-10 rounded-xl bg-white text-xs border-slate-200" />
+              <Input placeholder="Rechercher ID..." className="pl-10 h-10 rounded-xl bg-white text-xs border-slate-200" />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto no-scrollbar">
@@ -115,7 +126,7 @@ export default function AdminMessagingPage() {
                   )}
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <p className="font-black text-slate-900 text-sm truncate">ID: {conv.id.substring(0,12)}</p>
+                    <p className="font-black text-slate-900 text-sm truncate uppercase tracking-tighter">ID: {conv.id.substring(0,12)}</p>
                     {conv.lastAt && <span className="text-[9px] font-black text-slate-300 uppercase">{format(new Date(conv.lastAt), "dd/MM")}</span>}
                   </div>
                   <p className="text-xs text-slate-500 truncate">{conv.lastMessage || 'Nouvelle conversation'}</p>
@@ -139,7 +150,7 @@ export default function AdminMessagingPage() {
                 <div className="flex items-center gap-4">
                   <div className="bg-amber-100 p-3 rounded-2xl text-amber-600"><MessageSquare className="h-6 w-6" /></div>
                   <div>
-                    <p className="font-black text-slate-900 leading-none mb-1">Conversation #{activeId.substring(0,8)}</p>
+                    <p className="font-black text-slate-900 leading-none mb-1 uppercase">Conversation #{activeId.substring(0,8)}</p>
                     <div className="flex items-center gap-1.5">
                       <div className="h-2 w-2 rounded-full bg-amber-500" />
                       <p className="text-[10px] text-amber-600 font-black uppercase">Canal de support sécurisé</p>
@@ -205,5 +216,13 @@ export default function AdminMessagingPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function AdminMessagingPage() {
+  return (
+    <Suspense fallback={<div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>}>
+      <AdminMessagingContent />
+    </Suspense>
   );
 }

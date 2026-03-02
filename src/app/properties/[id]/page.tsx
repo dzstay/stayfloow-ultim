@@ -467,8 +467,11 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Adultes</span>
                 <Input 
                   type="number" 
-                  value={occupancy.adults} 
-                  onChange={e => setOccupancy({...occupancy, adults: parseInt(e.target.value)})}
+                  value={occupancy.adults.toString()} 
+                  onChange={e => {
+                    const val = parseInt(e.target.value);
+                    setOccupancy({...occupancy, adults: isNaN(val) ? 0 : val});
+                  }}
                   className="h-12 rounded-xl bg-slate-50 font-black"
                 />
               </div>
@@ -476,8 +479,11 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Enfants</span>
                 <Input 
                   type="number" 
-                  value={occupancy.children} 
-                  onChange={e => setOccupancy({...occupancy, children: parseInt(e.target.value)})}
+                  value={occupancy.children.toString()} 
+                  onChange={e => {
+                    const val = parseInt(e.target.value);
+                    setOccupancy({...occupancy, children: isNaN(val) ? 0 : val});
+                  }}
                   className="h-12 rounded-xl bg-slate-50 font-black"
                 />
               </div>

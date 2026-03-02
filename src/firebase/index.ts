@@ -1,12 +1,12 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, FirebaseApp, getApp } from 'firebase/app';
 import { getAuth as getAuthInstance, Auth } from 'firebase/auth';
 import { getFirestore as getFirestoreInstance, Firestore } from 'firebase/firestore';
 
 /**
- * @fileOverview Initialisation stable de Firebase pour Next.js.
+ * @fileOverview Initialisation robuste de Firebase pour Next.js.
  * Utilise globalThis pour persister les instances entre les rechargements HMR en développement,
  * évitant ainsi les erreurs d'assertion interne de Firestore (ID: ca9).
  */
@@ -18,10 +18,9 @@ declare global {
 }
 
 export function initializeFirebase() {
-  // Côté serveur (SSR)
+  // Protection SSR
   if (typeof window === 'undefined') {
-    const apps = getApps();
-    const app = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);
+    const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     return {
       firebaseApp: app,
       auth: getAuthInstance(app),
@@ -29,15 +28,10 @@ export function initializeFirebase() {
     };
   }
 
-  // Côté client avec protection HMR renforcée via globalThis
-  // Cela empêche l'erreur "Unexpected state (ID: ca9)" due à la recréation de l'instance.
+  // Singleton Client stable
   if (!globalThis.__firebaseApp) {
     const apps = getApps();
-    if (apps.length > 0) {
-      globalThis.__firebaseApp = apps[0];
-    } else {
-      globalThis.__firebaseApp = initializeApp(firebaseConfig);
-    }
+    globalThis.__firebaseApp = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);
   }
 
   if (!globalThis.__firebaseAuth) {
@@ -55,9 +49,6 @@ export function initializeFirebase() {
   };
 }
 
-/**
- * Helpers pour obtenir les instances de manière sécurisée et stable.
- */
 export function getAuth(): Auth {
   return initializeFirebase().auth;
 }
@@ -66,7 +57,6 @@ export function getFirestore(): Firestore {
   return initializeFirebase().firestore;
 }
 
-// Ré-exports des utilitaires et hooks
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';

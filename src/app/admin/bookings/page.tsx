@@ -27,21 +27,19 @@ export default function AdminBookingsPage() {
   const { user, isUserLoading } = useUser();
   const { formatPrice } = useCurrency();
 
-  // Détection robuste de l'administrateur
   const isAdmin = useMemo(() => {
     if (!user || isUserLoading) return false;
     const email = user.email?.toLowerCase() || "";
     return ADMIN_UIDS.includes(user.uid) || ADMIN_EMAILS.includes(email);
   }, [user, isUserLoading]);
 
-  // Sécurité de redirection
   useEffect(() => {
     if (!isUserLoading && (!user || !isAdmin)) {
       router.replace("/");
     }
   }, [user, isUserLoading, isAdmin, router]);
 
-  // Chargement des données uniquement si admin confirmé et auth stabilisée
+  // Chargement sécurisé : on attend que isAdmin soit confirmé pour lancer la requête
   const bookingsRef = useMemoFirebase(() => {
     if (!isAdmin || !db || isUserLoading) return null;
     return query(collection(db, "bookings"), orderBy("createdAt", "desc"));
@@ -59,7 +57,7 @@ export default function AdminBookingsPage() {
       <div className="h-screen flex items-center justify-center bg-slate-900">
         <div className="text-center space-y-4">
           <Loader2 className="animate-spin text-primary h-12 w-12 mx-auto" />
-          <p className="text-white/50 font-black uppercase tracking-widest text-[10px]">Vérification des accès administrateur...</p>
+          <p className="text-white/50 font-black uppercase tracking-widest text-[10px]">Vérification des privilèges...</p>
         </div>
       </div>
     );
@@ -78,9 +76,7 @@ export default function AdminBookingsPage() {
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Contrôle global ({bookings?.length || 0} transactions)</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge className="bg-green-600 border-none font-black text-[10px]">LIVE SYNC</Badge>
-          </div>
+          <Badge className="bg-green-600 border-none font-black text-[10px]">MODE ADMINISTRATEUR</Badge>
         </div>
       </header>
 

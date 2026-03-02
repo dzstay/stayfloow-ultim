@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 1. FONCTIONS DE SÉCURITÉ PARTAGÉES
+    // 1. FONCTIONS DE SÉCURITÉ MAÎTRES
     function isSignedIn() {
       return request.auth != null;
     }
@@ -15,62 +15,53 @@ service cloud.firestore {
       );
     }
 
-    // 2. ACCÈS MAÎTRE (ADMINISTRATION)
-    // Règle globale pour l'administrateur
+    // 2. ACCÈS PRIORITAIRE ADMINISTRATEUR (GOD MODE)
+    // Cette règle garantit que l'admin peut tout lister et tout modifier sans restriction.
     match /{document=**} {
       allow read, write: if isAdmin();
     }
 
-    // 3. RÈGLES UTILISATEURS STANDARDS (NON-ADMINS)
+    // 3. RÈGLES UTILISATEURS STANDARDS
     
     match /users/{userId} {
-      allow read, write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
     match /listings/{listingId} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (isAdmin() || resource.data.ownerId == request.auth.uid);
+      allow update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
     }
 
     match /bookings/{bookingId} {
-      // SÉPARATION CRITIQUE : allow list (requêtes globales) vs allow get (accès direct)
-      // L'admin peut lister toute la collection.
-      allow list: if isAdmin();
-      // Les utilisateurs ne peuvent lire que leurs propres documents (get).
-      allow get: if isAdmin() || (isSignedIn() && (
+      // Les utilisateurs normaux peuvent lire et modifier uniquement leurs propres réservations
+      allow get: if isSignedIn() && (
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
-      ));
-      
+      );
       allow create: if isSignedIn();
-      allow update: if isAdmin() || (isSignedIn() && (
+      allow update: if isSignedIn() && (
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
-      ));
+      );
     }
 
     match /partners/{partnerId} {
-      allow read, write: if isSignedIn() && (request.auth.uid == partnerId || isAdmin());
+      allow read, write: if isSignedIn() && request.auth.uid == partnerId;
     }
 
     match /settings/{doc} {
       allow read: if true;
-      allow write: if isAdmin();
     }
 
     match /conversations/{convId} {
-      // SÉPARATION CRITIQUE : L'admin peut lister toutes les conversations.
-      allow list: if isAdmin();
-      // Lecture individuelle pour les participants.
-      allow get: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
-      
+      allow get: if isSignedIn() && request.auth.uid in resource.data.participants;
       allow create: if isSignedIn();
-      allow update: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
+      allow update: if isSignedIn() && request.auth.uid in resource.data.participants;
       
       match /messages/{msgId} {
-        allow read, create: if isAdmin() || (isSignedIn() && 
-          get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid]));
+        allow read, create: if isSignedIn() && 
+          get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid]);
       }
     }
   }

@@ -16,6 +16,18 @@
       },
       "required": ["id", "email", "firstName", "lastName"]
     },
+    "PartnerProfile": {
+      "title": "PartnerProfile",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "companyName": { "type": "string" },
+        "businessType": { "type": "string" },
+        "verified": { "type": "boolean" },
+        "totalEarnings": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "PartnerListing": {
       "title": "PartnerListing",
       "type": "object",
@@ -43,21 +55,9 @@
         "itemName": { "type": "string" },
         "totalPrice": { "type": "number" },
         "status": { "type": "string", "enum": ["pending", "approved", "rejected", "cancelled"] },
-        "paymentId": { "type": "string" }
-      }
-    },
-    "Payment": {
-      "title": "Payment",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "bookingId": { "type": "string" },
-        "amount": { "type": "number" },
-        "commission": { "type": "number" },
-        "partnerRevenue": { "type": "number" },
-        "currency": { "type": "string" },
-        "status": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "createdAt": { "type": "string" }
       }
     }
   },
@@ -66,10 +66,11 @@
   },
   "firestore": {
     "/users/{userId}": { "schema": { "$ref": "#/backend/entities/UserProfile" }, "description": "User profiles" },
+    "/partners/{partnerId}": { "schema": { "$ref": "#/backend/entities/PartnerProfile" }, "description": "Professional partner details" },
     "/listings/{listingId}": { "schema": { "$ref": "#/backend/entities/PartnerListing" }, "description": "Global listings" },
     "/bookings/{bookingId}": { "schema": { "$ref": "#/backend/entities/Booking" }, "description": "Reservations" },
-    "/payments/{payId}": { "schema": { "$ref": "#/backend/entities/Payment" }, "description": "Financial transactions" },
     "/settings/siteConfig": { "schema": { "type": "object" }, "description": "Platform configuration" },
-    "/adminLogs/{logId}": { "schema": { "type": "object" }, "description": "Admin action logs" }
+    "/adminLogs/{logId}": { "schema": { "type": "object" }, "description": "Admin action logs" },
+    "/conversations/{convId}": { "schema": { "type": "object" }, "description": "Chat sessions" }
   }
 }

@@ -20,6 +20,8 @@ import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/firebase/init";
 
 const ADMIN_EMAIL = "stayflow2025@gmail.com";
 
@@ -31,10 +33,21 @@ export function Header() {
   const { toast } = useToast();
 
   const [mounted, setMounted] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (user) {
+      // Récupérer le rôle réel depuis Firestore
+      const fetchRole = async () => {
+        const docSnap = await getDoc(doc(db, 'users', user.uid));
+        if (docSnap.exists()) {
+          setUserRole(docSnap.data().role);
+        }
+      };
+      fetchRole();
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -46,6 +59,7 @@ export function Header() {
   };
 
   const isAdmin = useMemo(() => user && user.email === ADMIN_EMAIL, [user]);
+  const isPartner = useMemo(() => userRole === 'partner', [userRole]);
 
   if (!mounted) {
     return <header className="sticky top-0 z-50 w-full bg-primary h-16 shadow-md" />;
@@ -112,7 +126,7 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {!isAdmin && (
+            {!isAdmin && !isPartner && (
               <Button variant="ghost" className="text-sm font-bold hover:bg-white/10 px-3 py-2 rounded-md transition-colors" asChild>
                 <Link href="/partners/join">{t("list_property")}</Link>
               </Button>
@@ -148,11 +162,13 @@ export function Header() {
                     ) : (
                       <>
                         <DropdownMenuItem asChild className="font-bold py-3 cursor-pointer rounded-lg text-slate-700">
-                          <Link href="/profile"><UserIcon className="h-4 w-4 mr-3" /> Mon Profil</Link>
+                          <Link href="/profile"><UserIcon className="h-4 w-4 mr-3" /> Mon Profil Client</Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="font-bold py-3 cursor-pointer rounded-lg text-slate-700">
-                          <Link href="/partners/dashboard"><LayoutDashboard className="h-4 w-4 mr-3" /> Espace Partenaire</Link>
-                        </DropdownMenuItem>
+                        {isPartner && (
+                          <DropdownMenuItem asChild className="font-bold py-3 cursor-pointer rounded-lg bg-primary/5 text-primary">
+                            <Link href="/partners/dashboard"><LayoutDashboard className="h-4 w-4 mr-3" /> Espace Partenaire</Link>
+                          </DropdownMenuItem>
+                        )}
                       </>
                     )}
                     

@@ -1,109 +1,101 @@
+
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { properties, cars } from "@/lib/data";
-import { bookings } from "@/lib/bookings-data";
-import { useCurrency } from "@/context/currency-context";
-import {
-  CircleDollarSign,
-  Eye,
-  Calendar,
-  MessageSquare,
-  Building,
-  Car as CarIcon,
-  Compass,
-  Star,
-  TrendingUp,
-  ArrowRight
+import React, { useMemo } from "react";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, where, orderBy, limit } from "firebase/firestore";
+import { 
+  Building, Calendar, CreditCard, MessageSquare, 
+  TrendingUp, Users, ArrowRight, Loader2, Star, Eye
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
-
-const partnerListings = [
-  ...properties.slice(1, 3).map((p) => ({ ...p, itemType: "Hébergement" })),
-  ...cars.slice(0, 1).map((c) => ({
-    ...c,
-    id: c.id,
-    itemType: "Véhicule",
-    name: `${c.brand} ${c.name}`,
-    rating: c.rating
-  }))
-];
-
-const partnerBookings = bookings.slice(0, 3);
-
-const totalEarnings = partnerBookings.reduce(
-  (acc, booking) => acc + booking.totalAmount * 0.85,
-  0
-);
-
-const totalViews = 12500;
-const totalBookingsCount = partnerBookings.length;
-const conversionRate = ((totalBookingsCount / totalViews) * 100).toFixed(2);
+import { useRouter } from "next/navigation";
+import { useCurrency } from "@/context/currency-context";
+import { cn } from "@/lib/utils";
 
 export default function PartnerDashboardPage() {
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
+  const router = useRouter();
   const { formatPrice } = useCurrency();
 
+  // 1. Charger les annonces du partenaire
+  const listingsRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(db, "listings"), where("ownerId", "==", user.uid));
+  }, [db, user]);
+  const { data: listings, isLoading: listingsLoading } = useCollection(listingsRef);
+
+  // 2. Charger les réservations reçues
+  const bookingsRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(db, "bookings"), where("partnerId", "==", user.uid), orderBy("createdAt", "desc"), limit(5));
+  }, [db, user]);
+  const { data: bookings, isLoading: bookingsLoading } = useCollection(bookingsRef);
+
+  // Calcul des statistiques
+  const stats = useMemo(() => {
+    if (!listings || !bookings) return { active: 0, pending: 0, revenue: 0, bookingsCount: 0 };
+    return {
+      active: listings.filter(l => l.status === 'approved').length,
+      pending: listings.filter(l => l.status === 'pending').length,
+      bookingsCount: bookings.length,
+      revenue: bookings.filter(b => b.status === 'approved').reduce((acc, b) => acc + (b.totalPrice || 0), 0) * 0.85
+    };
+  }, [listings, bookings]);
+
+  if (isUserLoading || listingsLoading || bookingsLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <Loader2 className="h-12 w-12 animate-spin text-primary" />
+    </div>
+  );
+
+  if (!user) {
+    router.replace("/auth/login");
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 pb-12">
-      {/* Header */}
-      <div className="bg-primary text-white py-12 px-8 mb-8">
+    <div className="min-h-screen bg-slate-50 pb-20">
+      {/* Header Partenaire */}
+      <header className="bg-primary text-white py-12 px-8 shadow-lg">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <h1 className="text-4xl font-black tracking-tight mb-2">Tableau de Bord Partenaire</h1>
-            <p className="text-white/80 font-medium">Gérez votre activité et suivez vos performances sur StayFloow.com</p>
+            <h1 className="text-4xl font-black tracking-tight mb-2">Bonjour, {user.displayName || 'Partenaire'} !</h1>
+            <p className="text-white/80 font-medium">Votre centre de commande StayFloow en temps réel.</p>
           </div>
           <div className="flex gap-4">
-             <Button variant="outline" className="border-white text-white hover:bg-white hover:text-primary font-black" asChild>
-                <Link href="/partners/join">Ajouter une offre</Link>
-             </Button>
+            <Button variant="outline" className="border-white text-white hover:bg-white hover:text-primary font-black" asChild>
+              <Link href="/partners/join">Ajouter une offre</Link>
+            </Button>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-8">
-        {/* Statistiques */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard 
-            title="Gains Nets" 
-            value={formatPrice(totalEarnings)} 
-            desc="Après commission StayFloow" 
-            icon={<CircleDollarSign className="h-5 w-5 text-primary" />} 
-          />
-          <StatCard 
-            title="Vues (30j)" 
-            value={totalViews.toLocaleString()} 
-            desc="+15.2% ce mois" 
-            icon={<Eye className="h-5 w-5 text-primary" />} 
-          />
-          <StatCard 
-            title="Réservations" 
-            value={`+${totalBookingsCount}`} 
-            desc="30 derniers jours" 
-            icon={<Calendar className="h-5 w-5 text-primary" />} 
-          />
-          <StatCard 
-            title="Conversion" 
-            value={`${conversionRate}%`} 
-            desc="Vues / Réservations" 
-            icon={<TrendingUp className="h-5 w-5 text-primary" />} 
-          />
+      <main className="max-w-7xl mx-auto px-8 -mt-10 space-y-8">
+        {/* KPI CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard title="Annonces Actives" value={stats.active.toString()} icon={<Building />} color="green" />
+          <StatCard title="En attente" value={stats.pending.toString()} icon={<Eye />} color="orange" />
+          <StatCard title="Réservations" value={stats.bookingsCount.toString()} icon={<Calendar />} color="blue" />
+          <StatCard title="Gains Nets" value={formatPrice(stats.revenue)} icon={<CreditCard />} color="dark" highlight />
         </div>
 
-        {/* Annonces + Réservations */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Annonces */}
+          {/* DERNIÈRES RÉSERVATIONS */}
           <Card className="lg:col-span-2 border-none shadow-xl rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="bg-slate-50/50 border-b">
-              <div className="flex items-center justify-between">
+            <CardHeader className="bg-slate-50/50 border-b p-8">
+              <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-xl font-black text-slate-900">Vos Annonces</CardTitle>
-                  <CardDescription>Aperçu de vos services listés.</CardDescription>
+                  <CardTitle className="text-xl font-black text-slate-900">Réservations Récentes</CardTitle>
+                  <CardDescription>Suivi des demandes entrantes.</CardDescription>
                 </div>
-                <Button variant="ghost" className="text-primary font-black gap-2">
-                  Tout voir <ArrowRight className="h-4 w-4" />
+                <Button variant="ghost" className="text-primary font-black uppercase text-xs" onClick={() => router.push('/partners/bookings')}>
+                  Tout gérer <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </CardHeader>
@@ -111,79 +103,97 @@ export default function PartnerDashboardPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/30">
-                    <TableHead className="font-bold pl-6">Annonce</TableHead>
-                    <TableHead className="font-bold">Type</TableHead>
-                    <TableHead className="text-right font-bold pr-6">Note</TableHead>
+                    <TableHead className="font-bold pl-8 py-4">Service</TableHead>
+                    <TableHead className="font-bold">Client</TableHead>
+                    <TableHead className="font-bold">Prix Brut</TableHead>
+                    <TableHead className="text-right font-bold pr-8">Statut</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {partnerListings.map((listing) => (
-                    <TableRow key={listing.id} className="hover:bg-slate-50/50 transition-colors">
-                      <TableCell className="font-bold text-slate-700 pl-6">{listing.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="flex items-center gap-2 w-fit bg-primary/5 text-primary border-primary/10 px-3 py-1">
-                          {listing.itemType === "Hébergement" && <Building className="h-3 w-3" />}
-                          {listing.itemType === "Véhicule" && <CarIcon className="h-3 w-3" />}
-                          {listing.itemType === "Circuit" && <Compass className="h-3 w-3" />}
-                          {listing.itemType}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right pr-6">
-                        <div className="flex items-center justify-end gap-1.5 font-black text-slate-900">
-                          <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                          <span>{listing.rating ? listing.rating.toFixed(1) : "N/A"}</span>
-                        </div>
+                  {bookings?.map((b: any) => (
+                    <TableRow key={b.id} className="hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => router.push(`/partners/bookings?id=${b.id}`)}>
+                      <TableCell className="font-black text-slate-700 pl-8">{b.itemName}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-500">{b.customerName || 'Voyageur'}</TableCell>
+                      <TableCell className="font-black text-slate-900">{formatPrice(b.totalPrice)}</TableCell>
+                      <TableCell className="text-right pr-8">
+                        <Badge className={cn(
+                          "font-black text-[9px] uppercase",
+                          b.status === 'approved' ? "bg-green-600" : b.status === 'pending' ? "bg-amber-500" : "bg-red-600"
+                        )}>{b.status}</Badge>
                       </TableCell>
                     </TableRow>
                   ))}
+                  {(!bookings || bookings.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-40 text-center text-slate-400 font-bold italic">
+                        Aucune réservation pour le moment.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
 
-          {/* Réservations */}
-          <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="bg-slate-50/50 border-b">
-              <CardTitle className="text-xl font-black text-slate-900">Récentes</CardTitle>
-              <CardDescription>Dernières demandes de réservation.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                {partnerBookings.map((booking) => (
-                  <div key={booking.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-primary/20 transition-all">
-                    <div className="min-w-0">
-                      <p className="font-bold text-slate-900 truncate">{booking.itemName}</p>
-                      <p className="text-xs text-slate-500 font-medium">
-                        {booking.customer.name} • {booking.dates}
-                      </p>
-                    </div>
-                    <Button size="icon" variant="ghost" className="shrink-0 text-primary hover:bg-primary/10 rounded-full">
-                      <MessageSquare className="h-5 w-5" />
-                    </Button>
-                  </div>
-                ))}
+          {/* SIDEBAR MESSAGES */}
+          <div className="space-y-8">
+            <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
+              <CardHeader className="bg-slate-50/50 border-b p-8">
+                <CardTitle className="text-xl font-black text-slate-900 flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-primary" /> Messages
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <p className="text-slate-400 text-sm font-medium mb-6">Communiquez directement avec vos clients voyageurs.</p>
+                <Button className="w-full bg-primary hover:bg-primary/90 text-white font-black h-12 rounded-xl shadow-lg" onClick={() => router.push('/partners/messaging')}>
+                  Ouvrir la Messagerie
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-900 text-white border-none shadow-2xl rounded-3xl p-8 relative overflow-hidden">
+              <div className="relative z-10">
+                <h3 className="text-xl font-black mb-2 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-secondary" /> Booster mes ventes
+                </h3>
+                <p className="text-white/60 text-xs font-medium leading-relaxed">
+                  Activez l'offre "StayFloow Direct" pour permettre la réservation instantanée et augmenter votre visibilité de 40%.
+                </p>
+                <Button className="mt-6 bg-secondary text-primary hover:bg-white font-black w-full h-12 rounded-xl transition-all">
+                  Activer maintenant
+                </Button>
               </div>
-              <Button className="w-full mt-6 bg-primary hover:bg-primary/90 text-white font-black h-12 rounded-xl">
-                Gérer les réservations
-              </Button>
-            </CardContent>
-          </Card>
+              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
+            </Card>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
 
-function StatCard({ title, value, desc, icon }: { title: string; value: string; desc: string; icon: any }) {
+function StatCard({ title, value, icon, color, highlight = false }: any) {
+  const colors: any = {
+    "green": "bg-green-50 text-green-600",
+    "orange": "bg-orange-50 text-orange-600",
+    "blue": "bg-blue-50 text-blue-600",
+    "dark": "bg-slate-900 text-white"
+  };
+
   return (
-    <Card className="border-none shadow-lg rounded-3xl bg-white p-6 flex flex-col gap-4">
-      <div className="bg-primary/5 w-12 h-12 rounded-2xl flex items-center justify-center">
-        {icon}
+    <Card className={cn(
+      "border-none shadow-lg rounded-3xl p-6 transition-all hover:scale-[1.02]",
+      highlight ? "bg-slate-900 text-white" : "bg-white"
+    )}>
+      <div className="flex justify-between items-start mb-4">
+        <div className={cn("p-3 rounded-2xl", highlight ? "bg-white/10 text-white" : colors[color])}>
+          {icon}
+        </div>
+        <Badge className={highlight ? "bg-secondary text-primary" : "bg-slate-100 text-slate-400"}>LIVE</Badge>
       </div>
       <div>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</p>
-        <p className="text-2xl font-black text-slate-900 tracking-tight">{value}</p>
-        <p className="text-[10px] text-slate-500 font-medium mt-1">{desc}</p>
+        <p className="text-3xl font-black tracking-tighter">{value}</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{title}</p>
       </div>
     </Card>
   );

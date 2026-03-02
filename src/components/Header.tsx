@@ -21,8 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { doc, getDoc } from "firebase/firestore";
 import { Badge } from "./ui/badge";
-
-const ADMIN_EMAIL = "stayflow2025@gmail.com";
+import { checkIsAdmin } from "@/lib/admin-config";
 
 export function Header() {
   const { t, locale, setLocale, getLocaleDetails, availableLocales } = useLanguage();
@@ -45,7 +44,7 @@ export function Header() {
             setUserRole(docSnap.data().role);
           }
         } catch (e) {
-          // Erreur silencieuse pour les rôles
+          // Erreur silencieuse
         }
       };
       fetchRole();
@@ -61,7 +60,7 @@ export function Header() {
     }
   };
 
-  const isAdmin = useMemo(() => user && user.email === ADMIN_EMAIL, [user]);
+  const isAdmin = useMemo(() => checkIsAdmin(user), [user]);
   const isPartner = useMemo(() => userRole === 'partner', [userRole]);
 
   if (!mounted) {

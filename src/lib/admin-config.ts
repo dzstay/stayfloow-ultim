@@ -4,12 +4,14 @@
 
 export const ADMIN_EMAILS = [
   "stayflow2025@gmail.com",
-  "kiosque.du.passage@gmail.com"
+  "kiosque.du.passage@gmail.com",
+  "dunordlavoix3@gmail.com"
 ];
 
 export const ADMIN_UIDS = [
   "G4d04MgUW4fguFOjmhQBbWezheB2",
-  "SoSElCrTcwh6UBtGjXwv4Q8dlXc2" // Nouvel UID Kamel Dahane
+  "SoSElCrTcwh6UBtGjXwv4Q8dlXc2",
+  "MtuxkoHT0gOiII8WBpQQ5HPgXqx2"
 ];
 
 /**

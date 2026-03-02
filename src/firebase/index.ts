@@ -1,7 +1,7 @@
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, FirebaseApp, getApp } from 'firebase/app';
 import { getAuth as getAuthInstance, Auth } from 'firebase/auth';
 import { getFirestore as getFirestoreInstance, Firestore } from 'firebase/firestore';
 
@@ -23,8 +23,6 @@ const globalWithFirebase = (typeof globalThis !== 'undefined'
 
 /**
  * Initialise les services Firebase de manière stable et unique.
- * Utilise globalThis pour garantir qu'une seule instance de chaque service existe,
- * même lors des rechargements à chaud (HMR), évitant ainsi l'erreur "Unexpected state (ID: ca9)".
  */
 export function initializeFirebase() {
   // 1. Vérification du cache global (Client-side uniquement)

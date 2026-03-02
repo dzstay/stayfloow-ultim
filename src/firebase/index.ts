@@ -5,43 +5,64 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth as getAuthInstance, Auth } from 'firebase/auth';
 import { getFirestore as getFirestoreInstance, Firestore } from 'firebase/firestore';
 
-// Instances mises en cache pour garantir la stabilité sur le client
-let firebaseApp: FirebaseApp;
-let auth: Auth;
-let firestore: Firestore;
+/**
+ * Interface pour le cache global permettant de survivre au Hot Module Replacement (HMR)
+ * durant le développement Next.js.
+ */
+interface GlobalFirebase {
+  __firebaseApp?: FirebaseApp;
+  __firebaseAuth?: Auth;
+  __firebaseFirestore?: Firestore;
+}
+
+const globalWithFirebase = globalThis as unknown as GlobalFirebase;
 
 /**
  * Initialise Firebase de manière stable et unique.
- * Garantit que les instances ne sont jamais recréées sur le client, évitant les erreurs "Unexpected state".
+ * Utilise globalThis pour garantir qu'une seule instance de chaque service existe,
+ * même lors des rechargements à chaud (HMR), évitant ainsi l'erreur "Unexpected state (ID: ca9)".
  */
 export function initializeFirebase() {
-  // Sur le client, on retourne les instances en cache si elles existent
-  if (typeof window !== 'undefined' && firebaseApp && auth && firestore) {
-    return { firebaseApp, auth, firestore };
-  }
-
-  // Initialisation de l'App
-  if (getApps().length > 0) {
-    firebaseApp = getApp();
-  } else {
-    try {
-      // Tentative d'initialisation automatique (App Hosting)
-      firebaseApp = initializeApp();
-    } catch (e) {
-      // Fallback vers la config explicite
-      firebaseApp = initializeApp(firebaseConfig);
+  // 1. Vérification du cache global (Client-side uniquement)
+  if (typeof window !== 'undefined') {
+    if (
+      globalWithFirebase.__firebaseApp &&
+      globalWithFirebase.__firebaseAuth &&
+      globalWithFirebase.__firebaseFirestore
+    ) {
+      return {
+        firebaseApp: globalWithFirebase.__firebaseApp,
+        auth: globalWithFirebase.__firebaseAuth,
+        firestore: globalWithFirebase.__firebaseFirestore,
+      };
     }
   }
 
-  // Initialisation des services
-  auth = getAuthInstance(firebaseApp);
-  firestore = getFirestoreInstance(firebaseApp);
+  // 2. Initialisation ou récupération de l'App
+  let app: FirebaseApp;
+  const apps = getApps();
+  if (apps.length > 0) {
+    app = apps[0];
+  } else {
+    app = initializeApp(firebaseConfig);
+  }
 
-  return { firebaseApp, auth, firestore };
+  // 3. Initialisation des services
+  const auth = getAuthInstance(app);
+  const firestore = getFirestoreInstance(app);
+
+  // 4. Mise en cache pour les futurs appels sur le client
+  if (typeof window !== 'undefined') {
+    globalWithFirebase.__firebaseApp = app;
+    globalWithFirebase.__firebaseAuth = auth;
+    globalWithFirebase.__firebaseFirestore = firestore;
+  }
+
+  return { firebaseApp: app, auth, firestore };
 }
 
 /**
- * Helpers pour obtenir les instances hors contexte React (ex: API Routes)
+ * Helpers pour obtenir les instances de manière sécurisée.
  */
 export function getAuth(): Auth {
   return initializeFirebase().auth;
@@ -51,6 +72,7 @@ export function getFirestore(): Firestore {
   return initializeFirebase().firestore;
 }
 
+// Ré-exports des utilitaires et hooks
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';

@@ -1,3 +1,6 @@
-// Ce fichier est obsolète et a été consolidé dans src/firebase/index.ts
-// L'initialisation est désormais gérée de manière centralisée pour éviter les erreurs "Unexpected state".
+/**
+ * @fileOverview Ce fichier est déprécié. 
+ * Toute l'initialisation Firebase est désormais gérée dans src/firebase/index.ts 
+ * pour garantir une instance unique et éviter les erreurs d'état Firestore.
+ */
 export {};

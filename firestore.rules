@@ -2,27 +2,27 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 1. FONCTIONS DE SÉCURITÉ MAÎTRES
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    
-    // Vérification Admin ultra-robuste (UID prioritaire + Emails)
+    // 1. DÉTECTION ADMIN MAÎTRE (GOD MODE)
+    // Vérification ultra-rapide par UID (G4d04MgUW4fguFOjmhQBbWezheB2) ou Email.
     function isAdmin() {
-      return isSignedIn() && (
+      return request.auth != null && (
         request.auth.uid == "G4d04MgUW4fguFOjmhQBbWezheB2" || 
-        (request.auth.token.email != null && request.auth.token.email.lower() == "stayflow2025@gmail.com") ||
-        (request.auth.token.email != null && request.auth.token.email.lower() == "kiosque.du.passage@gmail.com")
+        request.auth.token.email == "stayflow2025@gmail.com" ||
+        request.auth.token.email == "kiosque.du.passage@gmail.com"
       );
     }
 
-    // 2. ACCÈS MAÎTRE PRIORITAIRE (GOD MODE)
-    // Cette règle prévaut sur toutes les autres : l'admin peut tout lister, lire et écrire partout.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // 2. ACCÈS PRIORITAIRE ADMIN
+    // Cette règle autorise tout pour l'admin et prévaut sur les règles plus spécifiques.
     match /{document=**} {
       allow read, write: if isAdmin();
     }
 
-    // 3. RÈGLES UTILISATEURS STANDARDS (Pour les clients et partenaires)
+    // 3. RÈGLES UTILISATEURS STANDARDS
     
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
@@ -35,6 +35,7 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
+      // allow list est déjà couvert par isAdmin() au-dessus
       allow get: if isSignedIn() && (
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid

@@ -2,7 +2,7 @@
 'use client';
 
 import React, { use, useState, useEffect, useRef, useMemo } from 'react';
-import { useDoc, useFirestore, useUser } from '@/firebase';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { 
   MapPin, Star, Share2, Heart, ShieldCheck, 
@@ -47,6 +47,7 @@ import { format, addDays, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { properties as mockProperties } from '@/lib/data';
 
 export default function PropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -72,8 +73,14 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     rooms: parseInt(searchParams.get('rooms') || "1"),
   });
 
-  const docRef = doc(db, 'listings', id);
-  const { data: property, loading } = useDoc(docRef);
+  const docRef = useMemoFirebase(() => doc(db, 'listings', id), [db, id]);
+  const { data: dbProperty, isLoading: loading } = useDoc(docRef);
+
+  // Fallback to mock data if not found in Firestore
+  const property = useMemo(() => {
+    if (dbProperty) return dbProperty;
+    return mockProperties.find(p => p.id === id);
+  }, [dbProperty, id]);
 
   // Refs for smooth scroll
   const overviewRef = useRef<HTMLDivElement>(null);
@@ -82,7 +89,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
   const rulesRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
 
-  const scrollToSection = (ref: React.RefObject<HTMLDivElement>, tabId: string) => {
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>, tabId: string) => {
     setActiveCategory(tabId);
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -91,45 +98,54 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     return Math.max(1, differenceInDays(dates.to, dates.from));
   }, [dates]);
 
-  // Derive Room Types from actual partner data
+  // Derive Room Types from actual partner data or mock data
   const roomTypes = useMemo(() => {
     if (!property) return [];
     
-    const details = property.details || {};
+    // In DB properties are inside 'details', in mock data they are flat
+    const details = property.details || property;
     const types = [];
 
-    if (details.propertyType === 'hotel') {
-      if (details.singleRoomsCount > 0) {
+    // Base price per night
+    const basePrice = property.price || 10000;
+
+    if (details.propertyType === 'hotel' || details.type?.toLowerCase().includes('hôtel') || details.type?.toLowerCase().includes('riad')) {
+      const singleCount = details.singleRoomsCount || 0;
+      const doubleCount = details.doubleRoomsCount || 5; // Default for demo
+      const suiteCount = details.parentalSuitesCount || 0;
+
+      if (singleCount > 0) {
         types.push({
           id: 'single',
           name: t('single_rooms'),
           size: '18m²',
           specs: ['1 lit simple', 'WiFi gratuit', 'Salle de bain'],
           maxGuests: 1,
-          price: property.price * 0.8,
-          stock: details.singleRoomsCount
+          price: basePrice * 0.8,
+          stock: singleCount
         });
       }
-      if (details.doubleRoomsCount > 0) {
-        types.push({
-          id: 'double',
-          name: t('double_rooms'),
-          size: '24m²',
-          specs: ['1 grand lit double', 'WiFi gratuit', 'Climatisation'],
-          maxGuests: 2,
-          price: property.price,
-          stock: details.doubleRoomsCount
-        });
-      }
-      if (details.parentalSuitesCount > 0) {
+      
+      // Always show double rooms for hotels in mock if no specific count provided
+      types.push({
+        id: 'double',
+        name: t('double_rooms'),
+        size: '24m²',
+        specs: ['1 grand lit double', 'WiFi gratuit', 'Climatisation'],
+        maxGuests: 2,
+        price: basePrice,
+        stock: doubleCount > 0 ? doubleCount : 10
+      });
+
+      if (suiteCount > 0) {
         types.push({
           id: 'suite',
           name: t('parental_suites'),
           size: '40m²',
           specs: ['1 lit King Size', 'Espace salon', 'Vue panoramique'],
           maxGuests: 3,
-          price: property.price * 1.5,
-          stock: details.parentalSuitesCount
+          price: basePrice * 1.5,
+          stock: suiteCount
         });
       }
     } else {
@@ -139,8 +155,8 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
         name: `Logement entier (${details.roomsCount || 1} pièces)`,
         size: '120m²',
         specs: [`${details.roomsCount || 1} chambres`, `${details.bathroomsCount || 1} SDB`, 'Cuisine équipée'],
-        maxGuests: (details.roomsCount || 1) * 2,
-        price: property.price,
+        maxGuests: (details.roomsCount || 1) * 2 || 4,
+        price: basePrice,
         stock: 1
       });
     }
@@ -161,7 +177,28 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     );
   }
 
-  if (!property) return <div className="p-20 text-center font-black">Établissement non trouvé.</div>;
+  if (!property) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-8 text-center">
+        <div className="bg-white p-12 rounded-[2rem] shadow-2xl space-y-6 max-w-md">
+          <div className="bg-red-50 text-red-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <X className="h-10 w-10" />
+          </div>
+          <h1 className="text-2xl font-black text-slate-900">Établissement non trouvé</h1>
+          <p className="text-slate-500 font-medium">Désolé, nous ne parvenons pas à charger les détails de cet établissement.</p>
+          <Button className="w-full h-12 bg-primary font-black rounded-xl" onClick={() => router.push('/')}>
+            Retour à l'accueil
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const photos = property.photos || property.images || [];
+  const propertyName = property.details?.name || property.name;
+  const rating = property.rating || 8.5;
+  const reviewsCount = property.reviewsCount || 125;
+  const stars = property.details?.stars || property.stars || 4;
 
   return (
     <div className="min-h-screen bg-white">
@@ -184,7 +221,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <div className="flex">
-                  {[...Array(property.details?.stars || 5)].map((_, i) => (
+                  {[...Array(stars)].map((_, i) => (
                     <Star key={i} className="h-3 w-3 fill-[#FEBA02] text-[#FEBA02]" />
                   ))}
                 </div>
@@ -192,10 +229,10 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                   <Leaf className="h-3 w-3" /> Certificat de durabilité
                 </Badge>
               </div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">{property.details?.name}</h1>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">{propertyName}</h1>
               <div className="flex items-center gap-2 text-[13px] text-slate-600">
                 <MapPin className="h-4 w-4 text-primary shrink-0" />
-                <span>{property.location?.address} — </span>
+                <span>{property.location?.address || property.location} — </span>
                 <button className="text-primary font-bold hover:underline">Excellent emplacement – voir la carte</button>
               </div>
             </div>
@@ -211,35 +248,35 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 aspect-[16/9] md:aspect-[21/9] rounded-lg overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 aspect-[16/9] md:aspect-[21/9] rounded-lg overflow-hidden shadow-md">
             <div className="md:col-span-2 md:row-span-2 relative cursor-pointer group">
-              <Image src={property.photos?.[0] || 'https://picsum.photos/seed/p1/800/600'} alt="Main" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+              <Image src={photos[0] || 'https://picsum.photos/seed/p1/800/600'} alt="Main" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
             </div>
             <div className="relative cursor-pointer group">
-              <Image src={property.photos?.[1] || 'https://picsum.photos/seed/p2/800/600'} alt="Side 1" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+              <Image src={photos[1] || 'https://picsum.photos/seed/p2/800/600'} alt="Side 1" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
             </div>
             <div className="md:row-span-2 relative bg-slate-900 overflow-hidden flex items-center justify-center group cursor-pointer">
-              <Image src={property.photos?.[2] || 'https://picsum.photos/seed/p3/800/600'} alt="Side 2" fill className="object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" />
+              <Image src={photos[2] || 'https://picsum.photos/seed/p3/800/600'} alt="Side 2" fill className="object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center text-white p-4">
                 <div className="bg-[#10B981] text-white font-black text-xl w-14 h-14 flex items-center justify-center rounded-sm shadow-xl mb-2">
-                  {property.rating?.toFixed(1) || '8.5'}
+                  {rating.toFixed(1)}
                 </div>
                 <div className="text-center">
-                  <p className="font-bold text-lg leading-none mb-1">Fabuleux</p>
-                  <p className="text-[11px] opacity-80">{property.reviewsCount || 150} avis</p>
+                  <p className="font-bold text-lg leading-none mb-1">{rating >= 9 ? "Fabuleux" : "Très bien"}</p>
+                  <p className="text-[11px] opacity-80">{reviewsCount} avis</p>
                 </div>
               </div>
             </div>
             <div className="relative group cursor-pointer">
-              <Image src={property.photos?.[3] || 'https://picsum.photos/seed/p4/800/600'} alt="Side 3" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+              <Image src={photos[3] || 'https://picsum.photos/seed/p4/800/600'} alt="Side 3" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera className="text-white h-8 w-8" />
               </div>
             </div>
             <div className="relative group cursor-pointer bg-slate-100">
-              <Image src={property.photos?.[4] || 'https://picsum.photos/seed/p5/800/600'} alt="Side 4" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+              <Image src={photos[4] || 'https://picsum.photos/seed/p5/800/600'} alt="Side 4" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <span className="text-white font-bold text-sm underline">+ {property.photos?.length || 5} autres photos</span>
+                <span className="text-white font-bold text-sm underline">+ {photos.length > 5 ? photos.length - 5 : 0} autres photos</span>
               </div>
             </div>
           </div>
@@ -272,7 +309,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 <TableRow>
                   <TableHead className="text-white font-bold py-4">Type de logement</TableHead>
                   <TableHead className="text-white font-bold text-center">Nombre de voyageurs</TableHead>
-                  <TableHead className="text-white font-bold">Tarif du jour</TableHead>
+                  <TableHead className="text-white font-bold">Tarif pour {nights} nuits</TableHead>
                   <TableHead className="text-white font-bold">Vos options</TableHead>
                   <TableHead className="text-white font-bold">Sélectionner des chambres</TableHead>
                 </TableRow>
@@ -302,7 +339,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                     </TableCell>
                     <TableCell className="align-top py-6">
                       <div className="space-y-1">
-                        <p className="font-black text-lg text-slate-900">{formatPrice(room.price)}</p>
+                        <p className="font-black text-lg text-slate-900">{formatPrice(room.price * nights)}</p>
                         <p className="text-[10px] text-slate-400">Taxes et frais compris</p>
                         <Badge className="bg-primary/10 text-primary border-none text-[10px] h-5">Offre StayFloow</Badge>
                       </div>

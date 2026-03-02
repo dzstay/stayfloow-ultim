@@ -57,6 +57,7 @@ export function useCollection<T = any>(
     setError(null);
 
     try {
+      // Protection contre les erreurs synchrones lors de la création du listener (ex: instance Firestore terminée)
       const unsubscribe = onSnapshot(
         memoizedTargetRefOrQuery,
         (snapshot: QuerySnapshot<DocumentData>) => {
@@ -87,10 +88,15 @@ export function useCollection<T = any>(
         }
       );
 
-      return () => unsubscribe();
+      return () => {
+        try {
+          unsubscribe();
+        } catch (e) {
+          // Ignorer les erreurs de désabonnement lors des cycles HMR agressifs
+        }
+      };
     } catch (e: any) {
-      // Capture les erreurs synchrones potentielles du SDK (instance terminée, etc.)
-      console.warn("Firestore listener sync error handled:", e.message);
+      console.warn("Firestore listener initialization failed (HMR cycle?):", e.message);
       setIsLoading(false);
     }
   }, [memoizedTargetRefOrQuery]);

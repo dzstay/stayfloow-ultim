@@ -7,8 +7,8 @@ import { getFirestore as getFirestoreInstance, Firestore } from 'firebase/firest
 
 /**
  * @fileOverview Initialisation stable de Firebase pour Next.js.
- * Utilise globalThis pour persister les instances entre les rechargements HMR (Hot Module Replacement)
- * en développement, ce qui empêche Firestore de perdre sa synchronisation interne (Erreur ca9).
+ * Utilise globalThis pour persister les instances entre les rechargements HMR en développement,
+ * évitant ainsi les erreurs d'assertion interne de Firestore (ID: ca9).
  */
 
 declare global {
@@ -29,7 +29,7 @@ export function initializeFirebase() {
     };
   }
 
-  // Côté client avec protection HMR stricte
+  // Côté client avec protection HMR stricte via globalThis
   if (!globalThis.__firebaseApp) {
     const apps = getApps();
     globalThis.__firebaseApp = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);

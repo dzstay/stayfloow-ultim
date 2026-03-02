@@ -18,7 +18,7 @@ declare global {
 }
 
 export function initializeFirebase() {
-  // Côté serveur (SSR), on ne met rien en cache globale pour éviter les fuites de mémoire
+  // Côté serveur (SSR)
   if (typeof window === 'undefined') {
     const apps = getApps();
     const app = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);
@@ -29,7 +29,8 @@ export function initializeFirebase() {
     };
   }
 
-  // Côté client avec protection HMR stricte via globalThis
+  // Côté client avec protection HMR renforcée via globalThis
+  // Cela empêche l'erreur "Unexpected state (ID: ca9)" due à la recréation de l'instance.
   if (!globalThis.__firebaseApp) {
     const apps = getApps();
     if (apps.length > 0) {

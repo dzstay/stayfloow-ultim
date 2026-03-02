@@ -8,11 +8,14 @@ interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Fournisseur Firebase côté client.
+ * Assure que initializeFirebase n'est appelé qu'une seule fois au montage initial.
+ */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
   const firebaseServices = useMemo(() => {
-    // Initialize Firebase on the client side, once per component mount.
     return initializeFirebase();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []); // Dépendances vides : stabilité garantie au montage du layout
 
   return (
     <FirebaseProvider

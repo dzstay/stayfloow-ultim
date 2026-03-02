@@ -5,35 +5,39 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth as getAuthInstance, Auth } from 'firebase/auth';
 import { getFirestore as getFirestoreInstance, Firestore } from 'firebase/firestore';
 
-/**
- * Retourne les services Firebase initialisés pour une application donnée.
- */
-export function getSdks(firebaseApp: FirebaseApp) {
-  return {
-    firebaseApp,
-    auth: getAuthInstance(firebaseApp),
-    firestore: getFirestoreInstance(firebaseApp)
-  };
-}
+// Instances mises en cache pour garantir la stabilité sur le client
+let firebaseApp: FirebaseApp;
+let auth: Auth;
+let firestore: Firestore;
 
 /**
- * Initialise Firebase de manière idempotente.
- * Supporte l'initialisation automatique de Firebase App Hosting ou le fallback vers la config locale.
+ * Initialise Firebase de manière stable et unique.
+ * Garantit que les instances ne sont jamais recréées sur le client, évitant les erreurs "Unexpected state".
  */
 export function initializeFirebase() {
-  if (!getApps().length) {
-    let firebaseApp;
-    try {
-      // Tentative d'initialisation via les variables d'environnement (App Hosting)
-      firebaseApp = initializeApp();
-    } catch (e) {
-      // Fallback vers la configuration manuelle (Développement)
-      firebaseApp = initializeApp(firebaseConfig);
-    }
-    return getSdks(firebaseApp);
+  // Sur le client, on retourne les instances en cache si elles existent
+  if (typeof window !== 'undefined' && firebaseApp && auth && firestore) {
+    return { firebaseApp, auth, firestore };
   }
 
-  return getSdks(getApp());
+  // Initialisation de l'App
+  if (getApps().length > 0) {
+    firebaseApp = getApp();
+  } else {
+    try {
+      // Tentative d'initialisation automatique (App Hosting)
+      firebaseApp = initializeApp();
+    } catch (e) {
+      // Fallback vers la config explicite
+      firebaseApp = initializeApp(firebaseConfig);
+    }
+  }
+
+  // Initialisation des services
+  auth = getAuthInstance(firebaseApp);
+  firestore = getFirestoreInstance(firebaseApp);
+
+  return { firebaseApp, auth, firestore };
 }
 
 /**

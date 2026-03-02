@@ -1,30 +1,11 @@
-
 'use client';
 
-import { useState, useEffect } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '../init';
+import { useUser as useUserFromProvider } from '../provider';
 
 /**
- * Hook d'authentification robuste.
- * Utilise l'instance Firebase Auth centralisée pour une détection immédiate.
+ * Hook d'authentification client.
+ * Utilise l'implémentation centralisée du FirebaseProvider pour une synchronisation parfaite.
  */
 export function useUser() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Écouter les changements d'état d'authentification
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    }, (error) => {
-      console.error("Auth observer error:", error);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  return { user, loading };
+  return useUserFromProvider();
 }

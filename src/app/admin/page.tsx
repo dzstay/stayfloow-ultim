@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { useCurrency } from "@/context/currency-context";
 
 const ADMIN_EMAILS = ["stayflow2025@gmail.com", "kiosque.du.passage@gmail.com"];
+const ADMIN_UIDS = ["G4d04MgUW4fguFOjmhQBbWezheB2"];
 
 export default function AdminDashboardMaster() {
   const { user, isUserLoading } = useUser();
@@ -30,23 +31,26 @@ export default function AdminDashboardMaster() {
   const { formatPrice } = useCurrency();
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  const isAdmin = useMemo(() => user && ADMIN_EMAILS.includes(user.email || ""), [user]);
+  const isAdmin = useMemo(() => {
+    if (!user) return false;
+    return ADMIN_UIDS.includes(user.uid) || ADMIN_EMAILS.includes(user.email?.toLowerCase() || "");
+  }, [user]);
 
   // DATA FETCHING REAL-TIME - Sécurisé par la vérification isAdmin
   const listingsRef = useMemoFirebase(() => {
-    if (!isAdmin) return null;
+    if (!isAdmin || !db) return null;
     return query(collection(db, 'listings'), orderBy('createdAt', 'desc'));
   }, [db, isAdmin]);
   const { data: listings } = useCollection(listingsRef);
 
   const usersRef = useMemoFirebase(() => {
-    if (!isAdmin) return null;
+    if (!isAdmin || !db) return null;
     return query(collection(db, 'users'), limit(1000));
   }, [db, isAdmin]);
   const { data: usersData } = useCollection(usersRef);
 
   const bookingsRef = useMemoFirebase(() => {
-    if (!isAdmin) return null;
+    if (!isAdmin || !db) return null;
     return query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
   }, [db, isAdmin]);
   const { data: bookings } = useCollection(bookingsRef);
@@ -55,11 +59,11 @@ export default function AdminDashboardMaster() {
     if (!isUserLoading) {
       if (!user) {
         router.replace("/auth/login");
-      } else if (!ADMIN_EMAILS.includes(user.email || "")) {
+      } else if (!isAdmin) {
         router.replace("/profile");
       }
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, isAdmin]);
 
   const stats = useMemo(() => {
     return {

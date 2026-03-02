@@ -8,38 +8,35 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && (
         request.auth.uid == "G4d04MgUW4fguFOjmhQBbWezheB2" ||
-        request.auth.token.email.matches('(?i)stayflow2025@gmail.com') ||
-        request.auth.token.email.matches('(?i)kiosque.du.passage@gmail.com')
+        (request.auth.token.email != null && request.auth.token.email.lower() == 'stayflow2025@gmail.com') ||
+        (request.auth.token.email != null && request.auth.token.email.lower() == 'kiosque.du.passage@gmail.com')
       );
     }
     
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
 
     match /users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow get: if isOwner(userId) || isAdmin();
-      allow write: if isOwner(userId) || isAdmin();
     }
 
     match /listings/{listingId} {
       allow read: if true;
-      allow write: if isSignedIn();
-      allow delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
     match /bookings/{bookingId} {
-      // Split list to allow admin global view without filters
-      allow list: if isAdmin();
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid);
-      
+      // Lecture individuelle
       allow get: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid));
+      // Liste globale pour admin ou liste filtrée pour proprio
+      allow list: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid));
       allow create: if isSignedIn();
       allow update: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid));
     }
 
     match /partners/{partnerId} {
-      allow read: if isSignedIn() && (request.auth.uid == partnerId || isAdmin());
-      allow write: if isSignedIn() && (request.auth.uid == partnerId || isAdmin());
+      allow read, write: if isOwner(partnerId) || isAdmin();
     }
 
     match /payments/{payId} {
@@ -52,14 +49,12 @@ service cloud.firestore {
     }
 
     match /adminLogs/{logId} {
-      allow create: if isAdmin();
-      allow read: if isAdmin();
+      allow read, write: if isAdmin();
     }
 
     match /conversations/{convId} {
-      allow list: if isAdmin();
-      allow list: if isSignedIn() && resource.data.participants.hasAny([request.auth.uid]);
       allow get: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
+      allow list: if isAdmin() || (isSignedIn() && resource.data.participants.hasAny([request.auth.uid]));
       allow write: if isSignedIn();
       
       match /messages/{msgId} {

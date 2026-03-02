@@ -5,9 +5,9 @@ import React, { useMemo } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, doc, updateDoc } from "firebase/firestore";
 import { 
-  Calendar, User, Euro, Clock, CheckCircle2, 
+  Calendar, User, Clock, CheckCircle2, 
   XCircle, ArrowLeft, Loader2, Search, Filter, 
-  MapPin, ShieldCheck, Mail, Phone
+  ShieldCheck
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

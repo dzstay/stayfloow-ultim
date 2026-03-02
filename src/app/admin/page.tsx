@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { 
   LayoutDashboard, Calendar, Building, Clock, 
-  CheckCircle2, Euro, Puzzle, Loader2, TrendingUp, Tag
+  CheckCircle2, Euro, Puzzle, Loader2, TrendingUp, Tag, Plus
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, query, orderBy } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 const ADMIN_EMAILS = ["stayflow2025@gmail.com", "kiosque.du.passage@gmail.com"];
@@ -38,7 +38,8 @@ export default function AdminDashboardMaster() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
-  const listingsRef = useMemoFirebase(() => collection(db, 'listings'), [db]);
+  // RÉCUPÉRATION DYNAMIQUE DE TOUT LE CATALOGUE
+  const listingsRef = useMemoFirebase(() => query(collection(db, 'listings'), orderBy('createdAt', 'desc')), [db]);
   const { data: listings, isLoading: listingsLoading } = useCollection(listingsRef);
 
   useEffect(() => {
@@ -53,12 +54,14 @@ export default function AdminDashboardMaster() {
     }
   }, [user, isUserLoading, router]);
 
+  // CALCUL DES STATISTIQUES RÉELLES
   const stats = useMemo(() => {
     if (!listings) return { total: 0, pending: 0, approved: 0, revenue: 0 };
     return {
       total: listings.length,
       pending: listings.filter(l => l.status === 'pending').length,
       approved: listings.filter(l => l.status === 'approved').length,
+      // Simulation revenus basés sur les annonces approuvées
       revenue: listings.filter(l => l.status === 'approved').reduce((acc, curr) => acc + (curr.price || 0), 0)
     };
   }, [listings]);
@@ -68,7 +71,7 @@ export default function AdminDashboardMaster() {
       <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="font-black uppercase tracking-widest animate-pulse">Vérification Admin...</p>
+          <p className="font-black uppercase tracking-widest animate-pulse">StayFloow Engine Sync...</p>
         </div>
       </div>
     );
@@ -85,12 +88,14 @@ export default function AdminDashboardMaster() {
         </div>
         <nav className="flex-1 flex h-full">
           <HeaderTab icon={<LayoutDashboard />} label="Tableau de Bord" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-          <HeaderTab icon={<Building />} label="Catalogue" active={activeTab === 'catalog'} onClick={() => router.push('/admin/catalog')} />
-          <HeaderTab icon={<Puzzle />} label="Extensions" active={activeTab === 'extensions'} onClick={() => setActiveTab('extensions')} />
+          <HeaderTab icon={<Building />} label="Catalogue Maître" active={activeTab === 'catalog'} onClick={() => router.push('/admin/catalog')} />
+          <HeaderTab icon={<Clock />} label="Validation" active={activeTab === 'validate'} onClick={() => router.push('/admin/validate')} />
         </nav>
         <div className="px-6 flex items-center gap-4 border-l border-slate-700 h-full">
-          <Badge className="bg-green-600 border-none font-black text-[10px]">ADMIN CONNECTÉ</Badge>
-          <div className="h-8 w-8 rounded-full bg-primary border-2 border-primary/20 flex items-center justify-center font-black text-xs">SF</div>
+          <Badge className="bg-green-600 border-none font-black text-[10px]">ADMIN ACTIF</Badge>
+          <div className="h-8 w-8 rounded-full bg-primary border-2 border-primary/20 flex items-center justify-center font-black text-xs">
+            {user?.email?.charAt(0).toUpperCase()}
+          </div>
         </div>
       </header>
 
@@ -98,30 +103,41 @@ export default function AdminDashboardMaster() {
         <aside className="w-64 bg-slate-800 text-slate-300 flex flex-col border-r border-slate-700 shrink-0">
           <div className="flex-1 py-6">
             <SidebarItem icon={<LayoutDashboard />} label="Tableau de Bord" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-            <SidebarItem icon={<Tag />} label="Catalogue Maître" onClick={() => router.push('/admin/catalog')} />
-            <SidebarItem icon={<Puzzle />} label="Extensions" active={activeTab === 'extensions'} onClick={() => setActiveTab('extensions')} />
+            <SidebarItem icon={<Tag />} label="Catalogue Global" onClick={() => router.push('/admin/catalog')} />
+            <SidebarItem icon={<Clock />} label="Files d'attente" onClick={() => router.push('/admin/validate')} />
+            <SidebarItem icon={<Puzzle />} label="Extensions IA" active={activeTab === 'extensions'} onClick={() => setActiveTab('extensions')} />
           </div>
           <div className="p-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center border-t border-slate-700">
-            StayFloow Engine v3.2
+            Real-time Database Active
           </div>
         </aside>
 
         <main className="flex-1 overflow-y-auto p-8 space-y-8">
           {activeTab === 'dashboard' && (
-            <div className="animate-in fade-in duration-300">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <KpiCard title="Total Annonces" value={stats.total.toString()} icon={<Building />} color="blue" sub="Gérer le parc" onClick={() => router.push('/admin/catalog')} loading={listingsLoading} />
-                <KpiCard title="Revenus Est." value={`${stats.revenue.toLocaleString()} DA`} icon={<Euro />} color="dark-blue" sub="Voir Rapport" onClick={() => {}} loading={listingsLoading} />
-                <KpiCard title="En attente" value={stats.pending.toString()} icon={<Clock />} color="orange" sub="Valider" onClick={() => router.push('/admin/validate')} loading={listingsLoading} />
-                <KpiCard title="Approuvées" value={stats.approved.toString()} icon={<CheckCircle2 />} color="green" sub="Analyses" onClick={() => router.push('/admin/catalog')} loading={listingsLoading} />
+            <div className="animate-in fade-in duration-300 space-y-8">
+              <div className="flex justify-between items-end">
+                <div>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Performances Live</h2>
+                  <p className="text-slate-500 font-medium">Statistiques basées sur les données réelles de Firestore.</p>
+                </div>
+                <Button className="bg-primary hover:bg-primary/90 font-black rounded-xl" asChild>
+                  <Link href="/partners/join"><Plus className="mr-2 h-4 w-4" /> Nouvelle Annonce</Link>
+                </Button>
               </div>
 
-              <Card className="mt-8 border-none shadow-sm rounded-none overflow-hidden bg-white">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest">Performances Plateforme</CardTitle>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <KpiCard title="Total Annonces" value={stats.total.toString()} icon={<Building />} color="blue" sub="Gérer le catalogue" onClick={() => router.push('/admin/catalog')} loading={listingsLoading} />
+                <KpiCard title="Revenus Est." value={`${stats.revenue.toLocaleString()} DA`} icon={<Euro />} color="dark-blue" sub="Voir Rapport" onClick={() => {}} loading={listingsLoading} />
+                <KpiCard title="En attente" value={stats.pending.toString()} icon={<Clock />} color="orange" sub="Vérifier" onClick={() => router.push('/admin/validate')} loading={listingsLoading} />
+                <KpiCard title="Approuvées" value={stats.approved.toString()} icon={<CheckCircle2 />} color="green" sub="Catalogue Actif" onClick={() => router.push('/admin/catalog')} loading={listingsLoading} />
+              </div>
+
+              <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+                <CardHeader className="flex flex-row items-center justify-between pb-2 bg-slate-50 border-b">
+                  <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest">Activité Plateforme (Estimation)</CardTitle>
                   <Badge variant="outline" className="font-bold border-slate-200">Année 2026</Badge>
                 </CardHeader>
-                <CardContent className="h-[300px] w-full pt-4">
+                <CardContent className="h-[350px] w-full pt-8">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <defs>
@@ -211,7 +227,7 @@ function KpiCard({ title, value, icon, color, sub, onClick, loading = false }: {
   };
   
   return (
-    <Card className="border-none shadow-sm rounded-none overflow-hidden group bg-white">
+    <Card className="border-none shadow-sm rounded-2xl overflow-hidden group bg-white border-b-4 border-slate-100 hover:border-primary transition-all">
       <CardContent className="p-6 relative">
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-1">

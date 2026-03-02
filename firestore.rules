@@ -20,7 +20,9 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read, write: if isAdmin() || isOwner(userId);
+      // L'admin peut lister tous les utilisateurs, la lecture/écriture est limitée au proprio ou admin
+      allow list: if isAdmin();
+      allow get, write: if isAdmin() || isOwner(userId);
     }
 
     match /listings/{listingId} {
@@ -30,9 +32,9 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      // Autorise la lecture globale (list) et individuelle (get) pour les admins
-      // Les clients/partenaires ne peuvent lire que les leurs
-      allow read: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid));
+      // Séparation list/get pour permettre à l'admin de voir tout sans filtre
+      allow list: if isAdmin();
+      allow get: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid));
       allow create: if isSignedIn();
       allow update: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid));
       allow delete: if isAdmin();
@@ -52,14 +54,16 @@ service cloud.firestore {
     }
 
     match /conversations/{convId} {
-      // Accès global pour l'admin, filtré pour les participants
-      allow read: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
+      // Séparation list/get pour le monitoring admin
+      allow list: if isAdmin();
+      allow get: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
       allow create: if isSignedIn();
       allow update: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
       allow delete: if isAdmin();
       
       match /messages/{msgId} {
-        allow read: if isAdmin() || (isSignedIn() && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid]));
+        // L'admin ou un participant peut voir les messages
+        allow list, get: if isAdmin() || (isSignedIn() && get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid]));
         allow create: if isSignedIn();
       }
     }

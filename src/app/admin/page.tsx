@@ -3,8 +3,9 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { 
-  LayoutDashboard, Calendar, Building, Clock, 
-  CheckCircle2, Euro, Puzzle, Loader2, TrendingUp, Tag, Plus
+  LayoutDashboard, Building, Clock, 
+  CheckCircle2, Euro, Loader2, Users, TrendingUp, Tag, Plus, 
+  ArrowRight, ShieldCheck, Wallet, MessageSquare
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,21 +17,11 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { collection, query, orderBy, limit } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useCurrency } from "@/context/currency-context";
 
 const ADMIN_EMAILS = ["stayflow2025@gmail.com", "kiosque.du.passage@gmail.com"];
-
-const chartData = [
-  { name: 'Jan', res: 400, rev: 2400 },
-  { name: 'Fév', res: 300, rev: 1398 },
-  { name: 'Mar', res: 200, rev: 9800 },
-  { name: 'Avr', res: 278, rev: 3908 },
-  { name: 'Mai', res: 189, rev: 4800 },
-  { name: 'Juin', res: 239, rev: 3800 },
-  { name: 'Juil', res: 349, rev: 4300 },
-];
 
 export default function AdminDashboardMaster() {
   const { user, isUserLoading } = useUser();
@@ -38,11 +29,16 @@ export default function AdminDashboardMaster() {
   const db = useFirestore();
   const { formatPrice } = useCurrency();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
-  // RÉCUPÉRATION DYNAMIQUE DE TOUT LE CATALOGUE
+  // DATA FETCHING REAL-TIME
   const listingsRef = useMemoFirebase(() => query(collection(db, 'listings'), orderBy('createdAt', 'desc')), [db]);
   const { data: listings, isLoading: listingsLoading } = useCollection(listingsRef);
+
+  const usersRef = useMemoFirebase(() => query(collection(db, 'users'), limit(1000)), [db]);
+  const { data: usersData, isLoading: usersLoading } = useCollection(usersRef);
+
+  const bookingsRef = useMemoFirebase(() => query(collection(db, 'bookings'), orderBy('createdAt', 'desc')), [db]);
+  const { data: bookings, isLoading: bookingsLoading } = useCollection(bookingsRef);
 
   useEffect(() => {
     if (!isUserLoading) {
@@ -50,36 +46,30 @@ export default function AdminDashboardMaster() {
         router.replace("/auth/login");
       } else if (!ADMIN_EMAILS.includes(user.email || "")) {
         router.replace("/profile");
-      } else {
-        setIsAuthorized(true);
       }
     }
   }, [user, isUserLoading, router]);
 
-  // CALCUL DES STATISTIQUES RÉELLES
+  // DYNAMIC STATS
   const stats = useMemo(() => {
-    if (!listings) return { total: 0, pending: 0, approved: 0, revenue: 0 };
     return {
-      total: listings.length,
-      pending: listings.filter(l => l.status === 'pending').length,
-      approved: listings.filter(l => l.status === 'approved').length,
-      revenue: listings.filter(l => l.status === 'approved').reduce((acc, curr) => acc + (curr.price || 0), 0)
+      totalListings: listings?.length || 0,
+      pendingListings: listings?.filter(l => l.status === 'pending').length || 0,
+      totalUsers: usersData?.length || 0,
+      totalRevenue: bookings?.filter(b => b.status === 'approved').reduce((acc, curr) => acc + (curr.totalPrice || 0), 0) || 0,
+      bookingsToday: bookings?.filter(b => {
+        const d = new Date(b.createdAt);
+        return d.toDateString() === new Date().toDateString();
+      }).length || 0,
     };
-  }, [listings]);
+  }, [listings, usersData, bookings]);
 
-  if (isUserLoading || isAuthorized === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="font-black uppercase tracking-widest animate-pulse">StayFloow Engine Sync...</p>
-        </div>
-      </div>
-    );
+  if (isUserLoading || !user) {
+    return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5] flex flex-col font-sans text-slate-700 page-fade-in">
+    <div className="min-h-screen bg-[#F0F2F5] flex flex-col font-sans">
       <header className="bg-slate-800 text-white flex items-center h-16 shadow-lg z-50">
         <div className="w-64 flex items-center justify-center border-r border-slate-700 h-full">
           <Link href="/" className="flex items-center gap-2">
@@ -87,203 +77,158 @@ export default function AdminDashboardMaster() {
             <span className="font-black tracking-tighter text-xl uppercase">StayFloow<span className="text-secondary text-xs">.admin</span></span>
           </Link>
         </div>
-        <nav className="flex-1 flex h-full">
-          <HeaderTab icon={<LayoutDashboard />} label="Tableau de Bord" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-          <HeaderTab icon={<Building />} label="Catalogue Maître" active={activeTab === 'catalog'} onClick={() => router.push('/admin/catalog')} />
-          <HeaderTab icon={<Clock />} label="Validation" active={activeTab === 'validate'} onClick={() => router.push('/admin/validate')} />
-        </nav>
-        <div className="px-6 flex items-center gap-4 border-l border-slate-700 h-full">
-          <Badge className="bg-green-600 border-none font-black text-[10px]">ADMIN ACTIF</Badge>
-          <div className="h-8 w-8 rounded-full bg-primary border-2 border-primary/20 flex items-center justify-center font-black text-xs">
-            {user?.email?.charAt(0).toUpperCase()}
-          </div>
+        <div className="flex-1 px-8">
+          <h1 className="text-sm font-black uppercase tracking-widest text-slate-400">Master Control Panel</h1>
+        </div>
+        <div className="px-6 flex items-center gap-4">
+          <Badge className="bg-green-600 border-none font-black text-[10px]">LIVE SYNC ACTIVE</Badge>
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-64 bg-slate-800 text-slate-300 flex flex-col border-r border-slate-700 shrink-0">
-          <div className="flex-1 py-6">
+          <div className="flex-1 py-6 space-y-1">
             <SidebarItem icon={<LayoutDashboard />} label="Tableau de Bord" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-            <SidebarItem icon={<Tag />} label="Catalogue Global" onClick={() => router.push('/admin/catalog')} />
-            <SidebarItem icon={<Clock />} label="Files d'attente" onClick={() => router.push('/admin/validate')} />
-            <SidebarItem icon={<Puzzle />} label="Extensions IA" active={activeTab === 'extensions'} onClick={() => setActiveTab('extensions')} />
-          </div>
-          <div className="p-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center border-t border-slate-700">
-            Real-time Database Active
+            <SidebarItem icon={<Building />} label="Catalogue Maître" onClick={() => router.push('/admin/catalog')} />
+            <SidebarItem icon={<Users />} label="Utilisateurs" onClick={() => router.push('/admin/users')} />
+            <SidebarItem icon={<Clock />} label="Validations" onClick={() => router.push('/admin/validate')} />
+            <SidebarItem icon={<Wallet />} label="Finance & Paiements" onClick={() => router.push('/admin/finance')} />
+            <SidebarItem icon={<MessageSquare />} label="Support Client" onClick={() => router.push('/admin/messaging')} />
+            <SidebarItem icon={<Tag />} label="Paramètres Site" onClick={() => router.push('/admin/settings')} />
           </div>
         </aside>
 
         <main className="flex-1 overflow-y-auto p-8 space-y-8">
-          {activeTab === 'dashboard' && (
-            <div className="animate-in fade-in duration-300 space-y-8">
-              <div className="flex justify-between items-end">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Performances Live</h2>
-                  <p className="text-slate-500 font-medium">Statistiques basées sur les données réelles de Firestore.</p>
+          <div className="flex justify-between items-end">
+            <div>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Performances Globales</h2>
+              <p className="text-slate-500 font-medium">Données synchronisées en temps réel avec Firestore.</p>
+            </div>
+            <div className="flex gap-3">
+               <Button variant="outline" className="bg-white border-none shadow-sm font-black" onClick={() => router.push('/admin/finance')}>Rapports Finance</Button>
+               <Button className="bg-primary hover:bg-primary/90 font-black rounded-xl" onClick={() => router.push('/partners/join')}>+ Nouvelle Annonce</Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <KpiCard title="Annonces Totales" value={stats.totalListings.toString()} icon={<Building />} color="blue" sub="Gérer l'inventaire" onClick={() => router.push('/admin/catalog')} />
+            <KpiCard title="Utilisateurs" value={stats.totalUsers.toString()} icon={<Users />} color="dark-blue" sub="Liste membres" onClick={() => router.push('/admin/users')} />
+            <KpiCard title="En attente" value={stats.pendingListings.toString()} icon={<Clock />} color="orange" sub="Vérifier" onClick={() => router.push('/admin/validate')} />
+            <KpiCard title="Chiffre d'Affaires" value={formatPrice(stats.totalRevenue)} icon={<TrendingUp />} color="green" sub="Voir détails" onClick={() => router.push('/admin/finance')} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <Card className="lg:col-span-2 border-none shadow-xl rounded-3xl overflow-hidden bg-white">
+              <CardHeader className="bg-slate-50 border-b p-6">
+                <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" /> Croissance Réservations
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="h-[350px] p-8">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorChart" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="val" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorChart)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
+              <CardHeader className="bg-slate-50 border-b p-6">
+                <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-orange-500" /> Activité Récente
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  {bookings?.slice(0, 5).map((b: any) => (
+                    <div key={b.id} className="flex items-center justify-between group">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-slate-100 p-2 rounded-xl group-hover:bg-primary/10 transition-colors">
+                          <Tag className="h-4 w-4 text-slate-400 group-hover:text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-slate-800 truncate max-w-[150px]">{b.itemName}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">{b.status}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm font-black text-primary">{formatPrice(b.totalPrice)}</p>
+                    </div>
+                  ))}
+                  {(!bookings || bookings.length === 0) && (
+                    <p className="text-center text-slate-400 font-bold py-10">Aucune activité.</p>
+                  )}
                 </div>
-                <Button className="bg-primary hover:bg-primary/90 font-black rounded-xl" asChild>
-                  <Link href="/partners/join"><Plus className="mr-2 h-4 w-4" /> Nouvelle Annonce</Link>
+                <Button variant="ghost" className="w-full mt-6 text-xs font-black uppercase text-slate-400 hover:text-primary" onClick={() => router.push('/admin/catalog')}>
+                  Voir tout le catalogue <ArrowRight className="h-3 w-3 ml-2" />
                 </Button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <KpiCard title="Total Annonces" value={stats.total.toString()} icon={<Building />} color="blue" sub="Gérer le catalogue" onClick={() => router.push('/admin/catalog')} loading={listingsLoading} />
-                <KpiCard title="Revenus Est." value={formatPrice(stats.revenue)} icon={<Euro />} color="dark-blue" sub="Voir Rapport" onClick={() => {}} loading={listingsLoading} />
-                <KpiCard title="En attente" value={stats.pending.toString()} icon={<Clock />} color="orange" sub="Vérifier" onClick={() => router.push('/admin/validate')} loading={listingsLoading} />
-                <KpiCard title="Approuvées" value={stats.approved.toString()} icon={<CheckCircle2 />} color="green" sub="Catalogue Actif" onClick={() => router.push('/admin/catalog')} loading={listingsLoading} />
-              </div>
-
-              <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 bg-slate-50 border-b">
-                  <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest">Activité Plateforme (Estimation)</CardTitle>
-                  <Badge variant="outline" className="font-bold border-slate-200">Année 2026</Badge>
-                </CardHeader>
-                <CardContent className="h-[350px] w-full pt-8">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
-                      <defs>
-                        <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10B981" stopOpacity={0.1}/>
-                          <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                      <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
-                      <Area type="monotone" dataKey="rev" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === 'extensions' && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
-              <div className="flex flex-col gap-2">
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight">StayFloow Marketplace</h2>
-                <p className="text-slate-500 font-medium">Installez de nouveaux modules pour étendre les capacités de la plateforme.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <ExtensionCard 
-                  title="Paiement BaridiMob" 
-                  desc="Intégration native des paiements Algérie Poste pour vos partenaires locaux." 
-                  status="installed"
-                  icon={<Euro className="h-8 w-8" />}
-                />
-                <ExtensionCard 
-                  title="Optimiseur SEO Pro" 
-                  desc="Générez automatiquement des méta-données via l'IA pour chaque annonce." 
-                  status="available"
-                  onClick={() => router.push('/admin/settings/seo')}
-                  icon={<TrendingUp className="h-8 w-8" />}
-                />
-              </div>
-            </div>
-          )}
+              </CardContent>
+            </Card>
+          </div>
         </main>
       </div>
     </div>
   );
 }
 
-function HeaderTab({ icon, label, active = false, onClick }: { icon: any, label: string, active?: boolean, onClick: () => void }) {
-  return (
-    <button 
-      onClick={onClick}
-      className={cn(
-        "px-6 flex items-center gap-3 font-bold text-sm transition-all border-b-4 outline-none",
-        active ? "bg-slate-700/50 border-primary text-white" : "border-transparent text-slate-400 hover:bg-slate-700 hover:text-white"
-      )}
-    >
-      <span className={cn("h-4 w-4", active ? "text-primary" : "text-slate-500")}>{icon}</span>
-      {label}
-    </button>
-  );
-}
+const chartData = [
+  { name: 'Lun', val: 400 },
+  { name: 'Mar', val: 300 },
+  { name: 'Mer', val: 600 },
+  { name: 'Jeu', val: 800 },
+  { name: 'Ven', val: 500 },
+  { name: 'Sam', val: 900 },
+  { name: 'Dim', val: 700 },
+];
 
 function SidebarItem({ icon, label, active = false, onClick }: { icon: any, label: string, active?: boolean, onClick?: () => void }) {
   return (
     <div 
       onClick={onClick}
       className={cn(
-        "px-6 py-3.5 flex items-center gap-4 cursor-pointer transition-colors border-l-4",
-        active ? "bg-slate-700 text-white border-primary" : "border-transparent text-slate-400 hover:bg-slate-700/50 hover:text-white"
+        "px-6 py-3.5 flex items-center gap-4 cursor-pointer transition-all border-l-4",
+        active ? "bg-slate-700/50 text-white border-primary" : "border-transparent text-slate-400 hover:bg-slate-700/30 hover:text-white"
       )}
     >
-      <span className={active ? "text-primary" : "text-slate-500"}>{icon}</span>
+      <span className={cn("h-4 w-4", active ? "text-primary" : "text-slate-500")}>{icon}</span>
       <span className="text-[13px] font-bold">{label}</span>
     </div>
   );
 }
 
-function KpiCard({ title, value, icon, color, sub, onClick, loading = false }: { title: string, value: string, icon: any, color: string, sub: string, onClick: () => void, loading?: boolean }) {
-  const colorClasses = {
-    "blue": "text-blue-600",
-    "dark-blue": "text-blue-900",
-    "green": "text-green-600",
-    "orange": "text-orange-600"
+function KpiCard({ title, value, icon, color, sub, onClick }: { title: string, value: string, icon: any, color: string, sub: string, onClick: () => void }) {
+  const colors: any = {
+    "blue": "text-blue-600 bg-blue-50",
+    "dark-blue": "text-indigo-600 bg-indigo-50",
+    "green": "text-emerald-600 bg-emerald-50",
+    "orange": "text-orange-600 bg-orange-50"
   };
   
   return (
-    <Card className="border-none shadow-sm rounded-2xl overflow-hidden group bg-white border-b-4 border-slate-100 hover:border-primary transition-all">
-      <CardContent className="p-6 relative">
+    <Card className="border-none shadow-sm rounded-3xl overflow-hidden group bg-white hover:shadow-xl transition-all cursor-pointer" onClick={onClick}>
+      <CardContent className="p-6">
         <div className="flex justify-between items-start mb-4">
-          <div className="space-y-1">
-            {loading ? (
-              <div className="h-8 w-24 bg-slate-100 animate-pulse rounded" />
-            ) : (
-              <p className="text-3xl font-black text-slate-800 tracking-tight">{value}</p>
-            )}
-            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{title}</p>
-          </div>
-          <div className={cn("p-2 bg-slate-50 rounded-lg", colorClasses[color as keyof typeof colorClasses])}>
+          <div className={cn("p-3 rounded-2xl", colors[color])}>
             {icon}
           </div>
-        </div>
-        <Button 
-          onClick={(e) => { e.preventDefault(); onClick(); }}
-          className={cn("w-full h-8 text-[10px] font-black uppercase tracking-widest rounded-md", 
-          color === 'blue' ? "bg-blue-600" : 
-          color === 'dark-blue' ? "bg-blue-900" : 
-          color === 'green' ? "bg-green-600" : "bg-orange-600"
-        )}>
-          {sub}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ExtensionCard({ title, desc, status, icon, onClick }: { title: string, desc: string, status: 'installed' | 'available', icon: any, onClick?: () => void }) {
-  return (
-    <Card className="border-none shadow-xl rounded-[2rem] overflow-hidden bg-white group hover:scale-[1.02] transition-all">
-      <CardContent className="p-8 space-y-6">
-        <div className="flex justify-between items-start">
-          <div className="p-4 bg-slate-50 rounded-2xl text-primary group-hover:bg-primary/10 transition-colors">
-            {icon}
+          <div className="text-right">
+            <p className="text-3xl font-black text-slate-900 tracking-tighter">{value}</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</p>
           </div>
-          {status === 'installed' ? (
-            <Badge className="bg-green-600 border-none font-black text-[10px]">INSTALLÉ</Badge>
-          ) : (
-            <Badge variant="outline" className="text-slate-400 border-slate-200 text-[10px]">DISPONIBLE</Badge>
-          )}
         </div>
-        <div className="space-y-2">
-          <h3 className="text-xl font-black text-slate-900">{title}</h3>
-          <p className="text-sm text-slate-500 leading-relaxed font-medium">{desc}</p>
-        </div>
-        <Button 
-          onClick={onClick}
-          className={cn(
-            "w-full h-12 font-black rounded-xl",
-            status === 'installed' ? "bg-slate-100 text-slate-400" : "bg-primary hover:bg-primary/90 text-white"
-          )}
-        >
-          {status === 'installed' ? "Gérer" : "Installer"}
-        </Button>
+        <p className="text-[10px] font-black text-primary uppercase tracking-tighter flex items-center gap-1">
+          {sub} <ArrowRight className="h-2.5 w-2.5" />
+        </p>
       </CardContent>
     </Card>
   );

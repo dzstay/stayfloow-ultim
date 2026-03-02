@@ -1,0 +1,166 @@
+
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { 
+  Settings, Globe, Shield, Mail, Wallet, 
+  ArrowLeft, Loader2, Save, Sparkles, Sliders, ToggleRight
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+
+const ADMIN_EMAILS = ["stayflow2025@gmail.com", "kiosque.du.passage@gmail.com"];
+
+export default function AdminSettingsPage() {
+  const router = useRouter();
+  const db = useFirestore();
+  const { toast } = useToast();
+  const { user, isUserLoading } = useUser();
+  const [isSaving, setIsSaving] = useState(false);
+
+  const configRef = useMemoFirebase(() => doc(db, "settings", "siteConfig"), [db]);
+  const { data: config, isLoading: configLoading } = useDoc(configRef);
+
+  const [formData, setFormData] = useState({
+    siteName: "StayFloow.com",
+    platformFee: 15,
+    autoValidate: false,
+    maintenanceMode: false,
+    supportEmail: "support@stayfloow.com",
+    currency: "DZD"
+  });
+
+  useEffect(() => {
+    if (config) {
+      setFormData({
+        siteName: config.siteName || "StayFloow.com",
+        platformFee: config.platformFee || 15,
+        autoValidate: config.autoValidate || false,
+        maintenanceMode: config.maintenanceMode || false,
+        supportEmail: config.supportEmail || "support@stayfloow.com",
+        currency: config.currency || "DZD"
+      });
+    }
+  }, [config]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await setDoc(configRef, {
+        ...formData,
+        updatedAt: serverTimestamp(),
+        updatedBy: user?.email
+      });
+      toast({ title: "Configuration mise à jour", description: "Les paramètres du site ont été appliqués." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Erreur", description: "Impossible de sauvegarder." });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isUserLoading || configLoading) return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
+
+  if (!user || !ADMIN_EMAILS.includes(user.email || "")) {
+    router.replace("/");
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC]">
+      <header className="bg-slate-800 text-white py-8 px-8 shadow-lg sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => router.push('/admin')} className="text-white hover:bg-white/10 rounded-full">
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-black uppercase tracking-tight">Configuration Plateforme</h1>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Pilotage global du moteur StayFloow</p>
+            </div>
+          </div>
+          <Button onClick={handleSave} disabled={isSaving} className="bg-primary hover:bg-primary/90 text-white font-black px-8 h-12 rounded-xl shadow-xl">
+            {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <><Save className="mr-2 h-4 w-4" /> Sauvegarder</>}
+          </Button>
+        </div>
+      </header>
+
+      <main className="max-w-5xl mx-auto px-8 py-12 space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          {/* IDENTITÉ */}
+          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+            <CardHeader className="bg-slate-50 border-b">
+              <CardTitle className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                <Globe className="h-4 w-4 text-primary" /> Identité du Site
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="space-y-2">
+                <Label className="font-bold text-slate-700">Nom de la plateforme</Label>
+                <Input value={formData.siteName} onChange={e => setFormData({...formData, siteName: e.target.value})} className="h-12 bg-slate-50" />
+              </div>
+              <div className="space-y-2">
+                <Label className="font-bold text-slate-700">Email support officiel</Label>
+                <Input value={formData.supportEmail} onChange={e => setFormData({...formData, supportEmail: e.target.value})} className="h-12 bg-slate-50" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* BUSINESS MODEL */}
+          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+            <CardHeader className="bg-slate-50 border-b">
+              <CardTitle className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                <Wallet className="h-4 w-4 text-emerald-500" /> Modèle Économique
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="space-y-2">
+                <Label className="font-bold text-slate-700">Frais de service plateforme (%)</Label>
+                <div className="relative">
+                  <Input type="number" value={formData.platformFee} onChange={e => setFormData({...formData, platformFee: parseInt(e.target.value)})} className="h-12 bg-slate-50 pr-12 font-black" />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">%</div>
+                </div>
+                <p className="text-[10px] text-slate-400 italic">Appliqué sur chaque réservation confirmée.</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* WORKFLOW AUTOMATION */}
+          <Card className="md:col-span-2 border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-slate-900 text-white">
+            <CardContent className="p-10">
+              <h3 className="text-xl font-black mb-8 flex items-center gap-3">
+                <Sliders className="h-6 w-6 text-primary" /> Automatisation & Sécurité
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="flex items-center justify-between p-6 bg-white/5 rounded-3xl border border-white/10">
+                  <div className="space-y-1">
+                    <p className="font-black">Validation Automatique</p>
+                    <p className="text-xs text-white/40">Approuver les annonces sans vérification admin.</p>
+                  </div>
+                  <Switch checked={formData.autoValidate} onCheckedChange={v => setFormData({...formData, autoValidate: v})} />
+                </div>
+
+                <div className="flex items-center justify-between p-6 bg-white/5 rounded-3xl border border-white/10">
+                  <div className="space-y-1">
+                    <p className="font-black text-amber-400">Mode Maintenance</p>
+                    <p className="text-xs text-white/40">Rendre le site inaccessible aux clients.</p>
+                  </div>
+                  <Switch checked={formData.maintenanceMode} onCheckedChange={v => setFormData({...formData, maintenanceMode: v})} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+        </div>
+      </main>
+    </div>
+  );
+}

@@ -10,9 +10,9 @@
         "firstName": { "type": "string" },
         "lastName": { "type": "string" },
         "phoneNumber": { "type": "string" },
-        "languagePreference": { "type": "string" },
-        "currencyPreference": { "type": "string" },
-        "loyaltyPoints": { "type": "number" }
+        "role": { "type": "string", "enum": ["client", "partner", "admin"] },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "email", "firstName", "lastName"]
     },
@@ -23,15 +23,14 @@
         "id": { "type": "string" },
         "ownerId": { "type": "string" },
         "category": { "type": "string", "enum": ["accommodation", "car_rental", "circuit"] },
-        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "inactive"] },
         "price": { "type": "number" },
         "currency": { "type": "string" },
         "details": { "type": "object" },
         "location": { "type": "object" },
         "photos": { "type": "array", "items": { "type": "string" } },
         "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "ownerId", "category", "status", "price"]
+      }
     },
     "Booking": {
       "title": "Booking",
@@ -42,26 +41,23 @@
         "partnerId": { "type": "string" },
         "listingId": { "type": "string" },
         "itemName": { "type": "string" },
-        "itemType": { "type": "string" },
-        "startDate": { "type": "string", "format": "date-time" },
-        "endDate": { "type": "string", "format": "date-time" },
         "totalPrice": { "type": "number" },
-        "currency": { "type": "string" },
         "status": { "type": "string", "enum": ["pending", "approved", "rejected", "cancelled"] },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["userId", "partnerId", "listingId", "startDate", "totalPrice"]
+        "paymentId": { "type": "string" }
+      }
     },
-    "Conversation": {
-      "title": "Conversation",
+    "Payment": {
+      "title": "Payment",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "participants": { "type": "array", "items": { "type": "string" } },
         "bookingId": { "type": "string" },
-        "listingId": { "type": "string" },
-        "lastMessage": { "type": "string" },
-        "lastAt": { "type": "string", "format": "date-time" }
+        "amount": { "type": "number" },
+        "commission": { "type": "number" },
+        "partnerRevenue": { "type": "number" },
+        "currency": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       }
     }
   },
@@ -70,9 +66,10 @@
   },
   "firestore": {
     "/users/{userId}": { "schema": { "$ref": "#/backend/entities/UserProfile" }, "description": "User profiles" },
-    "/listings/{listingId}": { "schema": { "$ref": "#/backend/entities/PartnerListing" }, "description": "Public listings" },
+    "/listings/{listingId}": { "schema": { "$ref": "#/backend/entities/PartnerListing" }, "description": "Global listings" },
     "/bookings/{bookingId}": { "schema": { "$ref": "#/backend/entities/Booking" }, "description": "Reservations" },
-    "/conversations/{convId}": { "schema": { "$ref": "#/backend/entities/Conversation" }, "description": "Messaging threads" },
-    "/conversations/{convId}/messages/{msgId}": { "schema": { "type": "object" }, "description": "Individual messages" }
+    "/payments/{payId}": { "schema": { "$ref": "#/backend/entities/Payment" }, "description": "Financial transactions" },
+    "/settings/siteConfig": { "schema": { "type": "object" }, "description": "Platform configuration" },
+    "/adminLogs/{logId}": { "schema": { "type": "object" }, "description": "Admin action logs" }
   }
 }

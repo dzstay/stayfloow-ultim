@@ -4,44 +4,52 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isSignedIn() { return request.auth != null; }
-    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
     function isAdmin() {
       return isSignedIn() && (
-        exists(/databases/$(database)/documents/admin_roles/$(request.auth.uid)) ||
         request.auth.token.email == "stayflow2025@gmail.com" ||
         request.auth.token.email == "kiosque.du.passage@gmail.com"
       );
     }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
 
     match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
-      allow write: if isOwner(userId);
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
     }
 
     match /listings/{listingId} {
-      allow read: if resource.data.status == 'approved' || isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
-      allow create: if isSignedIn();
-      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+      allow read: if true;
+      allow write: if isSignedIn();
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
     match /bookings/{bookingId} {
-      allow read: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid));
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid || isAdmin());
       allow create: if isSignedIn();
       allow update: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid));
     }
 
-    match /conversations/{convId} {
-      allow read: if isSignedIn() && request.auth.uid in resource.data.participants;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && request.auth.uid in resource.data.participants;
-
-      match /messages/{msgId} {
-        allow read, write: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.participants;
-      }
+    match /payments/{payId} {
+      allow read, write: if isAdmin();
     }
 
-    match /admin_roles/{userId} {
-      allow get, list: if isAdmin();
+    match /settings/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /adminLogs/{logId} {
+      allow create: if isAdmin();
+      allow read: if isAdmin();
+    }
+
+    match /conversations/{convId} {
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.participants || isAdmin());
+      allow write: if isSignedIn();
+      
+      match /messages/{msgId} {
+        allow read, write: if isSignedIn();
+      }
     }
   }
 }

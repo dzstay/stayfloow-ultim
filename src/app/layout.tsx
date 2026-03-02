@@ -1,3 +1,4 @@
+
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -13,6 +14,7 @@ const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-inter',
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -45,6 +47,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning className={inter.variable}>
+      <head>
+        {/* Pré-connexion aux domaines critiques pour la rapidité */}
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="preconnect" href="https://picsum.photos" />
+      </head>
       <body className="font-body antialiased bg-background min-h-screen flex flex-col overflow-x-hidden">
         <FirebaseClientProvider>
           <ClientProviders>

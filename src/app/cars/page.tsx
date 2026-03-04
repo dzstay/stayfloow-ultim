@@ -10,6 +10,7 @@ import { cars } from '@/lib/data';
 import { CarCard } from '@/components/car-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/context/language-context';
+import { cn } from '@/lib/utils';
 
 export default function CarsPage() {
   const { t } = useLanguage();
@@ -28,25 +29,29 @@ export default function CarsPage() {
       name: 'Économique', 
       image: getImage('car-eco'), 
       count: getCount('Économique'),
-      slug: 'économique'
+      slug: 'économique',
+      color: 'text-[#10B981]' // Vert comme sur la photo
     },
     { 
       name: 'SUV & 4x4', 
       image: getImage('car-suv'), 
       count: getCount('SUV & 4x4'),
-      slug: 'suv & 4x4'
+      slug: 'suv & 4x4',
+      color: 'text-slate-900'
     },
     { 
       name: 'Berline', 
       image: getImage('car-sedan'), 
       count: getCount('Berline'),
-      slug: 'berline'
+      slug: 'berline',
+      color: 'text-slate-900'
     },
     { 
       name: 'Luxe', 
       image: getImage('car-luxury'), 
       count: getCount('Luxe'),
-      slug: 'luxe'
+      slug: 'luxe',
+      color: 'text-slate-900'
     },
   ];
 
@@ -54,7 +59,7 @@ export default function CarsPage() {
     <div className="flex flex-col min-h-screen bg-[#f5f5f5]">
       {/* Hero Section */}
       <section className="bg-primary pt-16 pb-32 px-6 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto relative z-10 text-center md:text-left space-y-6">
+        <div className="max-w-7xl mx-auto relative z-10 text-center md:text-left space-y-6">
           <h1 className="text-4xl md:text-6xl font-black text-white leading-tight tracking-tight">
             Location de voitures pour tous les types de voyages
           </h1>
@@ -96,30 +101,32 @@ export default function CarsPage() {
           </Card>
         </section>
 
-        {/* Categories Dynamiques */}
+        {/* Categories Section - Fidèle à la photo demandée */}
         <section className="mb-20">
-          <h2 className="text-3xl font-black mb-8 text-slate-900 tracking-tight">Parcourir par catégorie</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <h2 className="text-2xl font-black mb-8 text-slate-900 tracking-tight">Parcourir par catégorie</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {carCategories.map((cat) => (
-              <Link key={cat.slug} href={`/cars/results?cat=${cat.slug}`} className="group block">
-                <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden mb-4 shadow-xl border-4 border-white transition-all group-hover:shadow-2xl group-hover:-translate-y-2 bg-slate-100">
+              <Link key={cat.slug} href={`/cars/results?cat=${cat.slug}`} className="group block space-y-4">
+                <div className="relative aspect-[1.4/1] rounded-[2rem] overflow-hidden shadow-sm border border-slate-100 transition-all group-hover:shadow-md bg-[#E5EAF3] flex items-center justify-center">
                   {cat.image ? (
                     <Image 
                       src={cat.image} 
                       alt={cat.name} 
                       fill 
-                      className="object-cover group-hover:scale-110 transition-transform duration-1000" 
+                      className="object-cover transition-transform duration-700 group-hover:scale-110" 
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-200">
-                      <Gauge className="h-12 w-12 text-slate-400 opacity-20" />
-                    </div>
+                    <Gauge className="h-16 w-16 text-slate-300/50" />
                   )}
                 </div>
-                <h3 className="font-black text-xl group-hover:text-primary transition-colors text-slate-900">{cat.name}</h3>
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
-                  {cat.count} {cat.count > 1 ? 'VÉHICULES' : 'VÉHICULE'}
-                </p>
+                <div className="px-1">
+                  <h3 className={cn("font-black text-xl tracking-tight transition-colors", cat.color)}>
+                    {cat.name}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                    {cat.count} {cat.count > 1 ? 'VÉHICULES' : 'VÉHICULE'}
+                  </p>
+                </div>
               </Link>
             ))}
           </div>

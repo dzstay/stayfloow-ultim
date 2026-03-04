@@ -5,13 +5,14 @@ import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { 
   Settings, Globe, Shield, Mail, Wallet, 
-  ArrowLeft, Loader2, Save, Sparkles, Sliders, ToggleRight
+  ArrowLeft, Loader2, Save, Sparkles, Sliders, ToggleRight, Type
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { checkIsAdmin } from "@/lib/admin-config";
@@ -34,7 +35,9 @@ export default function AdminSettingsPage() {
     autoValidate: false,
     maintenanceMode: false,
     supportEmail: "support@stayfloow.com",
-    currency: "DZD"
+    currency: "DZD",
+    heroTitle: "",
+    heroSubtitle: ""
   });
 
   useEffect(() => {
@@ -45,7 +48,9 @@ export default function AdminSettingsPage() {
         autoValidate: config.autoValidate || false,
         maintenanceMode: config.maintenanceMode || false,
         supportEmail: config.supportEmail || "support@stayfloow.com",
-        currency: config.currency || "DZD"
+        currency: config.currency || "DZD",
+        heroTitle: config.heroTitle || "",
+        heroSubtitle: config.heroSubtitle || ""
       });
     }
   }, [config]);
@@ -57,7 +62,7 @@ export default function AdminSettingsPage() {
         ...formData,
         updatedAt: serverTimestamp(),
         updatedBy: user?.email
-      });
+      }, { merge: true });
       toast({ title: "Configuration mise à jour", description: "Les paramètres du site ont été appliqués." });
     } catch (e) {
       toast({ variant: "destructive", title: "Erreur", description: "Impossible de sauvegarder." });
@@ -129,6 +134,36 @@ export default function AdminSettingsPage() {
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">%</div>
                 </div>
                 <p className="text-[10px] text-slate-400 italic">Appliqué sur chaque réservation confirmée.</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* CONTENU HOME - HERO SECTION */}
+          <Card className="md:col-span-2 border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+            <CardHeader className="bg-slate-50 border-b p-8">
+              <CardTitle className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                <Type className="h-4 w-4 text-primary" /> Contenu de la Page d'Accueil
+              </CardTitle>
+              <CardDescription className="font-bold">Personnalisez le texte principal affiché aux visiteurs (Section Hero).</CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 space-y-8">
+              <div className="space-y-3">
+                <Label className="font-black text-slate-700">Titre Principal (Hero Title)</Label>
+                <Input 
+                  value={formData.heroTitle} 
+                  onChange={e => setFormData({...formData, heroTitle: e.target.value})} 
+                  placeholder="Laissez vide pour utiliser le texte par défaut..."
+                  className="h-14 rounded-xl bg-slate-50 border-slate-100 font-bold text-lg" 
+                />
+              </div>
+              <div className="space-y-3">
+                <Label className="font-black text-slate-700">Sous-titre (Hero Subtitle)</Label>
+                <Textarea 
+                  value={formData.heroSubtitle} 
+                  onChange={e => setFormData({...formData, heroSubtitle: e.target.value})} 
+                  placeholder="Expliquez votre offre phare..."
+                  className="min-h-[100px] rounded-xl bg-slate-50 border-slate-100 font-medium" 
+                />
               </div>
             </CardContent>
           </Card>

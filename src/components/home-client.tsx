@@ -1,10 +1,9 @@
-
 "use client";
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Sparkles, CheckCircle2, Zap, ShieldCheck, Clock } from 'lucide-react';
+import { MapPin, Sparkles, CheckCircle2, Zap, ShieldCheck, Clock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AdvancedSearchBar from '@/components/search/AdvancedSearchBar';
 import { useLanguage } from '@/context/language-context';
@@ -13,6 +12,8 @@ import { useEffect, useState, Suspense, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { properties } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 // Chargement différé strict pour les composants non critiques au LCP
 const AiRecommender = dynamic(() => import('@/components/ai-recommender').then(mod => mod.AiRecommender), {
@@ -28,7 +29,12 @@ const PersonalizedRecommendations = dynamic(() => import('@/components/personali
 export function HomeClient() {
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
+  const db = useFirestore();
   const [isClient, setIsClient] = useState(false);
+
+  // Récupération de la configuration du site pour le texte Hero
+  const configRef = useMemoFirebase(() => doc(db, "settings", "siteConfig"), [db]);
+  const { data: siteConfig } = useDoc(configRef);
 
   useEffect(() => {
     setIsClient(true);
@@ -77,6 +83,10 @@ export function HomeClient() {
 
   if (!isClient) return <div className="min-h-screen bg-slate-50 animate-pulse" />;
 
+  // Textes dynamiques ou par défaut
+  const displayHeroTitle = siteConfig?.heroTitle || t("hero_title");
+  const displayHeroSubtitle = siteConfig?.heroSubtitle || t("hero_subtitle");
+
   return (
     <div className="flex flex-col min-h-screen bg-background page-fade-in">
       {/* BANNIÈRE DE TEST DE NAVIGATION (Optimisée) */}
@@ -93,18 +103,18 @@ export function HomeClient() {
             <Sparkles className="h-4 w-4 text-secondary" /> {t("exclusive_offers")}
           </div>
           <h1 className="text-5xl md:text-7xl font-black tracking-tighter max-w-4xl leading-[0.95] mx-auto md:mx-0 animate-in fade-in slide-in-from-left-4 duration-700">
-            {t("hero_title")}
+            {displayHeroTitle}
           </h1>
-          <p className="text-xl md:text-2xl font-medium opacity-90 max-w-2xl leading-relaxed mx-auto md:mx-0 delay-100 animate-in fade-in slide-in-from-left-4 duration-700">
-            {t("hero_subtitle")}
+          <p className="text-xl md:text-2xl font-medium opacity-90 max-w-2xl leading-relaxed mx-auto md:mx-0 delay-100 animate-in fade-in slide-in-from-left-4 duration-700 whitespace-pre-wrap">
+            {displayHeroSubtitle}
           </p>
         </div>
-        {/* Décorations de fond optimisées (pas d'images lourdes ici) */}
+        {/* Décorations de fond optimisées */}
         <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[120px]" />
         <div className="absolute top-20 left-1/2 w-96 h-96 bg-white/5 rounded-full blur-[100px]" />
       </section>
 
-      {/* Barre de Recherche Avancée - Z-index élevé pour éviter les chevauchements */}
+      {/* Barre de Recherche Avancée - Z-index élevé */}
       <div className="max-w-7xl mx-auto w-full px-6 -mt-40 z-30 mb-20">
         <div className="bg-primary p-10 rounded-[3rem] shadow-[0_30px_70px_rgba(0,0,0,0.25)] border-4 border-white/5">
           <AdvancedSearchBar />
@@ -128,7 +138,7 @@ export function HomeClient() {
           </div>
         </section>
 
-        {/* Types d'hébergement - Avec Priorité sur les premières images */}
+        {/* Types d'hébergement */}
         <section className="mb-24">
           <div className="flex justify-between items-end mb-10">
             <div>
@@ -145,7 +155,7 @@ export function HomeClient() {
                     alt={type.name} 
                     fill 
                     sizes="(max-width: 768px) 50vw, 25vw"
-                    priority={idx < 2} // Charge les deux premières catégories en priorité
+                    priority={idx < 2}
                     className="object-cover group-hover:scale-110 transition-transform duration-1000" 
                   />
                 </div>
@@ -156,7 +166,7 @@ export function HomeClient() {
           </div>
         </section>
 
-        {/* Hébergements uniques - Chargement intelligent */}
+        {/* Hébergements uniques */}
         <section className="mb-24">
           <div className="bg-slate-900 rounded-[3rem] p-12 text-white relative overflow-hidden mb-12 shadow-2xl">
             <div className="relative z-10">
@@ -175,7 +185,7 @@ export function HomeClient() {
                     alt={stay.name} 
                     fill 
                     sizes="(max-width: 768px) 100vw, 25vw"
-                    priority={idx === 0} // Charge la première offre "Unique" en priorité
+                    priority={idx === 0}
                     className="object-cover group-hover:scale-110 transition-transform duration-1000"
                   />
                   <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg">STAYFLOOW SELECTION</div>
@@ -204,7 +214,7 @@ export function HomeClient() {
           </div>
         </section>
 
-        {/* Sections lourdes chargées uniquement au scroll */}
+        {/* Sections lourdes */}
         <Suspense fallback={<Skeleton className="w-full h-[600px] rounded-[3rem]" />}>
           <PersonalizedRecommendations />
         </Suspense>

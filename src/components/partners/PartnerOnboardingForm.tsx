@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -20,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Building, Car, Compass, MapPin, Upload, CheckCircle2, 
   Loader2, Wand2, X, Plus, Minus, Users, Bed, Bath, Sofa, Clock, Globe,
-  Wifi, Wind, ParkingCircle, Coffee, Utensils, Waves, Star, Home, Layout
+  Wifi, Wind, ParkingCircle, Coffee, Utensils, Waves, Star, Home, Layout, Trees
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generatePartnerDescription } from '@/ai/flows/partner-description-generator';

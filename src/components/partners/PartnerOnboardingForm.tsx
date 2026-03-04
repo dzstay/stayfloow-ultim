@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { 
   Building, Car, Compass, MapPin, Upload, CheckCircle2, 
-  Loader2, Wand2, X, Plus, Minus, Users, Bed, Bath, Sofa
+  Loader2, Wand2, X, Plus, Minus, Users, Bed, Bath, Sofa, Clock, Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generatePartnerDescription } from '@/ai/flows/partner-description-generator';
@@ -130,17 +130,14 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     try {
       const listingId = `list_${Date.now()}`;
       
-      // Calcul du prix normalisé en EURO pour stockage (BASE)
       const enteredPrice = parseFloat(formData.price) || 0;
       const rate = NORMALIZATION_RATES[formData.listingCurrency] || 1;
       const normalizedPriceEUR = enteredPrice / rate;
 
-      // 1. Mettre à jour le rôle de l'utilisateur
       await updateDoc(doc(db, 'users', user.uid), {
         role: 'partner'
       });
 
-      // 2. Créer le profil partenaire
       await setDoc(doc(db, 'partners', user.uid), {
         userId: user.uid,
         companyName: `${formData.firstName} ${formData.lastName}`,
@@ -148,7 +145,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         verified: false
       });
 
-      // 3. Enregistrer l'annonce
       const finalData = {
         id: listingId,
         ownerId: user.uid,
@@ -184,7 +180,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
             languages: formData.languages,
           })
         },
-        price: normalizedPriceEUR, // Toujours stocké en base EUR
+        price: normalizedPriceEUR, 
         currency: 'EUR', 
         photos: photos,
         createdAt: new Date().toISOString()
@@ -321,7 +317,11 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
 }
 
 function renderStep3(formData: any, setFormData: any, category: string, onAI: any, isGen: boolean, t: any) {
-  const amenities = category === 'accommodation' ? ["Wi-Fi", "Climatisation", "Parking", "Piscine", "Cuisine"] : category === 'car_rental' ? ["GPS", "Assurance", "Clim", "Siège Bébé"] : ["Guide", "Repas", "Transport"];
+  const amenities = category === 'accommodation' 
+    ? ["Wi-Fi", "Climatisation", "Parking", "Piscine", "Cuisine"] 
+    : category === 'car_rental' 
+    ? ["GPS", "Assurance tous risques", "Climatisation", "Siège Bébé", "Kilométrage illimité"] 
+    : ["Guide certifié", "Repas inclus", "Transport inclus", "Annulation gratuite", "Assurance voyage"];
   
   return (
     <div className="space-y-8">
@@ -334,11 +334,30 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
         </div>
       )}
 
+      {category === 'circuit' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-slate-50 p-4 rounded-2xl space-y-2">
+            <Label className="font-black text-[10px] uppercase text-slate-400 flex items-center gap-2"><Clock className="h-3 w-3 text-primary" /> Durée du circuit</Label>
+            <Input value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} placeholder="Ex: 3 jours, 2 nuits" className="bg-white border-slate-200" />
+          </div>
+          <Counter icon={<Users/>} label="Max Groupe" value={formData.maxGroupSize} onChange={v => setFormData({...formData, maxGroupSize: v})} />
+          <div className="bg-slate-50 p-4 rounded-2xl space-y-2">
+            <Label className="font-black text-[10px] uppercase text-slate-400 flex items-center gap-2"><Globe className="h-3 w-3 text-primary" /> Langues parlées</Label>
+            <Input placeholder="Français, Arabe, Anglais..." className="bg-white border-slate-200" onBlur={(e) => setFormData({...formData, languages: e.target.value.split(',').map(l => l.trim())})} />
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
-        <Label className="font-black">Équipements populaires</Label>
+        <Label className="font-black">Options & Équipements inclus</Label>
         <div className="flex flex-wrap gap-3">
           {amenities.map(a => (
-            <Badge key={a} variant={formData.amenities.includes(a) ? "default" : "outline"} onClick={() => setFormData({...formData, amenities: formData.amenities.includes(a) ? formData.amenities.filter((x:any) => x!==a) : [...formData.amenities, a]})} className="cursor-pointer px-4 py-2 rounded-xl border-slate-200">
+            <Badge 
+              key={a} 
+              variant={formData.amenities.includes(a) ? "default" : "outline"} 
+              onClick={() => setFormData({...formData, amenities: formData.amenities.includes(a) ? formData.amenities.filter((x:any) => x!==a) : [...formData.amenities, a]})} 
+              className="cursor-pointer px-4 py-2 rounded-xl border-slate-200 transition-all active:scale-95"
+            >
               {a}
             </Badge>
           ))}
@@ -350,7 +369,12 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
           <Label className="font-black">Description commerciale</Label>
           <Button variant="ghost" size="sm" onClick={onAI} disabled={isGen} className="text-primary font-bold"><Wand2 className="h-4 w-4 mr-2"/> {isGen ? 'Génération...' : 'Améliorer par IA'}</Button>
         </div>
-        <Textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="min-h-[150px] bg-slate-50" />
+        <Textarea 
+          value={formData.description} 
+          onChange={e => setFormData({...formData, description: e.target.value})} 
+          placeholder={category === 'circuit' ? "Décrivez l'itinéraire, les points forts et l'expérience vécue..." : "Décrivez votre offre en détails..."}
+          className="min-h-[150px] bg-slate-50 rounded-2xl border-slate-200" 
+        />
       </div>
     </div>
   );
@@ -362,9 +386,9 @@ function Counter({ icon, label, value, onChange }: any) {
       <div className="text-primary">{icon}</div>
       <span className="text-[10px] font-black uppercase text-slate-400">{label}</span>
       <div className="flex items-center gap-3">
-        <button onClick={() => onChange(Math.max(0, value-1))} className="h-6 w-6 rounded-full bg-white shadow-sm flex items-center justify-center"><Minus className="h-3 w-3"/></button>
-        <span className="font-black">{value}</span>
-        <button onClick={() => onChange(value+1)} className="h-6 w-6 rounded-full bg-white shadow-sm flex items-center justify-center"><Plus className="h-3 w-3"/></button>
+        <button onClick={() => onChange(Math.max(0, value-1))} className="h-8 w-8 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-primary transition-all active:scale-90"><Minus className="h-4 w-4"/></button>
+        <span className="font-black text-lg">{value}</span>
+        <button onClick={() => onChange(value+1)} className="h-8 w-8 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-primary transition-all active:scale-90"><Plus className="h-4 w-4"/></button>
       </div>
     </div>
   );

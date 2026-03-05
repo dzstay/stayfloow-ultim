@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -250,7 +249,7 @@ export default function AdvancedSearchBar() {
           <PopoverTrigger asChild>
             <div className="flex-[1.2] bg-white flex flex-col justify-center px-6 py-3 min-h-[85px] cursor-pointer hover:bg-slate-50 transition-colors border-r border-slate-100">
               <span className="text-[11px] font-black text-slate-400 uppercase tracking-tight mb-1.5 leading-none">
-                {activeCategory === 'cars' ? "Départ — Retour" : "Arrivée — Départ"}
+                {activeCategory === 'cars' ? t("pickup_return") : t("arrival_departure")}
               </span>
               <div className="flex items-center gap-3">
                 <CalendarIcon className="text-slate-300 h-5 w-5 shrink-0" />
@@ -258,7 +257,7 @@ export default function AdvancedSearchBar() {
                   {dateRange?.from ? (
                     dateRange.to ? `${format(dateRange.from, "dd MMM", { locale: getDateLocale() })} — ${format(dateRange.to, "dd MMM", { locale: getDateLocale() })}` 
                     : format(dateRange.from, "dd MMM", { locale: getDateLocale() })
-                  ) : "Choisir les dates"}
+                  ) : t("choose_dates")}
                 </span>
               </div>
             </div>
@@ -313,19 +312,19 @@ export default function AdvancedSearchBar() {
                     {Array.from({ length: occupancy.children }).map((_, idx) => (
                       <div key={idx} className="space-y-2">
                         <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                          ÂGE DE L'ENFANT {idx + 1}
+                          {t("age_of_child")} {idx + 1}
                         </Label>
                         <Select 
                           value={occupancy.childrenAges[idx]?.toString() || "10"} 
                           onValueChange={(val) => updateChildAge(idx, val)}
                         >
                           <SelectTrigger className="h-14 font-black border-slate-200 rounded-xl focus:ring-primary/20 transition-all bg-white text-slate-900 shadow-sm">
-                            <SelectValue placeholder="Choisir l'âge" />
+                            <SelectValue placeholder={t("choose_dates")} />
                           </SelectTrigger>
                           <SelectContent className="max-h-[300px] rounded-xl border-none shadow-2xl z-[150] bg-white">
                             {Array.from({ length: 18 }).map((_, i) => (
                               <SelectItem key={i} value={i.toString()} className="font-bold py-3 cursor-pointer">
-                                {i} {i <= 1 ? "an" : "ans"} {i < 2 ? "(Gratuit)" : ""}
+                                {i} {i <= 1 ? t("year_label") : t("years_label")} {i < 2 ? `(${t("free_label")})` : ""}
                               </SelectItem>
                             ))}
                           </SelectContent>

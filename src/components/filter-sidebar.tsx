@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -6,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Star, ChevronDown } from "lucide-react";
+import { useLanguage } from "@/context/language-context";
 
 export type FilterStats = {
   ratings: Record<string, number>;
@@ -29,8 +29,8 @@ export function FilterSidebar({
   onToggleAmenity,
   onToggleRating
 }: FilterSidebarProps) {
+  const { t } = useLanguage();
   
-  // Liste identique à celle du formulaire Onboarding pour une cohérence parfaite
   const amenitiesList = [
     "Wi-Fi gratuit",
     "Piscine",
@@ -47,40 +47,25 @@ export function FilterSidebar({
   ];
 
   const ratingOptions = [
-    { label: "Fabuleux : 9+", value: "9" },
-    { label: "Très bien : 8+", value: "8" },
-    { label: "Bien : 7+", value: "7" },
-    { label: "Agréable : 6+", value: "6" },
+    { label: t("excellent_9"), value: "9" },
+    { label: t("very_good_8"), value: "8" },
+    { label: t("good_7"), value: "7" },
+    { label: t("pleasant_6"), value: "6" },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Title with Green Star */}
+      {/* Title */}
       <div className="flex items-center gap-2 border-b pb-4">
         <div className="bg-[#10B981] p-1.5 rounded-sm">
           <Star className="h-4 w-4 text-white fill-white" />
         </div>
-        <h2 className="text-[18px] font-bold text-[#10B981]">Filtres intelligents</h2>
-      </div>
-
-      {/* Quick Search */}
-      <div className="space-y-2">
-        <Label className="font-bold text-slate-900">Que recherchez-vous ?</Label>
-        <div className="relative">
-          <input 
-            className="w-full bg-slate-50 border rounded-md h-10 pl-3 pr-10 text-[13px] focus:ring-2 ring-[#10B981]/20 outline-none"
-            placeholder="Exemple : annulation gratuite..."
-          />
-          <ChevronDown className="absolute right-3 top-3 h-4 w-4 text-slate-400" />
-        </div>
-        <Button className="w-full bg-[#10B981] hover:bg-[#059669] text-white font-bold rounded-md h-10 shadow-sm mt-2">
-          Trouver des hébergements
-        </Button>
+        <h2 className="text-[18px] font-bold text-[#10B981]">{t("smart_filters")}</h2>
       </div>
 
       {/* Ratings Section */}
-      <div className="space-y-4 pt-4 border-t">
-        <h3 className="text-[16px] font-bold text-slate-900">Note des commentaires</h3>
+      <div className="space-y-4 pt-4">
+        <h3 className="text-[16px] font-bold text-slate-900">{t("guest_ratings")}</h3>
         <div className="space-y-3">
           {ratingOptions.map((opt) => (
             <FilterRow 
@@ -95,9 +80,9 @@ export function FilterSidebar({
         </div>
       </div>
 
-      {/* Popular Equipments Section */}
+      {/* Amenities Section */}
       <div className="space-y-4 pt-4 border-t">
-        <h3 className="text-[16px] font-bold text-[#10B981]">Équipements populaires</h3>
+        <h3 className="text-[16px] font-bold text-[#10B981]">{t("popular_amenities")}</h3>
         <div className="space-y-3">
           {amenitiesList.map((amenity) => (
             <FilterRow 

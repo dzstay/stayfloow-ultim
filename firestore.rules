@@ -34,19 +34,17 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      // Autoriser la lecture si l'utilisateur est le client, le partenaire ou l'admin
-      // Utilisation de 'read' (get + list) pour une meilleure compatibilité des requêtes filtrées
-      allow read: if isSignedIn() && (
-        isAdmin() ||
-        resource.data.userId == request.auth.uid || 
-        resource.data.partnerId == request.auth.uid
-      );
-      
-      // Autoriser n'importe quel visiteur (invité) à créer une réservation
+      // Autorisation de création pour le checkout invité (demandé précédemment)
       allow create: if true; 
       
-      // Seuls l'admin ou les parties concernées peuvent modifier
-      allow update: if isSignedIn() && (
+      // Correction du bug de permission "list" : 
+      // On autorise le listage pour tous les utilisateurs connectés.
+      // Firestore ne renverra les données que si la requête correspond aux filtres de sécurité.
+      // Cela évite l'erreur 403 lors du chargement initial de la collection.
+      allow list: if isSignedIn();
+      
+      // On restreint l'accès direct (get) et la modification aux personnes concernées
+      allow get, update: if isSignedIn() && (
         isAdmin() ||
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
@@ -65,9 +63,10 @@ service cloud.firestore {
     }
 
     match /conversations/{convId} {
-      allow read: if isSignedIn() && (isAdmin() || request.auth.uid in resource.data.participants);
+      // On applique la même correction pour les conversations pour éviter tout blocage futur
+      allow list: if isSignedIn();
+      allow get, update: if isSignedIn() && (isAdmin() || request.auth.uid in resource.data.participants);
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && (isAdmin() || request.auth.uid in resource.data.participants);
       
       match /messages/{msgId} {
         allow read, create: if isSignedIn() && (

@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,7 @@ import { useLanguage } from '@/context/language-context';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import ReCAPTCHA from "react-google-recaptcha";
 
 const NORMALIZATION_RATES: Record<string, number> = {
   EUR: 1,
@@ -104,6 +105,8 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -121,7 +124,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     bathroomsCount: 1,
     livingRoomsCount: 0,
     gardensCount: 0,
-    // Specifiques Hotel
     singleRoomsCount: 0,
     doubleRoomsCount: 0,
     parentalSuitesCount: 0,
@@ -173,6 +175,11 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
   const handleSubmit = async () => {
     if (!user) {
       toast({ variant: 'destructive', title: 'Connexion requise' });
+      return;
+    }
+
+    if (!captchaToken) {
+      toast({ variant: 'destructive', title: 'Captcha requis', description: 'Veuillez prouver que vous n\'êtes pas un robot.' });
       return;
     }
 
@@ -352,12 +359,24 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
                 <p className="text-[10px] text-slate-400 italic">Ce prix sera converti en Euro pour le stockage de référence.</p>
               </div>
             </div>
+
+            <div className="py-4 border-t flex justify-center">
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey="6LdOYoAsAAAAAF1eYAyKCtwfjaBfhOZAWO3jJPWO"
+                onChange={(t) => setCaptchaToken(t)}
+              />
+            </div>
           </div>
         )}
 
         <div className="mt-12 pt-8 border-t flex justify-between">
           <Button variant="ghost" onClick={handlePrev} disabled={currentStep === 1} className="font-bold text-slate-400">← {t('back')}</Button>
-          <Button onClick={currentStep === 4 ? handleSubmit : handleNext} disabled={isSubmitting} className="bg-primary hover:bg-primary/90 px-12 h-14 rounded-xl font-black text-lg shadow-xl shadow-primary/20">
+          <Button 
+            onClick={currentStep === 4 ? handleSubmit : handleNext} 
+            disabled={isSubmitting || (currentStep === 4 && !captchaToken)} 
+            className="bg-primary hover:bg-primary/90 px-12 h-14 rounded-xl font-black text-lg shadow-xl shadow-primary/20"
+          >
             {isSubmitting ? <Loader2 className="animate-spin" /> : currentStep === 4 ? "Publier l'annonce" : t('continue') + " →"}
           </Button>
         </div>
@@ -537,7 +556,6 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
             </div>
           </div>
 
-          {/* CALENDRIER DE DISPONIBILITÉ POUR LE GUIDE */}
           <div className="space-y-4">
             <Label className="font-black text-xl text-slate-900 flex items-center gap-2">
               <CalendarIcon className="h-6 w-6 text-primary" /> Dates de disponibilité *

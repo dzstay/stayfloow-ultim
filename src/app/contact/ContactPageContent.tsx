@@ -7,7 +7,9 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Loader2 } from "lucide-react";
+import ReCAPTCHA from "react-google-recaptcha";
+import { useState, useRef } from "react";
 
 interface ContactPageContentProps {
   t: (key: string) => string;
@@ -15,6 +17,10 @@ interface ContactPageContentProps {
 }
 
 export default function ContactPageContent({ t, toast }: ContactPageContentProps) {
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+
   const form = useForm({
     defaultValues: {
       name: "",
@@ -23,14 +29,33 @@ export default function ContactPageContent({ t, toast }: ContactPageContentProps
     },
   });
 
-  const onSubmit = (values: any) => {
+  const onCaptchaChange = (token: string | null) => {
+    setCaptchaToken(token);
+  };
+
+  const onSubmit = async (values: any) => {
+    if (!captchaToken) {
+      toast({
+        variant: "destructive",
+        title: "Vérification requise",
+        description: "Veuillez valider le captcha pour prouver que vous n'êtes pas un robot.",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    // Simuler un envoi
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     toast({
       title: t("contact.successTitle"),
       description: t("contact.successMessage"),
     });
 
-    console.log("Form submitted:", values);
     form.reset();
+    setCaptchaToken(null);
+    recaptchaRef.current?.reset();
+    setIsSubmitting(false);
   };
 
   return (
@@ -112,8 +137,20 @@ export default function ContactPageContent({ t, toast }: ContactPageContentProps
                   )}
                 />
 
-                <Button type="submit" className="w-full h-14 text-lg font-black bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 rounded-xl">
-                  {t("contact.send")}
+                <div className="py-2 flex justify-center md:justify-start">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey="6LdOYoAsAAAAAF1eYAyKCtwfjaBfhOZAWO3jJPWO"
+                    onChange={onCaptchaChange}
+                  />
+                </div>
+
+                <Button 
+                  type="submit" 
+                  disabled={!captchaToken || isSubmitting}
+                  className="w-full h-14 text-lg font-black bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 rounded-xl"
+                >
+                  {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : t("contact.send")}
                 </Button>
               </form>
             </Form>

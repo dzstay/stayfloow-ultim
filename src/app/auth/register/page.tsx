@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +10,7 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useAuth } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import ReCAPTCHA from "react-google-recaptcha";
 
 import {
   Form,
@@ -36,6 +37,8 @@ export default function RegisterPage() {
   const auth = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
@@ -47,12 +50,20 @@ export default function RegisterPage() {
   });
 
   const onSubmit = async (values: z.infer<typeof signupSchema>) => {
+    if (!captchaToken) {
+      toast({
+        variant: "destructive",
+        title: "Captcha requis",
+        description: "Veuillez confirmer que vous n'êtes pas un robot.",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       
-      // Mettre à jour le profil avec le nom complet
       await updateProfile(userCredential.user, {
         displayName: values.fullName
       });
@@ -69,6 +80,8 @@ export default function RegisterPage() {
         title: "Erreur d'inscription",
         description: error.message || "Impossible de créer le compte.",
       });
+      recaptchaRef.current?.reset();
+      setCaptchaToken(null);
     } finally {
       setLoading(false);
     }
@@ -94,7 +107,6 @@ export default function RegisterPage() {
           <CardContent className="p-8">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                {/* FULL NAME */}
                 <FormField
                   control={form.control}
                   name="fullName"
@@ -113,7 +125,6 @@ export default function RegisterPage() {
                   )}
                 />
 
-                {/* EMAIL */}
                 <FormField
                   control={form.control}
                   name="email"
@@ -133,7 +144,6 @@ export default function RegisterPage() {
                   )}
                 />
 
-                {/* PASSWORD */}
                 <FormField
                   control={form.control}
                   name="password"
@@ -153,9 +163,17 @@ export default function RegisterPage() {
                   )}
                 />
 
+                <div className="py-2 flex justify-center">
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey="6LdOYoAsAAAAAF1eYAyKCtwfjaBfhOZAWO3jJPWO"
+                    onChange={(t) => setCaptchaToken(t)}
+                  />
+                </div>
+
                 <Button 
                   type="submit" 
-                  disabled={loading} 
+                  disabled={loading || !captchaToken} 
                   className="w-full h-16 bg-primary hover:bg-primary/90 text-white font-black text-xl shadow-xl shadow-primary/20 rounded-2xl transition-all active:scale-95 mt-4"
                 >
                   {loading ? (

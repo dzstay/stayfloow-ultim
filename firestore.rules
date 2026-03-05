@@ -33,13 +33,18 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      allow list: if isAdmin(); 
+      // Correction : Autoriser le listing si l'utilisateur est le client ou le partenaire
+      allow list: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.userId == request.auth.uid || 
+        resource.data.partnerId == request.auth.uid
+      );
       allow get: if isSignedIn() && (
         isAdmin() ||
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
       );
-      // Correction : Autoriser n'importe quel visiteur (invité) à créer une réservation
+      // Autoriser n'importe quel visiteur (invité) à créer une réservation
       allow create: if true; 
       allow update: if isSignedIn() && (
         isAdmin() ||
@@ -58,7 +63,7 @@ service cloud.firestore {
     }
 
     match /conversations/{convId} {
-      allow list: if isAdmin();
+      allow list: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
       allow get: if isSignedIn() && (isAdmin() || request.auth.uid in resource.data.participants);
       allow create: if isSignedIn();
       allow update: if isSignedIn() && (isAdmin() || request.auth.uid in resource.data.participants);

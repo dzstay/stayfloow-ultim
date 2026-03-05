@@ -46,6 +46,8 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -57,10 +59,10 @@ export function useCollection<T = any>(
     setError(null);
 
     try {
-      // Protection contre les erreurs synchrones lors de la création du listener (ex: instance Firestore terminée)
       const unsubscribe = onSnapshot(
         memoizedTargetRefOrQuery,
         (snapshot: QuerySnapshot<DocumentData>) => {
+          if (!isMounted) return;
           const results: WithId<T>[] = [];
           snapshot.forEach((doc) => {
             results.push({ ...(doc.data() as T), id: doc.id });
@@ -70,6 +72,7 @@ export function useCollection<T = any>(
           setIsLoading(false);
         },
         async (serverError: FirestoreError) => {
+          if (!isMounted) return;
           const path: string =
             memoizedTargetRefOrQuery.type === 'collection'
               ? (memoizedTargetRefOrQuery as CollectionReference).path
@@ -89,14 +92,15 @@ export function useCollection<T = any>(
       );
 
       return () => {
+        isMounted = false;
         try {
           unsubscribe();
         } catch (e) {
-          // Ignorer les erreurs de désabonnement lors des cycles HMR agressifs
+          // Silent cleanup failure during HMR
         }
       };
     } catch (e: any) {
-      console.warn("Firestore listener initialization failed (HMR cycle?):", e.message);
+      console.warn("Firestore listener failed initialization:", e.message);
       setIsLoading(false);
     }
   }, [memoizedTargetRefOrQuery]);

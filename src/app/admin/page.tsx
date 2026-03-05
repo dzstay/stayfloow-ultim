@@ -1,10 +1,11 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { 
   LayoutDashboard, Building, Clock, 
-  CheckCircle2, Euro, Loader2, Users, TrendingUp, Tag, Plus, 
-  ArrowRight, ShieldCheck, Wallet, MessageSquare
+  TrendingUp, Users, ArrowRight, Loader2, Tag, 
+  ShieldCheck, Wallet, MessageSquare
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit, where } from "firebase/firestore";
+import { collection, query, orderBy, limit } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useCurrency } from "@/context/currency-context";
 import { checkIsAdmin } from "@/lib/admin-config";
@@ -30,23 +31,23 @@ export default function AdminDashboardMaster() {
 
   const isAdmin = useMemo(() => checkIsAdmin(user), [user]);
 
-  // DATA FETCHING REAL-TIME - Sécurisé par la vérification isAdmin
+  // DATA FETCHING REAL-TIME - Sécurisé par la vérification isAdmin stricte
   const listingsRef = useMemoFirebase(() => {
-    if (!isAdmin || !db) return null;
+    if (!isAdmin || !db || isUserLoading) return null;
     return query(collection(db, 'listings'), orderBy('createdAt', 'desc'));
-  }, [db, isAdmin]);
+  }, [db, isAdmin, isUserLoading]);
   const { data: listings } = useCollection(listingsRef);
 
   const usersRef = useMemoFirebase(() => {
-    if (!isAdmin || !db) return null;
+    if (!isAdmin || !db || isUserLoading) return null;
     return query(collection(db, 'users'), limit(1000));
-  }, [db, isAdmin]);
+  }, [db, isAdmin, isUserLoading]);
   const { data: usersData } = useCollection(usersRef);
 
   const bookingsRef = useMemoFirebase(() => {
-    if (!isAdmin || !db) return null;
+    if (!isAdmin || !db || isUserLoading) return null;
     return query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
-  }, [db, isAdmin]);
+  }, [db, isAdmin, isUserLoading]);
   const { data: bookings } = useCollection(bookingsRef);
 
   useEffect(() => {

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef, Suspense } from "react";
@@ -37,7 +38,7 @@ function AdminMessagingContent() {
     }
   }, [user, isUserLoading, isAdmin, router]);
 
-  // Toutes les conversations de la plateforme - Protégé par isAdmin local
+  // Toutes les conversations de la plateforme - Uniquement si ADMIN MAÎTRE
   const convsRef = useMemoFirebase(() => {
     if (!isAdmin || !db || isUserLoading) return null;
     return query(collection(db, "conversations"), orderBy("lastAt", "desc"), limit(100));
@@ -73,7 +74,7 @@ function AdminMessagingContent() {
 
   const handleSendAdminMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!replyText.trim() || !activeId || !user) return;
+    if (!replyText.trim() || !activeId || !user || !isAdmin) return;
 
     const msg = replyText;
     setReplyText("");

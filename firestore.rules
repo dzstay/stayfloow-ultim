@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 1. DÉTECTION ADMIN MAÎTRE (STRICTE)
+    // 1. ADMIN STRICT (seuls ces deux comptes ont accès total)
     function isAdmin() {
       return request.auth != null && (
         request.auth.token.email == "stayflow2025@gmail.com" ||
@@ -11,84 +11,68 @@ service cloud.firestore {
       );
     }
 
+    // 2. UTILISATEUR CONNECTÉ (tous les autres)
     function isSignedIn() {
       return request.auth != null;
     }
 
-    // ACCÈS PRIORITAIRE ADMIN
+    // ACCÈS TOTAL POUR ADMIN SEULEMENT
     match /{document=**} {
       allow read, write: if isAdmin();
     }
 
-    // 2. RÈGLES UTILISATEURS
+    // 3. RÈGLES SPÉCIFIQUES PAR COLLECTION (pour utilisateurs normaux et partenaires)
     
+    // Users : chacun son propre profil
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
 
+    // Listings : lecture publique, écriture par propriétaire ou admin
     match /listings/{listingId} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (isAdmin() || resource.data.ownerId == request.auth.uid);
+      allow read: if true;  // tout le monde peut voir les annonces
+      allow create, update, delete: if isSignedIn() && (
+        isAdmin() || resource.data.ownerId == request.auth.uid
+      );
     }
 
+    // Bookings : lecture/écriture seulement par l'utilisateur ou le partenaire concerné
     match /bookings/{bookingId} {
-      // Autorisation de création pour le checkout invité
-      allow create: if true; 
-      
-      // On autorise le listage global pour les utilisateurs connectés.
-      // Firestore ne renverra les données que si la requête correspond aux filtres de sécurité.
-      allow list: if isSignedIn();
-      
-      // On restreint l'accès direct (get) et la modification aux personnes concernées
-      allow get, update: if isSignedIn() && (
+      allow read, write: if isSignedIn() && (
         isAdmin() ||
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
       );
-      
-      allow delete: if isAdmin();
+      allow create: if true;  // permet la création même si invité (formulaire multi-étape)
     }
 
-    match /partners/{partnerId} {
-      allow read, write: if isSignedIn() && (request.auth.uid == partnerId || isAdmin());
-    }
-
-    match /settings/{doc} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
+    // Conversations : lecture/écriture seulement par les participants ou admin
     match /conversations/{convId} {
-      // On autorise le listage global pour les utilisateurs connectés.
-      allow list: if isSignedIn();
-      
-      // Accès restreint aux documents individuels pour la confidentialité
-      allow get, update: if isSignedIn() && (
+      allow read, write: if isSignedIn() && (
         isAdmin() || 
         request.auth.uid in resource.data.participants
       );
-      
       allow create: if isSignedIn();
       
       match /messages/{msgId} {
-        // Lecture et création autorisée pour les membres de la conversation
-        allow read, create: if isSignedIn();
+        allow read, create: if isSignedIn() && (
+          isAdmin() ||
+          get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid])
+        );
       }
     }
 
-    // Logs et autres collections système
-    match /adminLogs/{logId} {
-      allow read, write: if isAdmin();
+    // Partners : chacun son profil partenaire
+    match /partners/{partnerId} {
+      allow read, write: if isSignedIn() && (
+        isAdmin() || request.auth.uid == partnerId
+      );
     }
 
-    // Stripe Extensions
-    match /customers/{uid}/checkout_sessions/{id} {
-      allow read, write: if isSignedIn() && request.auth.uid == uid;
-    }
-    
-    match /products/{id} {
+    // Settings : lecture publique, écriture admin seulement
+    match /settings/{doc} {
       allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

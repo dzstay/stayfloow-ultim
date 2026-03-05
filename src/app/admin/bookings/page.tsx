@@ -1,11 +1,11 @@
+
 "use client";
 
 import React, { useMemo, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser, updateDocumentNonBlocking } from "@/firebase";
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { 
-  Calendar, User, Clock, CheckCircle2, 
-  XCircle, ArrowLeft, Loader2, Search, Filter, 
+  Calendar, User, ArrowLeft, Loader2, Search, Filter, 
   ShieldCheck
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,7 +34,7 @@ export default function AdminBookingsPage() {
     }
   }, [user, isUserLoading, isAdmin, router]);
 
-  // On attend que isAdmin soit TRUE avant de lancer la requête Firestore
+  // On attend que isAdmin soit formellement TRUE avant de lancer la requête Firestore globale
   const bookingsRef = useMemoFirebase(() => {
     if (!isAdmin || !db || isUserLoading) return null;
     return query(collection(db, "bookings"), orderBy("createdAt", "desc"));
@@ -43,6 +43,7 @@ export default function AdminBookingsPage() {
   const { data: bookings, isLoading } = useCollection(bookingsRef);
 
   const handleStatusUpdate = (id: string, newStatus: string) => {
+    if (!isAdmin) return;
     const docRef = doc(db, "bookings", id);
     updateDocumentNonBlocking(docRef, { status: newStatus });
   };

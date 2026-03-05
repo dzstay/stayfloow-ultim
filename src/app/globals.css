@@ -36,13 +36,17 @@
   }
 }
 
-/* FIX CRITIQUE NAVIGATION : Empêche le blocage des événements de clic par des overlays invisibles */
-/* On cible spécifiquement les conteneurs Radix/Shadcn qui peuvent devenir bloquants sans fond visible */
+/* FIX NAVIGATION & SELECTS : Permet l'interaction avec les menus déroulants et popovers */
 .fixed.inset-0:not(.bg-black\/80):not(.bg-background\/80) {
   pointer-events: none !important;
 }
 
 .fixed.inset-0 > * {
+  pointer-events: auto !important;
+}
+
+/* Assure que les portails de sélection restent interactifs */
+[data-radix-portal] {
   pointer-events: auto !important;
 }
 

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -128,9 +127,7 @@ export default function AdvancedSearchBar() {
     const from = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : '';
     const to = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : '';
     
-    // Détection de nourrissons pour l'algorithme de mise en avant
     const hasInfants = occupancy.childrenAges.some(age => age < 2);
-    
     const occupancyParams = `adults=${occupancy.adults}&children=${occupancy.children}&rooms=${occupancy.rooms}&pets=${occupancy.pets}&hasInfants=${hasInfants}`;
     
     let url = "";
@@ -150,7 +147,7 @@ export default function AdvancedSearchBar() {
       const newVal = Math.max(field === 'adults' ? 1 : field === 'rooms' ? 1 : 0, prev[field] + delta);
       let newAges = [...prev.childrenAges];
       if (field === 'children') {
-        if (delta > 0) newAges.push(10); // Âge par défaut
+        if (delta > 0) newAges.push(10);
         else if (delta < 0) newAges.pop();
       }
       return { ...prev, [field]: newVal, childrenAges: newAges };
@@ -244,11 +241,6 @@ export default function AdvancedSearchBar() {
                   </div>
                 ))}
               </div>
-              <div className="bg-slate-50 p-3 text-center border-t">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  Villes certifiées StayFloow en Afrique
-                </p>
-              </div>
             </div>
           )}
         </div>
@@ -301,7 +293,7 @@ export default function AdvancedSearchBar() {
                 </div>
               </div>
             </PopoverTrigger>
-            <PopoverContent className="w-[380px] p-6 space-y-6 border-none shadow-2xl rounded-xl bg-white z-[100]" align="center">
+            <PopoverContent className="w-[380px] p-6 space-y-6 border-none shadow-2xl rounded-[2rem] bg-white z-[100]" align="center">
               {/* ADULTES */}
               <div className="flex items-center justify-between">
                 <Label className="font-bold text-slate-800 text-[15px]">{t('adults')}</Label>
@@ -316,20 +308,20 @@ export default function AdvancedSearchBar() {
                 </div>
                 
                 {occupancy.children > 0 && (
-                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
                     {Array.from({ length: occupancy.children }).map((_, idx) => (
                       <div key={idx} className="space-y-2">
                         <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                          {t('age_child_label') || "ÂGE DE L'ENFANT"} {idx + 1}
+                          {t('age_child_label') === 'age_child_label' ? "ÂGE DE L'ENFANT" : t('age_child_label')} {idx + 1}
                         </Label>
                         <Select 
                           value={occupancy.childrenAges[idx]?.toString() || "10"} 
                           onValueChange={(val) => updateChildAge(idx, val)}
                         >
-                          <SelectTrigger className="h-14 font-black border-slate-200 rounded-xl focus:ring-primary/20 transition-all bg-white text-slate-900">
-                            <SelectValue placeholder="Sélectionnez l'âge" />
+                          <SelectTrigger className="h-14 font-black border-slate-200 rounded-xl focus:ring-primary/20 transition-all bg-white text-slate-900 shadow-sm">
+                            <SelectValue placeholder="Choisir l'âge" />
                           </SelectTrigger>
-                          <SelectContent className="max-h-[300px] rounded-xl border-none shadow-2xl">
+                          <SelectContent className="max-h-[300px] rounded-xl border-none shadow-2xl z-[150]">
                             {Array.from({ length: 18 }).map((_, i) => (
                               <SelectItem key={i} value={i.toString()} className="font-bold py-3 cursor-pointer">
                                 {i} {i <= 1 ? "an" : "ans"} {i < 2 ? "(Gratuit)" : ""}
@@ -342,9 +334,9 @@ export default function AdvancedSearchBar() {
                   </div>
                 )}
                 
-                <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 flex gap-3">
+                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex gap-3">
                   <Baby className="h-5 w-5 text-primary shrink-0" />
-                  <p className="text-[12px] text-slate-700 leading-tight font-medium">
+                  <p className="text-[12px] text-emerald-800 leading-tight font-bold">
                     {t('infant_free_info')}
                   </p>
                 </div>
@@ -366,7 +358,7 @@ export default function AdvancedSearchBar() {
 
               <Button 
                 onClick={() => setIsOccupancyOpen(false)} 
-                className="w-full bg-primary text-white font-black h-11 rounded-md mt-4 shadow-lg shadow-primary/20"
+                className="w-full bg-primary text-white font-black h-14 rounded-xl mt-4 shadow-xl shadow-primary/20"
               >
                 {t('done')}
               </Button>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -34,6 +35,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ReCAPTCHA from "react-google-recaptcha";
+import { sendWelcomeEmail } from '@/lib/mail';
 
 const NORMALIZATION_RATES: Record<string, number> = {
   EUR: 1,
@@ -172,11 +174,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
   };
 
   const handleSubmit = async () => {
-    if (!user) {
-      toast({ variant: 'destructive', title: 'Connexion requise' });
-      return;
-    }
-
     if (!captchaToken) {
       toast({ variant: 'destructive', title: 'Captcha requis', description: 'Veuillez prouver que vous n\'êtes pas un robot.' });
       return;
@@ -194,11 +191,15 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
       const rate = NORMALIZATION_RATES[formData.listingCurrency] || 1;
       const normalizedPriceEUR = enteredPrice / rate;
 
-      await updateDoc(doc(db, 'users', user.uid), { role: 'partner' });
+      const finalOwnerId = user?.uid || `guest_partner_${Date.now()}`;
+
+      if (user) {
+        await updateDoc(doc(db, 'users', user.uid), { role: 'partner' });
+      }
 
       const finalData = {
         id: listingId,
-        ownerId: user.uid,
+        ownerId: finalOwnerId,
         category: initialCategory,
         status: 'pending',
         partnerInfo: {
@@ -244,6 +245,16 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
       };
 
       await setDoc(doc(db, 'listings', listingId), finalData);
+
+      // Envoi de l'email de bienvenue sympa
+      await sendWelcomeEmail({
+        hostName: formData.firstName,
+        submissionType: initialCategory === 'accommodation' ? 'établissement' : initialCategory === 'car_rental' ? 'véhicule' : 'circuit',
+        submissionName: formData.listingName,
+        hostEmail: formData.email,
+        referenceNumber: listingId.substring(5, 11).toUpperCase()
+      });
+
       setCurrentStep(5);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Erreur', description: 'Échec de la soumission.' });
@@ -268,9 +279,12 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
   if (currentStep === 5) return (
     <div className="text-center py-20 bg-white rounded-3xl shadow-2xl animate-in zoom-in-95">
       <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8"><CheckCircle2 className="h-16 w-16 text-primary" /></div>
-      <h3 className="text-4xl font-black text-slate-900 mb-4">Profil Partenaire Activé !</h3>
-      <p className="text-xl text-slate-600 max-w-lg mx-auto">Votre annonce est en cours de validation. Vous recevrez un email dès qu'elle sera en ligne.</p>
-      <Button size="lg" className="mt-12 bg-primary px-10 h-14 font-black text-lg rounded-xl" asChild><a href="/partners/dashboard">Accéder au Dashboard</a></Button>
+      <h3 className="text-4xl font-black text-slate-900 mb-4">Offre Soumise avec Succès !</h3>
+      <p className="text-xl text-slate-600 max-w-lg mx-auto">Merci {formData.firstName} ! Un e-mail de bienvenue vient de vous être envoyé à <strong>{formData.email}</strong>. Pensez à vérifier vos courriers indésirables.</p>
+      <div className="mt-12 flex flex-col gap-4 max-w-xs mx-auto">
+        <Button size="lg" className="bg-primary h-14 font-black rounded-xl" asChild><a href="/auth/login">Se connecter</a></Button>
+        <Button variant="ghost" className="font-bold text-slate-400" onClick={() => window.location.href = '/'}>Retour à l'accueil</Button>
+      </div>
     </div>
   );
 
@@ -398,7 +412,6 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
     <div className="space-y-10">
       {category === 'accommodation' && (
         <div className="space-y-12">
-          {/* TYPE DE BIEN - STYLE IMAGE */}
           <div className="space-y-6">
             <Label className="font-black text-xl text-slate-900">Quel type de bien proposez-vous ? *</Label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -422,7 +435,6 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
             </div>
           </div>
 
-          {/* COMPOSITION - STYLE IMAGE */}
           <div className="space-y-6">
             <div className="p-10 bg-slate-50/50 rounded-[3rem] border border-slate-100">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
@@ -436,7 +448,6 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
             </div>
           </div>
 
-          {/* OPTIONS SPÉCIFIQUES HÔTEL */}
           {formData.propertyType === 'hotel' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500 bg-primary/5 p-8 rounded-[2.5rem] border border-primary/10">
               <h4 className="font-black text-lg text-primary flex items-center gap-2">
@@ -563,7 +574,7 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                 <div className="space-y-6">
                   <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                    Sélectionnez les jours où ce circuit est ouvert à la réservation. Vos clients ne pourront choisir que parmi ces dates.
+                    Sélectionnez les jours où ce circuit est ouvert à la réservation.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {formData.availableDates.length > 0 ? (

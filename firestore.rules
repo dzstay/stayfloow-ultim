@@ -31,28 +31,32 @@ service cloud.firestore {
     // Listings : lecture publique, écriture par propriétaire ou admin
     match /listings/{listingId} {
       allow read: if true;  // tout le monde peut voir les annonces
-      allow create, update, delete: if isSignedIn() && (
+      allow create: if true; // Permettre à n'importe qui de soumettre une offre (onboarding invité)
+      allow update, delete: if isSignedIn() && (
         isAdmin() || resource.data.ownerId == request.auth.uid
       );
     }
 
     // Bookings : lecture/écriture seulement par l'utilisateur ou le partenaire concerné
     match /bookings/{bookingId} {
-      allow read, write: if isSignedIn() && (
+      allow read: if isSignedIn() && (
         isAdmin() ||
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
       );
-      allow create: if true;  // permet la création même si invité (formulaire multi-étape)
+      allow create: if true;  // permet la création même si invité
+      allow update, delete: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid));
     }
 
     // Conversations : lecture/écriture seulement par les participants ou admin
     match /conversations/{convId} {
-      allow read, write: if isSignedIn() && (
+      allow read: if isSignedIn() && (
         isAdmin() || 
         request.auth.uid in resource.data.participants
       );
+      allow list: if isSignedIn();
       allow create: if isSignedIn();
+      allow update: if isSignedIn() && (isAdmin() || request.auth.uid in resource.data.participants);
       
       match /messages/{msgId} {
         allow read, create: if isSignedIn() && (

@@ -97,6 +97,7 @@ export function useCollection<T = any>(
       return () => {
         isMounted = false;
         try {
+          // Protection contre les erreurs d'assertion interne du SDK lors de l'HMR (ca9 / b815)
           unsubscribe();
         } catch (e) {
           // Silent cleanup failure during HMR or instance termination

@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect } from 'react';
@@ -38,6 +39,8 @@ export function useDoc<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     if (!memoizedDocRef) {
       setData(null);
       setIsLoading(false);
@@ -52,6 +55,7 @@ export function useDoc<T = any>(
       const unsubscribe = onSnapshot(
         memoizedDocRef,
         (snapshot: DocumentSnapshot<DocumentData>) => {
+          if (!isMounted) return;
           if (snapshot.exists()) {
             setData({ ...(snapshot.data() as T), id: snapshot.id });
           } else {
@@ -61,6 +65,7 @@ export function useDoc<T = any>(
           setIsLoading(false);
         },
         (serverError: FirestoreError) => {
+          if (!isMounted) return;
           const contextualError = new FirestorePermissionError({
             operation: 'get',
             path: memoizedDocRef.path,
@@ -75,15 +80,19 @@ export function useDoc<T = any>(
       );
 
       return () => {
+        isMounted = false;
         try {
+          // Protection contre les erreurs d'assertion interne du SDK lors de l'HMR (ca9 / b815)
           unsubscribe();
         } catch (e) {
-          // Ignorer les erreurs de désabonnement HMR
+          // Ignorer les erreurs de désabonnement HMR ou état inattendu
         }
       };
     } catch (e: any) {
-      console.warn("Firestore doc listener failed initialization:", e.message);
-      setIsLoading(false);
+      if (isMounted) {
+        console.warn("Firestore doc listener failed initialization:", e.message);
+        setIsLoading(false);
+      }
     }
   }, [memoizedDocRef]);
 

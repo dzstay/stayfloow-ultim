@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
@@ -6,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { 
   Search as SearchIcon, Loader2, Map as MapIcon, 
   Grid, List as ListIcon, 
-  Info, ChevronRight, SlidersHorizontal
+  Info, ChevronRight, SlidersHorizontal, Baby
 } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
@@ -36,13 +35,13 @@ function SearchResultsContent() {
   const [selectedRatings, setSelectedRatings] = useState<string[]>([]);
 
   const locationParam = searchParams.get('dest') || '';
+  const hasInfants = searchParams.get('hasInfants') === 'true';
 
   useEffect(() => {
     const fetchApprovedListings = async () => {
       setLoading(true);
       try {
         const listingsRef = collection(db, 'listings');
-        // FIX: Ajout du filtre de catégorie 'accommodation' pour éviter le mélange avec voitures/circuits
         const q = query(
           listingsRef, 
           where('category', '==', 'accommodation'),
@@ -63,8 +62,10 @@ function SearchResultsContent() {
             amenities: data.details?.amenities || [],
             type: data.details?.type || 'Hôtel',
             isBoosted: data.isBoosted || false,
-            stars: data.details?.stars ? parseInt(data.details.stars) : undefined
-          } as Property;
+            stars: data.details?.stars ? parseInt(data.details.stars) : undefined,
+            // Score IA pour les nourrissons
+            isInfantFriendly: data.details?.amenities?.includes("Lit bébé / lit supplémentaire") || data.details?.propertyType === 'hotel'
+          } as Property & { isInfantFriendly?: boolean };
         });
 
         setAllApproved([...mockProperties, ...dbListings]);
@@ -112,7 +113,7 @@ function SearchResultsContent() {
   }, [allApproved, locationParam]);
 
   const filteredResults = useMemo(() => {
-    return allApproved.filter(p => {
+    let results = allApproved.filter(p => {
       const matchDest = locationParam ? p.location.toLowerCase().includes(locationParam.toLowerCase()) : true;
       if (!matchDest) return false;
 
@@ -128,7 +129,19 @@ function SearchResultsContent() {
 
       return true;
     });
-  }, [allApproved, locationParam, selectedAmenities, selectedRatings]);
+
+    // ALGORITHME DE MISE EN AVANT IA
+    if (hasInfants) {
+      results.sort((a: any, b: any) => {
+        // Priorité aux annonces certifiées "Infant Friendly"
+        const scoreA = (a.isInfantFriendly ? 10 : 0) + (a.isBoosted ? 5 : 0);
+        const scoreB = (b.isInfantFriendly ? 10 : 0) + (b.isBoosted ? 5 : 0);
+        return scoreB - scoreA;
+      });
+    }
+
+    return results;
+  }, [allApproved, locationParam, selectedAmenities, selectedRatings, hasInfants]);
 
   const handleToggleAmenity = (amenity: string) => {
     setSelectedAmenities(prev => 
@@ -152,7 +165,6 @@ function SearchResultsContent() {
 
       <div className="max-w-[1100px] mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
         
-        {/* SIDEBAR DESKTOP */}
         <aside className="hidden lg:block w-[280px] shrink-0 space-y-4">
           <div className="relative h-24 rounded-lg overflow-hidden border shadow-sm cursor-pointer group">
             <div className="absolute inset-0 bg-slate-200 animate-pulse" />
@@ -173,7 +185,6 @@ function SearchResultsContent() {
           />
         </aside>
 
-        {/* MOBILE FILTER BAR */}
         <div className="lg:hidden flex gap-2 overflow-x-auto no-scrollbar pb-2">
           <Sheet>
             <SheetTrigger asChild>
@@ -202,8 +213,17 @@ function SearchResultsContent() {
           </Button>
         </div>
 
-        {/* MAIN CONTENT */}
         <main className="flex-1 space-y-4">
+          {hasInfants && (
+            <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-center gap-4 animate-in slide-in-from-top-2 duration-500">
+              <div className="bg-primary p-2 rounded-full text-white shadow-lg"><Baby className="h-5 w-5" /></div>
+              <div>
+                <p className="font-black text-emerald-900 leading-tight">Politique StayFloow Nourrissons</p>
+                <p className="text-xs text-emerald-700 font-medium">Les enfants de moins de 2 ans séjournent gratuitement. Nous avons mis en avant les établissements les mieux équipés pour votre bébé.</p>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-xl md:text-2xl font-black text-slate-900 leading-tight">
@@ -285,7 +305,7 @@ function SearchResultsContent() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>}>
+    <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary h-10 w-10" /></div>}>
       <SearchResultsContent />
     </Suspense>
   );

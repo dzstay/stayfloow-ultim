@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
@@ -44,9 +43,10 @@ const translations: Record<string, Record<Locale, string>> = {
     "rooms_plural": { fr: "chambres", en: "rooms", ar: "غرف", es: "habitaciones" },
     "age_label": { fr: "ans", en: "years old", ar: "سنة", es: "años" },
     "children_age_info": { fr: "Pour trouver un hébergement pouvant accueillir votre groupe et afficher les bons tarifs, nous avons besoin de connaître l'âge qu'auront vos enfants à la fin du séjour.", en: "To find an accommodation that can accommodate your group and show the right prices, we need to know the age your children will be at the end of the stay.", ar: "للعثور على مكان إقامة يمكنه استيعاب مجموعتك وعرض الأسعار الصحيحة ، نحتاج إلى معرفة العمر الذي سيكون عليه أطفالك في نهاية الإقامة.", es: "Para encontrar un alojamiento que pueda acomodar a su groupe y mostrar los precios correctos, necesitamos saber la edad que tendrán sus hijos al final de la estancia." },
+    "infant_free_info": { fr: "Bon à savoir : Les enfants de moins de 2 ans séjournent gratuitement sur StayFloow !", en: "Good to know: Children under 2 stay for free on StayFloow!", ar: "معلومة مفيدة: الأطفال دون سن 2 سنة يقيمون مجانًا في StayFloow!", es: "¡Es bueno saberlo: los niños menores de 2 años se alojan gratis en StayFloow!" },
     "travel_with_pet": { fr: "Vous voyagez avec votre animal ?", en: "Are you traveling with your pet?", ar: "هل تسافر مع حيوانك الأليف؟", es: "¿Viajas con tu mascota?" },
     "service_animal_info": { fr: "Les animaux d'assistance ne sont pas considérés comme des animaux de compagnie.", en: "Service animals are not considered pets.", ar: "لا تُعتبر حيوانات الخدمة حيوانات أليفة.", es: "Los animales de servicio no se consideran mascotas." },
-    "learn_more_service_animal": { fr: "En savoir plus sur les voyages avec un animal d'assistance", en: "Learn more about traveling with a service animal", ar: "تعرف على المزيد حول السفر مع حيوان خدمة", es: "Más información sobre viajar con un perro de asistencia" },
+    "learn_more_service_animal": { fr: "En savoir plus sur les voyages avec un animal d'assistance", en: "Learn more about traveling with a service animal", ar: "تعرف على المزيد حول السفر avec un animal d'assistance", es: "Más información sobre viajar con un perro de asistencia" },
     "done": { fr: "Terminer", en: "Done", ar: "تم", es: "Terminar" },
     "guests_rooms": { fr: "Voyageurs & Chambres", en: "Guests & Rooms", ar: "المسافرون والغرف", es: "Viajeros y Habitaciones" },
 

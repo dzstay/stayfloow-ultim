@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { MapPin, Calendar as CalendarIcon, Building, Car, Compass, Users, Plus, Minus, ChevronDown, Loader2 } from 'lucide-react';
+import { MapPin, Calendar as CalendarIcon, Building, Car, Compass, Users, Plus, Minus, ChevronDown, Loader2, Baby } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
@@ -80,7 +80,6 @@ export default function AdvancedSearchBar() {
     const fetchCities = async () => {
       setIsLoadingSuggestions(true);
       try {
-        // Query Nominatim restricted to Algeria (DZ) and Egypt (EG)
         const response = await fetch(
           `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destination)}&countrycodes=dz,eg&addressdetails=1&limit=6&featuretype=city`
         );
@@ -99,7 +98,6 @@ export default function AdvancedSearchBar() {
           };
         });
 
-        // Filter duplicates by main name
         const unique = formatted.filter((v: any, i: number, a: any[]) => a.findIndex(t => t.main === v.main) === i);
         
         setSuggestions(unique);
@@ -129,7 +127,10 @@ export default function AdvancedSearchBar() {
     const from = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : '';
     const to = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : '';
     
-    const occupancyParams = `adults=${occupancy.adults}&children=${occupancy.children}&rooms=${occupancy.rooms}&pets=${occupancy.pets}`;
+    // Détection de nourrissons pour l'algorithme de mise en avant
+    const hasInfants = occupancy.childrenAges.some(age => age < 2);
+    
+    const occupancyParams = `adults=${occupancy.adults}&children=${occupancy.children}&rooms=${occupancy.rooms}&pets=${occupancy.pets}&hasInfants=${hasInfants}`;
     
     let url = "";
     if (activeCategory === 'cars') {
@@ -148,10 +149,18 @@ export default function AdvancedSearchBar() {
       const newVal = Math.max(field === 'adults' ? 1 : field === 'rooms' ? 1 : 0, prev[field] + delta);
       let newAges = [...prev.childrenAges];
       if (field === 'children') {
-        if (delta > 0) newAges.push(0);
+        if (delta > 0) newAges.push(10); // Âge par défaut
         else if (delta < 0) newAges.pop();
       }
       return { ...prev, [field]: newVal, childrenAges: newAges };
+    });
+  };
+
+  const updateChildAge = (idx: number, age: string) => {
+    setOccupancy(prev => {
+      const newAges = [...prev.childrenAges];
+      newAges[idx] = parseInt(age);
+      return { ...prev, childrenAges: newAges };
     });
   };
 
@@ -209,7 +218,6 @@ export default function AdvancedSearchBar() {
             {isLoadingSuggestions && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
           </div>
 
-          {/* Suggestions Dropdown */}
           {showSuggestions && suggestions.length > 0 && (
             <div 
               ref={suggestionsRef}
@@ -309,13 +317,15 @@ export default function AdvancedSearchBar() {
                 {occupancy.children > 0 && (
                   <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2">
                     {occupancy.childrenAges.map((age, idx) => (
-                      <Select key={idx} defaultValue={age.toString()}>
+                      <Select key={idx} value={age.toString()} onValueChange={(val) => updateChildAge(idx, val)}>
                         <SelectTrigger className="h-11 font-medium border-slate-400 rounded-md focus:ring-0">
                           <SelectValue placeholder="Âge" />
                         </SelectTrigger>
                         <SelectContent>
                           {Array.from({ length: 18 }).map((_, i) => (
-                            <SelectItem key={i} value={i.toString()}>{i} {t('age_label')}</SelectItem>
+                            <SelectItem key={i} value={i.toString()}>
+                              {i} {t('age_label')} {i < 2 && " (Gratuit)"}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -323,12 +333,14 @@ export default function AdvancedSearchBar() {
                   </div>
                 )}
                 
-                <p className="text-[13px] text-slate-700 leading-tight">
-                  {t('children_age_info')}
-                </p>
+                <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 flex gap-3">
+                  <Baby className="h-5 w-5 text-primary shrink-0" />
+                  <p className="text-[12px] text-slate-700 leading-tight font-medium">
+                    {t('infant_free_info')}
+                  </p>
+                </div>
               </div>
 
-              {/* CHAMBRES */}
               <div className="flex items-center justify-between pt-2">
                 <Label className="font-bold text-slate-800 text-[15px]">{t('rooms')}</Label>
                 <CounterControl value={occupancy.rooms} onMinus={() => updateOccupancy('rooms', -1)} onPlus={() => updateOccupancy('rooms', 1)} min={1} />
@@ -336,25 +348,16 @@ export default function AdvancedSearchBar() {
 
               <Separator className="bg-slate-100" />
 
-              {/* ANIMAUX */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="pets" className="font-bold text-slate-800 text-[15px]">{t('travel_with_pet')}</Label>
                   <Switch id="pets" checked={occupancy.pets} onCheckedChange={(checked) => setOccupancy(prev => ({ ...prev, pets: checked }))} />
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[12px] text-slate-800 leading-tight font-medium">
-                    {t('service_animal_info')}
-                  </p>
-                  <button type="button" className="text-[12px] text-primary font-bold hover:underline text-left">
-                    {t('learn_more_service_animal')}
-                  </button>
-                </div>
               </div>
 
               <Button 
                 onClick={() => setIsOccupancyOpen(false)} 
-                className="w-full bg-white border border-primary text-primary hover:bg-slate-50 font-bold h-11 rounded-md mt-4"
+                className="w-full bg-primary text-white font-black h-11 rounded-md mt-4 shadow-lg shadow-primary/20"
               >
                 {t('done')}
               </Button>

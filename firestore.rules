@@ -34,13 +34,11 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      // Autorisation de création pour le checkout invité (demandé précédemment)
+      // Autorisation de création pour le checkout invité
       allow create: if true; 
       
-      // Correction du bug de permission "list" : 
       // On autorise le listage pour tous les utilisateurs connectés.
       // Firestore ne renverra les données que si la requête correspond aux filtres de sécurité.
-      // Cela évite l'erreur 403 lors du chargement initial de la collection.
       allow list: if isSignedIn();
       
       // On restreint l'accès direct (get) et la modification aux personnes concernées
@@ -62,10 +60,19 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // CORRECTION PERMISSIONS CONVERSATIONS
     match /conversations/{convId} {
-      // On applique la même correction pour les conversations pour éviter tout blocage futur
+      // Correction du bug de permission "list" pour les conversations : 
+      // On autorise le listage global pour les utilisateurs connectés.
+      // Cela permet de charger la liste des discussions sans erreur 403.
       allow list: if isSignedIn();
-      allow get, update: if isSignedIn() && (isAdmin() || request.auth.uid in resource.data.participants);
+      
+      // Accès restreint aux documents individuels pour la confidentialité
+      allow get, update: if isSignedIn() && (
+        isAdmin() || 
+        request.auth.uid in resource.data.participants
+      );
+      
       allow create: if isSignedIn();
       
       match /messages/{msgId} {
@@ -74,6 +81,20 @@ service cloud.firestore {
           get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid])
         );
       }
+    }
+
+    // Logs et autres collections système
+    match /adminLogs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Stripe Extensions
+    match /customers/{uid}/checkout_sessions/{id} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+    
+    match /products/{id} {
+      allow read: if true;
     }
   }
 }

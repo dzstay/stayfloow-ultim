@@ -312,7 +312,7 @@ export default function AdvancedSearchBar() {
                     {Array.from({ length: occupancy.children }).map((_, idx) => (
                       <div key={idx} className="space-y-2">
                         <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                          {t('age_child_label') === 'age_child_label' ? "ÂGE DE L'ENFANT" : t('age_child_label')} {idx + 1}
+                          ÂGE DE L'ENFANT {idx + 1}
                         </Label>
                         <Select 
                           value={occupancy.childrenAges[idx]?.toString() || "10"} 
@@ -321,7 +321,7 @@ export default function AdvancedSearchBar() {
                           <SelectTrigger className="h-14 font-black border-slate-200 rounded-xl focus:ring-primary/20 transition-all bg-white text-slate-900 shadow-sm">
                             <SelectValue placeholder="Choisir l'âge" />
                           </SelectTrigger>
-                          <SelectContent className="max-h-[300px] rounded-xl border-none shadow-2xl z-[150]">
+                          <SelectContent className="max-h-[300px] rounded-xl border-none shadow-2xl z-[150] bg-white">
                             {Array.from({ length: 18 }).map((_, i) => (
                               <SelectItem key={i} value={i.toString()} className="font-bold py-3 cursor-pointer">
                                 {i} {i <= 1 ? "an" : "ans"} {i < 2 ? "(Gratuit)" : ""}

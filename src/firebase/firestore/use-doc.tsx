@@ -1,4 +1,3 @@
-
 'use client';
     
 import { useState, useEffect } from 'react';
@@ -20,19 +19,17 @@ type WithId<T> = T & { id: string };
  * @template T Type of the document data.
  */
 export interface UseDocResult<T> {
-  data: WithId<T> | null; // Document data with ID, or null.
-  isLoading: boolean;       // True if loading.
-  error: FirestoreError | Error | null; // Error object, or null.
+  data: WithId<T> | null; 
+  isLoading: boolean;       
+  error: FirestoreError | Error | null; 
 }
 
 /**
  * React hook to subscribe to a single Firestore document in real-time.
- * Handles nullable references.
- * 
- * IMPORTANT: La référence passée doit être mémoïsée avec useMemoFirebase.
+ * Renforcé contre les erreurs d'assertion ca9.
  */
 export function useDoc<T = any>(
-  memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
+  memoizedDocRef: (DocumentReference<DocumentData> & {__memo?: boolean}) | null | undefined,
 ): UseDocResult<T> {
   const [data, setData] = useState<WithId<T> | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -48,11 +45,18 @@ export function useDoc<T = any>(
       return;
     }
 
+    // Sécurité de mémoïsation requise pour Firestore
+    if (!memoizedDocRef.__memo) {
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
+    let unsubscribe = () => {};
+
     try {
-      const unsubscribe = onSnapshot(
+      unsubscribe = onSnapshot(
         memoizedDocRef,
         (snapshot: DocumentSnapshot<DocumentData>) => {
           if (!isMounted) return;
@@ -74,26 +78,24 @@ export function useDoc<T = any>(
           setError(contextualError);
           setData(null);
           setIsLoading(false);
-
           errorEmitter.emit('permission-error', contextualError);
         }
       );
-
-      return () => {
-        isMounted = false;
-        try {
-          // Protection contre les erreurs d'assertion interne du SDK lors de l'HMR (ca9 / b815)
-          unsubscribe();
-        } catch (e) {
-          // Ignorer les erreurs de désabonnement HMR ou état inattendu
-        }
-      };
     } catch (e: any) {
       if (isMounted) {
         console.warn("Firestore doc listener failed initialization:", e.message);
         setIsLoading(false);
       }
     }
+
+    return () => {
+      isMounted = false;
+      try {
+        unsubscribe();
+      } catch (e) {
+        // Capture silencieuse
+      }
+    };
   }, [memoizedDocRef]);
 
   return { data, isLoading, error };

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -7,13 +6,16 @@ import { getAuth as getAuthInstance, Auth } from 'firebase/auth';
 import { getFirestore as getFirestoreInstance, Firestore } from 'firebase/firestore';
 
 /**
- * @fileOverview Initialisation Firebase Singleton pour Next.js.
- * Utilise des variables locales au module pour persister les instances et éviter l'erreur ca9.
+ * @fileOverview Initialisation Firebase Singleton Ultra-Robuste.
+ * Utilise globalThis pour persister les instances à travers les rechargements HMR de Next.js,
+ * ce qui est la seule solution fiable pour éviter l'erreur d'état interne ca9 de Firestore.
  */
 
-let cachedApp: FirebaseApp | undefined;
-let cachedAuth: Auth | undefined;
-let cachedFirestore: Firestore | undefined;
+declare global {
+  var _firebaseApp: FirebaseApp | undefined;
+  var _firebaseAuth: Auth | undefined;
+  var _firebaseFirestore: Firestore | undefined;
+}
 
 export function initializeFirebase() {
   // SSR : Toujours créer une instance fraîche pour le rendu serveur
@@ -26,28 +28,24 @@ export function initializeFirebase() {
     };
   }
 
-  // CLIENT : Singleton strict pour éviter les erreurs d'état interne Firestore (ca9)
-  if (!cachedApp) {
+  // CLIENT : Utilisation du cache global persistant
+  if (!globalThis._firebaseApp) {
     const apps = getApps();
-    if (apps.length > 0) {
-      cachedApp = apps[0];
-    } else {
-      cachedApp = initializeApp(firebaseConfig);
-    }
+    globalThis._firebaseApp = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);
   }
 
-  if (!cachedAuth) {
-    cachedAuth = getAuthInstance(cachedApp);
+  if (!globalThis._firebaseAuth) {
+    globalThis._firebaseAuth = getAuthInstance(globalThis._firebaseApp);
   }
 
-  if (!cachedFirestore) {
-    cachedFirestore = getFirestoreInstance(cachedApp);
+  if (!globalThis._firebaseFirestore) {
+    globalThis._firebaseFirestore = getFirestoreInstance(globalThis._firebaseApp);
   }
 
   return {
-    firebaseApp: cachedApp,
-    auth: cachedAuth,
-    firestore: cachedFirestore,
+    firebaseApp: globalThis._firebaseApp,
+    auth: globalThis._firebaseAuth,
+    firestore: globalThis._firebaseFirestore,
   };
 }
 

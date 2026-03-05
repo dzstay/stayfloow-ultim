@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -36,8 +35,7 @@ export interface InternalQuery extends Query<DocumentData> {
 
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
- * 
- * IMPORTANT: La référence passée doit être mémoïsée avec useMemoFirebase.
+ * Renforcé pour éviter les erreurs d'assertion ca9.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -49,6 +47,7 @@ export function useCollection<T = any>(
   useEffect(() => {
     let isMounted = true;
 
+    // Protection contre les références nulles ou non mémoïsées
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -56,11 +55,18 @@ export function useCollection<T = any>(
       return;
     }
 
+    if (!memoizedTargetRefOrQuery.__memo) {
+      console.error('Firebase Reference was not properly memoized using useMemoFirebase. Rendering blocked to prevent loop.');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
+    let unsubscribe = () => {};
+
     try {
-      const unsubscribe = onSnapshot(
+      unsubscribe = onSnapshot(
         memoizedTargetRefOrQuery,
         (snapshot: QuerySnapshot<DocumentData>) => {
           if (!isMounted) return;
@@ -88,32 +94,25 @@ export function useCollection<T = any>(
           setError(contextualError);
           setData(null);
           setIsLoading(false);
-
-          // On n'émet l'erreur que si on n'est pas en train de démonter
           errorEmitter.emit('permission-error', contextualError);
         }
       );
-
-      return () => {
-        isMounted = false;
-        try {
-          // Protection contre les erreurs d'assertion interne du SDK lors de l'HMR (ca9 / b815)
-          unsubscribe();
-        } catch (e) {
-          // Silent cleanup failure during HMR or instance termination
-        }
-      };
     } catch (e: any) {
       if (isMounted) {
-        console.warn("Firestore listener failed initialization:", e.message);
+        console.warn("Firestore listener failed initialization (expected during HMR):", e.message);
         setIsLoading(false);
       }
     }
-  }, [memoizedTargetRefOrQuery]);
 
-  if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error('Firebase Reference was not properly memoized using useMemoFirebase. This would cause an infinite render loop.');
-  }
+    return () => {
+      isMounted = false;
+      try {
+        unsubscribe();
+      } catch (e) {
+        // Capture silencieuse des échecs de désabonnement lors des états instables du SDK
+      }
+    };
+  }, [memoizedTargetRefOrQuery]);
 
   return { data, isLoading, error };
 }

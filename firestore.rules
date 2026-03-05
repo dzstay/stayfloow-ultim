@@ -4,6 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // 1. DÉTECTION ADMIN MAÎTRE (STRICTE)
+    // Synchronisé avec src/lib/admin-config.ts
     function isAdmin() {
       return request.auth != null && (
         request.auth.token.email == "stayflow2025@gmail.com" ||
@@ -29,28 +30,29 @@ service cloud.firestore {
     match /listings/{listingId} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isSignedIn() && (isAdmin() || resource.data.ownerId == request.auth.uid);
     }
 
     match /bookings/{bookingId} {
-      // Correction : Autoriser le listing si l'utilisateur est le client ou le partenaire
-      allow list: if isSignedIn() && (
+      // Autoriser la lecture si l'utilisateur est le client, le partenaire ou l'admin
+      // Utilisation de 'read' (get + list) pour une meilleure compatibilité des requêtes filtrées
+      allow read: if isSignedIn() && (
         isAdmin() ||
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
       );
-      allow get: if isSignedIn() && (
-        isAdmin() ||
-        resource.data.userId == request.auth.uid || 
-        resource.data.partnerId == request.auth.uid
-      );
+      
       // Autoriser n'importe quel visiteur (invité) à créer une réservation
       allow create: if true; 
+      
+      // Seuls l'admin ou les parties concernées peuvent modifier
       allow update: if isSignedIn() && (
         isAdmin() ||
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
       );
+      
+      allow delete: if isAdmin();
     }
 
     match /partners/{partnerId} {
@@ -63,8 +65,7 @@ service cloud.firestore {
     }
 
     match /conversations/{convId} {
-      allow list: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
-      allow get: if isSignedIn() && (isAdmin() || request.auth.uid in resource.data.participants);
+      allow read: if isSignedIn() && (isAdmin() || request.auth.uid in resource.data.participants);
       allow create: if isSignedIn();
       allow update: if isSignedIn() && (isAdmin() || request.auth.uid in resource.data.participants);
       

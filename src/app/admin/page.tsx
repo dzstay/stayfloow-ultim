@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -31,23 +30,23 @@ export default function AdminDashboardMaster() {
 
   const isAdmin = useMemo(() => checkIsAdmin(user), [user]);
 
-  // DATA FETCHING REAL-TIME - Sécurisé par la vérification isAdmin stricte
+  // DATA FETCHING REAL-TIME - Uniquement si ADMIN MAÎTRE confirmé
   const listingsRef = useMemoFirebase(() => {
-    if (!isAdmin || !db || isUserLoading) return null;
+    if (!isAdmin || !db || isUserLoading || !user) return null;
     return query(collection(db, 'listings'), orderBy('createdAt', 'desc'));
-  }, [db, isAdmin, isUserLoading]);
+  }, [db, isAdmin, isUserLoading, user]);
   const { data: listings } = useCollection(listingsRef);
 
   const usersRef = useMemoFirebase(() => {
-    if (!isAdmin || !db || isUserLoading) return null;
+    if (!isAdmin || !db || isUserLoading || !user) return null;
     return query(collection(db, 'users'), limit(1000));
-  }, [db, isAdmin, isUserLoading]);
+  }, [db, isAdmin, isUserLoading, user]);
   const { data: usersData } = useCollection(usersRef);
 
   const bookingsRef = useMemoFirebase(() => {
-    if (!isAdmin || !db || isUserLoading) return null;
+    if (!isAdmin || !db || isUserLoading || !user) return null;
     return query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
-  }, [db, isAdmin, isUserLoading]);
+  }, [db, isAdmin, isUserLoading, user]);
   const { data: bookings } = useCollection(bookingsRef);
 
   useEffect(() => {
@@ -67,6 +66,7 @@ export default function AdminDashboardMaster() {
       totalUsers: usersData?.length || 0,
       totalRevenue: bookings?.filter(b => b.status === 'approved').reduce((acc, curr) => acc + (curr.totalPrice || 0), 0) || 0,
       bookingsToday: bookings?.filter(b => {
+        if (!b.createdAt) return false;
         const d = new Date(b.createdAt);
         return d.toDateString() === new Date().toDateString();
       }).length || 0,

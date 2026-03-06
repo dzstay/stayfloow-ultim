@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useEffect } from "react";
@@ -36,9 +35,9 @@ export default function AdminBookingsPage() {
 
   // On attend que isAdmin soit formellement TRUE avant de lancer la requête Firestore globale
   const bookingsRef = useMemoFirebase(() => {
-    if (!isAdmin || !db || isUserLoading) return null;
+    if (!isAdmin || !db || isUserLoading || !user) return null;
     return query(collection(db, "bookings"), orderBy("createdAt", "desc"));
-  }, [db, isAdmin, isUserLoading]);
+  }, [db, isAdmin, isUserLoading, user]);
   
   const { data: bookings, isLoading } = useCollection(bookingsRef);
 
@@ -48,7 +47,7 @@ export default function AdminBookingsPage() {
     updateDocumentNonBlocking(docRef, { status: newStatus });
   };
 
-  if (isUserLoading || !isAdmin) {
+  if (isUserLoading || !isAdmin || !user) {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-900">
         <div className="text-center space-y-4">

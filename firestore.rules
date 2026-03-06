@@ -1,4 +1,3 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -31,39 +30,37 @@ service cloud.firestore {
     // Listings : lecture publique, écriture par propriétaire ou admin
     match /listings/{listingId} {
       allow read: if true; 
-      allow create: if true; // Permettre la soumission par les invités
-      allow update, delete: if isSignedIn() && (
+      allow create, update, delete: if isSignedIn() && (
         isAdmin() || resource.data.ownerId == request.auth.uid
       );
     }
 
     // Bookings : Accès filtré par userId ou partnerId
     match /bookings/{bookingId} {
-      // Pour le listage (useCollection), Firestore exige que la requête soit filtrée
       allow list: if isSignedIn() && (
         isAdmin() || 
         request.query.filters.userId == request.auth.uid || 
         request.query.filters.partnerId == request.auth.uid
       );
-      // Pour la lecture directe d'un document
-      allow get: if isSignedIn() && (
+      allow get, write: if isSignedIn() && (
         isAdmin() || 
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
       );
-      allow create: if true; // Autoriser la création même en mode invité
-      allow update, delete: if isAdmin() || (isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid));
+      allow create: if isSignedIn(); 
     }
 
     // Conversations : lecture/écriture seulement par les participants ou admin
     match /conversations/{convId} {
-      allow list: if isSignedIn();
-      allow get: if isSignedIn() && (
+      allow list: if isSignedIn() && (
+        isAdmin() || 
+        request.auth.uid in request.query.filters.participants
+      );
+      allow get, write: if isSignedIn() && (
         isAdmin() || 
         request.auth.uid in resource.data.participants
       );
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && (isAdmin() || request.auth.uid in resource.data.participants);
       
       match /messages/{msgId} {
         allow read, create: if isSignedIn() && (

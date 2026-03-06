@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef, Suspense } from "react";
@@ -40,9 +39,9 @@ function AdminMessagingContent() {
 
   // Toutes les conversations de la plateforme - Uniquement si ADMIN MAÎTRE
   const convsRef = useMemoFirebase(() => {
-    if (!isAdmin || !db || isUserLoading) return null;
+    if (!isAdmin || !db || isUserLoading || !user) return null;
     return query(collection(db, "conversations"), orderBy("lastAt", "desc"), limit(100));
-  }, [db, isAdmin, isUserLoading]);
+  }, [db, isAdmin, isUserLoading, user]);
   const { data: conversations, isLoading: convsLoading } = useCollection(convsRef);
 
   // Messages de la conversation sélectionnée
@@ -51,7 +50,7 @@ function AdminMessagingContent() {
   const [replyText, setReplyText] = useState("");
 
   useEffect(() => {
-    if (!activeId || !isAdmin || !db) return;
+    if (!activeId || !isAdmin || !db || !user) return;
     setMessagesLoading(true);
     const q = query(collection(db, "conversations", activeId, "messages"), orderBy("createdAt", "asc"), limit(100));
     
@@ -70,7 +69,7 @@ function AdminMessagingContent() {
       setMessagesLoading(false);
     });
     return () => unsubscribe();
-  }, [activeId, isAdmin, db]);
+  }, [activeId, isAdmin, db, user]);
 
   const handleSendAdminMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +93,7 @@ function AdminMessagingContent() {
     });
   };
 
-  if (isUserLoading || !isAdmin) {
+  if (isUserLoading || !isAdmin || !user) {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-900">
         <div className="text-center space-y-4">

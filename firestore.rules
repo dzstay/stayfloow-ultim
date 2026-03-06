@@ -2,17 +2,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 1. ADMIN STRICT (seuls ces deux comptes ont accès total)
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
     function isAdmin() {
-      return request.auth != null && (
+      return isSignedIn() && (
         request.auth.token.email == "stayflow2025@gmail.com" ||
         request.auth.uid == "G4d04MgUW4fguFOjmhQBbWezheB2"
       );
     }
 
-    // 2. UTILISATEUR CONNECTÉ
-    function isSignedIn() {
-      return request.auth != null;
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     // ACCÈS TOTAL POUR ADMIN SEULEMENT
@@ -24,54 +26,69 @@ service cloud.firestore {
     
     // Users : chacun son propre profil
     match /users/{userId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      allow read, update, delete: if isOwner(userId);
+      allow create: if isOwner(userId);
     }
 
     // Listings : lecture publique, écriture par propriétaire ou admin
     match /listings/{listingId} {
       allow read: if true; 
-      allow create, update, delete: if isSignedIn() && (
-        isAdmin() || resource.data.ownerId == request.auth.uid
-      );
-    }
-
-    // Bookings : lecture/écriture seulement par l’utilisateur ou le partenaire concerné
-    match /bookings/{bookingId} {
-      allow read, write: if isSignedIn() && (
-        isAdmin() || 
-        resource.data.userId == request.auth.uid || 
-        resource.data.partnerId == request.auth.uid
-      );
-      allow create: if isSignedIn(); 
-    }
-
-    // Conversations : lecture/écriture seulement par les participants ou admin
-    match /conversations/{convId} {
-      allow read, write: if isSignedIn() && (
-        isAdmin() || 
-        request.auth.uid in resource.data.participants
-      );
       allow create: if isSignedIn();
-      
-      match /messages/{msgId} {
-        allow read, create: if isSignedIn() && (
-          isAdmin() ||
-          get(/databases/$(database)/documents/conversations/$(convId)).data.participants.hasAny([request.auth.uid])
-        );
-      }
+      allow update, delete: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid
+      );
     }
 
     // Partners : chacun son profil partenaire
     match /partners/{partnerId} {
-      allow read, write: if isSignedIn() && (
-        isAdmin() || request.auth.uid == partnerId
+      allow read, update, delete: if isOwner(partnerId);
+      allow create: if isOwner(partnerId);
+    }
+
+    // Bookings : lecture/écriture seulement par l’utilisateur ou le partenaire concerné
+    match /bookings/{bookingId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.partnerId == request.auth.uid
       );
+      
+      allow create: if isSignedIn() 
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.listingId is string;
+
+      allow update: if isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.partnerId == request.auth.uid
+      );
+
+      allow delete: if false;
     }
 
     // Settings : lecture publique, écriture admin seulement
     match /settings/{doc} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // Conversations : lecture/écriture seulement par les participants ou admin
+    match /conversations/{convId} {
+      allow read: if isSignedIn() && 
+        request.auth.uid in resource.data.participants;
+
+      allow create: if isSignedIn() && 
+        request.auth.uid in request.resource.data.participants;
+
+      allow update: if isSignedIn() && 
+        request.auth.uid in resource.data.participants;
+      
+      allow delete: if false;
+      
+      match /messages/{msgId} {
+        allow read, create: if isSignedIn() && (
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.participants
+        );
+        allow update, delete: if false;
+      }
     }
   }
 }

@@ -35,7 +35,7 @@ export interface InternalQuery extends Query<DocumentData> {
 
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
- * Reinforced to prevent internal assertion errors (ca9).
+ * Optimized to handle permissions and ensure stability during cycle renders.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -47,6 +47,7 @@ export function useCollection<T = any>(
   useEffect(() => {
     let isMounted = true;
 
+    // Early return if no ref or query provided (e.g. while loading auth)
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -55,7 +56,7 @@ export function useCollection<T = any>(
     }
 
     if (!memoizedTargetRefOrQuery.__memo) {
-      console.warn('Firebase Reference was not properly memoized using useMemoFirebase. This can lead to assertion errors.');
+      console.warn('Firebase Reference was not properly memoized using useMemoFirebase. This can lead to assertion errors or redundant listeners.');
     }
 
     setIsLoading(true);
@@ -79,6 +80,7 @@ export function useCollection<T = any>(
         async (serverError: FirestoreError) => {
           if (!isMounted) return;
           
+          // Construct contextual error for better debugging
           const path: string =
             memoizedTargetRefOrQuery.type === 'collection'
               ? (memoizedTargetRefOrQuery as CollectionReference).path
@@ -92,24 +94,25 @@ export function useCollection<T = any>(
           setError(contextualError);
           setData(null);
           setIsLoading(false);
+          // Emit globally for developer feedback
           errorEmitter.emit('permission-error', contextualError);
         }
       );
     } catch (e: any) {
       if (isMounted) {
         setIsLoading(false);
+        setError(e);
       }
     }
 
     return () => {
       isMounted = false;
       try {
-        // Essential: Standardize the cleanup to avoid ID: ca9
         if (typeof unsubscribe === 'function') {
           unsubscribe();
         }
       } catch (e) {
-        // Silent catch for internal SDK failures during component unmount
+        // Silent catch for internal SDK failures during component unmount or HMR
       }
     };
   }, [memoizedTargetRefOrQuery]);

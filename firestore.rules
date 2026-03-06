@@ -35,14 +35,9 @@ service cloud.firestore {
       );
     }
 
-    // Bookings : Accès filtré par userId ou partnerId
+    // Bookings : lecture/écriture seulement par l’utilisateur ou le partenaire concerné
     match /bookings/{bookingId} {
-      allow list: if isSignedIn() && (
-        isAdmin() || 
-        request.query.filters.userId == request.auth.uid || 
-        request.query.filters.partnerId == request.auth.uid
-      );
-      allow get, write: if isSignedIn() && (
+      allow read, write: if isSignedIn() && (
         isAdmin() || 
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
@@ -52,11 +47,7 @@ service cloud.firestore {
 
     // Conversations : lecture/écriture seulement par les participants ou admin
     match /conversations/{convId} {
-      allow list: if isSignedIn() && (
-        isAdmin() || 
-        request.auth.uid in request.query.filters.participants
-      );
-      allow get, write: if isSignedIn() && (
+      allow read, write: if isSignedIn() && (
         isAdmin() || 
         request.auth.uid in resource.data.participants
       );

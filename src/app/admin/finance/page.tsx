@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { 
-  Wallet, TrendingUp, Download, ArrowLeft, Loader2, 
+  Wallet, Download, ArrowLeft, Loader2, 
   Euro, CreditCard, ShieldCheck, ArrowUpRight
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,9 +27,9 @@ export default function AdminFinancePage() {
 
   // Chargement sécurisé des réservations uniquement si Admin confirmé
   const bookingsRef = useMemoFirebase(() => {
-    if (!isAdmin || !db) return null;
+    if (!isAdmin || !db || isUserLoading || !user) return null;
     return query(collection(db, "bookings"), orderBy("createdAt", "desc"));
-  }, [db, isAdmin]);
+  }, [db, isAdmin, isUserLoading, user]);
   
   const { data: bookings, isLoading } = useCollection(bookingsRef);
 

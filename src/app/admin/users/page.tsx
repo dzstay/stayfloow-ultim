@@ -30,13 +30,14 @@ export default function AdminUsersPage() {
   const isAdmin = useMemo(() => checkIsAdmin(adminUser), [adminUser]);
 
   const usersRef = useMemoFirebase(() => {
-    if (!isAdmin || !db) return null;
+    if (!isAdmin || !db || isUserLoading || !adminUser) return null;
     return query(collection(db, "users"), orderBy("createdAt", "desc"));
-  }, [db, isAdmin]);
+  }, [db, isAdmin, isUserLoading, adminUser]);
   
   const { data: users, isLoading } = useCollection(usersRef);
 
   const handleStatusUpdate = async (id: string, newStatus: string) => {
+    if (!isAdmin) return;
     await updateDoc(doc(db, "users", id), { status: newStatus });
   };
 

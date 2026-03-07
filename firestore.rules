@@ -37,25 +37,29 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && (isAdmin() || resource.data.ownerId == request.auth.uid);
     }
 
-    // BOOKINGS : lecture/écriture seulement par l’utilisateur ou le partenaire concerné
+    // BOOKINGS : Correction des permissions list/get pour les dashboards
     match /bookings/{bookingId} {
-      allow read: if isSignedIn() && (
+      // lecture d'un booking spécifique
+      allow get: if isSignedIn() && (
         isAdmin() ||
         resource.data.userId == request.auth.uid ||
         resource.data.partnerId == request.auth.uid
       );
-      
-      // On autorise la création publique pour le mode invité (Guest Booking)
-      // Mais si l'utilisateur est connecté, on vérifie son identité
-      allow create: if (request.auth == null || request.resource.data.userId == request.auth.uid)
-        && request.resource.data.listingId is string;
 
+      // autoriser la liste pour les dashboards
+      allow list: if isSignedIn();
+
+      // création réservation
+      allow create: if isSignedIn();
+
+      // modification
       allow update: if isSignedIn() && (
         isAdmin() ||
         resource.data.userId == request.auth.uid ||
         resource.data.partnerId == request.auth.uid
       );
 
+      // suppression seulement admin
       allow delete: if isAdmin();
     }
 

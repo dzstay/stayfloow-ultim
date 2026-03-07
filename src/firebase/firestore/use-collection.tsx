@@ -35,10 +35,9 @@ export interface InternalQuery extends Query<DocumentData> {
 
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
- * Optimized to handle permissions and ensure stability during cycle renders.
  */
 export function useCollection<T = any>(
-    memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
+    memoizedTargetRefOrQuery: (CollectionReference<DocumentData> | Query<DocumentData>) | null | undefined,
 ): UseCollectionResult<T> {
   const [data, setData] = useState<WithId<T>[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -47,16 +46,11 @@ export function useCollection<T = any>(
   useEffect(() => {
     let isMounted = true;
 
-    // Early return if no ref or query provided (e.g. while loading auth)
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
       setError(null);
       return;
-    }
-
-    if (!memoizedTargetRefOrQuery.__memo) {
-      console.warn('Firebase Reference was not properly memoized using useMemoFirebase. This can lead to assertion errors or redundant listeners.');
     }
 
     setIsLoading(true);
@@ -80,7 +74,6 @@ export function useCollection<T = any>(
         async (serverError: FirestoreError) => {
           if (!isMounted) return;
           
-          // Construct contextual error for better debugging
           const path: string =
             memoizedTargetRefOrQuery.type === 'collection'
               ? (memoizedTargetRefOrQuery as CollectionReference).path
@@ -94,7 +87,6 @@ export function useCollection<T = any>(
           setError(contextualError);
           setData(null);
           setIsLoading(false);
-          // Emit globally for developer feedback
           errorEmitter.emit('permission-error', contextualError);
         }
       );
@@ -107,12 +99,8 @@ export function useCollection<T = any>(
 
     return () => {
       isMounted = false;
-      try {
-        if (typeof unsubscribe === 'function') {
-          unsubscribe();
-        }
-      } catch (e) {
-        // Silent catch for internal SDK failures during component unmount or HMR
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
       }
     };
   }, [memoizedTargetRefOrQuery]);

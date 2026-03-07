@@ -6,19 +6,16 @@ import { getAuth as getAuthInstance, Auth } from 'firebase/auth';
 import { getFirestore as getFirestoreInstance, Firestore } from 'firebase/firestore';
 
 /**
- * @fileOverview Initialisation Firebase Singleton Ultra-Robuste.
- * Utilise globalThis pour persister les instances à travers les rechargements HMR de Next.js,
- * ce qui est la seule solution fiable pour éviter l'erreur d'état interne ca9 de Firestore.
+ * @fileOverview Initialisation Firebase Singleton.
+ * Garantit qu'une seule instance de chaque service est créée par application.
  */
 
-declare global {
-  var _firebaseApp: FirebaseApp | undefined;
-  var _firebaseAuth: Auth | undefined;
-  var _firebaseFirestore: Firestore | undefined;
-}
+let clientApp: FirebaseApp;
+let clientAuth: Auth;
+let clientFirestore: Firestore;
 
 export function initializeFirebase() {
-  // SSR : Toujours créer une instance fraîche pour le rendu serveur
+  // SSR : Retourne des instances fraîches pour chaque requête serveur
   if (typeof window === 'undefined') {
     const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     return {
@@ -28,24 +25,17 @@ export function initializeFirebase() {
     };
   }
 
-  // CLIENT : Utilisation du cache global persistant
-  if (!globalThis._firebaseApp) {
-    const apps = getApps();
-    globalThis._firebaseApp = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);
-  }
-
-  if (!globalThis._firebaseAuth) {
-    globalThis._firebaseAuth = getAuthInstance(globalThis._firebaseApp);
-  }
-
-  if (!globalThis._firebaseFirestore) {
-    globalThis._firebaseFirestore = getFirestoreInstance(globalThis._firebaseApp);
+  // CLIENT : Utilisation d'un singleton persistant pour éviter CA9
+  if (!clientApp) {
+    clientApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    clientAuth = getAuthInstance(clientApp);
+    clientFirestore = getFirestoreInstance(clientApp);
   }
 
   return {
-    firebaseApp: globalThis._firebaseApp,
-    auth: globalThis._firebaseAuth,
-    firestore: globalThis._firebaseFirestore,
+    firebaseApp: clientApp,
+    auth: clientAuth,
+    firestore: clientFirestore,
   };
 }
 

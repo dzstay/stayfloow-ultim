@@ -16,7 +16,6 @@ type WithId<T> = T & { id: string };
 
 /**
  * Interface for the return value of the useDoc hook.
- * @template T Type of the document data.
  */
 export interface UseDocResult<T> {
   data: WithId<T> | null; 
@@ -26,10 +25,9 @@ export interface UseDocResult<T> {
 
 /**
  * React hook to subscribe to a single Firestore document in real-time.
- * Reinforced against internal assertion errors (ca9).
  */
 export function useDoc<T = any>(
-  memoizedDocRef: (DocumentReference<DocumentData> & {__memo?: boolean}) | null | undefined,
+  memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
 ): UseDocResult<T> {
   const [data, setData] = useState<WithId<T> | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -84,12 +82,8 @@ export function useDoc<T = any>(
 
     return () => {
       isMounted = false;
-      try {
-        if (typeof unsubscribe === 'function') {
-          unsubscribe();
-        }
-      } catch (e) {
-        // Silent catch for internal SDK failures
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
       }
     };
   }, [memoizedDocRef]);

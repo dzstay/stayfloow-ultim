@@ -48,7 +48,6 @@ export const FirebaseContext = createContext<FirebaseContextState | undefined>(u
 
 /**
  * FirebaseProvider centralise la gestion de l'état d'authentification et des services.
- * Sa stabilité est critique pour éviter les erreurs internes de Firestore.
  */
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
@@ -65,7 +64,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   useEffect(() => {
     if (!auth) return;
 
-    // L'abonnement doit être recréé uniquement si l'instance auth change (très rare avec le cache global)
     const unsubscribe = onAuthStateChanged(
       auth,
       (firebaseUser) => {
@@ -100,9 +98,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   );
 };
 
-/**
- * Hook pour accéder aux services Firebase et à l'utilisateur.
- */
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
@@ -126,15 +121,10 @@ export const useFirestore = (): Firestore => useFirebase().firestore;
 export const useFirebaseApp = (): FirebaseApp => useFirebase().firebaseApp;
 
 /**
- * Stabilise une référence ou une requête Firestore pour éviter les boucles infinies de rendu.
+ * Stabilise une référence ou une requête Firestore pour éviter les boucles infinies.
  */
-type MemoFirebase<T> = T & { __memo?: boolean };
-
-export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
-  const memoized = useMemo(factory, deps);
-  if (typeof memoized !== 'object' || memoized === null) return memoized;
-  (memoized as MemoFirebase<T>).__memo = true;
-  return memoized;
+export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
+  return useMemo(factory, deps);
 }
 
 export const useUser = (): UserHookResult => {

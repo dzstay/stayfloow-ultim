@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/badge";
+import { Badge } from "@/components/ui/badge";
 import { 
   Building, Car, Compass, MapPin, Upload, CheckCircle2, 
   Loader2, Wand2, X, Plus, Minus, Users, Bed, Bath, Sofa, Clock, Globe,
@@ -192,7 +192,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
 
       const finalOwnerId = user?.uid || `guest_partner_${Date.now()}`;
 
-      // Si l'utilisateur est connecté, on met à jour son rôle de manière sécurisée
       if (user) {
         await setDoc(doc(db, 'users', user.uid), { role: 'partner' }, { merge: true });
       }
@@ -246,7 +245,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
 
       await setDoc(doc(db, 'listings', listingId), finalData);
 
-      // Envoi de l'email de bienvenue
       await sendWelcomeEmail({
         hostName: formData.firstName,
         submissionType: initialCategory === 'accommodation' ? 'établissement' : initialCategory === 'car_rental' ? 'véhicule' : 'circuit',
@@ -277,21 +275,36 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     }
   };
 
-  if (currentStep === 5) return (
-    <div className="text-center py-20 bg-white rounded-3xl shadow-2xl animate-in zoom-in-95">
-      <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8"><CheckCircle2 className="h-16 w-16 text-primary" /></div>
-      <h3 className="text-4xl font-black text-slate-900 mb-4">Offre Soumise avec Succès !</h3>
-      <p className="text-xl text-slate-600 max-w-lg mx-auto">Merci {formData.firstName} ! Un e-mail de bienvenue vient de vous être envoyé à <strong>{formData.email}</strong>. Pensez à vérifier vos courriers indésirables.</p>
-      <div className="mt-12 flex flex-col gap-4 max-w-xs mx-auto">
-        <Button size="lg" className="bg-primary h-14 font-black rounded-xl" asChild><a href="/auth/login">Se connecter</a></Button>
-        <Button variant="ghost" className="font-bold text-slate-400" onClick={() => window.location.href = '/'}>Retour à l'accueil</Button>
+  if (currentStep === 5) {
+    return (
+      <div className="text-center py-20 bg-white rounded-3xl shadow-2xl animate-in zoom-in-95">
+        <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8">
+          <CheckCircle2 className="h-16 w-16 text-primary" />
+        </div>
+        <h3 className="text-4xl font-black text-slate-900 mb-4">Offre Soumise avec Succès !</h3>
+        <p className="text-xl text-slate-600 max-w-lg mx-auto">
+          Merci {formData.firstName} ! Un e-mail de bienvenue vient de vous être envoyé à <strong>{formData.email}</strong>. Pensez à vérifier vos courriers indésirables.
+        </p>
+        <div className="mt-12 flex flex-col gap-4 max-w-xs mx-auto">
+          <Button size="lg" className="bg-primary h-14 font-black rounded-xl" asChild>
+            <a href="/auth/login">Se connecter</a>
+          </Button>
+          <Button variant="ghost" className="font-bold text-slate-400" onClick={() => window.location.href = '/'}>
+            Retour à l'accueil
+          </Button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
-      <div className="bg-slate-100 h-2 w-full"><div className="bg-primary h-full transition-all duration-1000" style={{ width: `${(currentStep / steps.length) * 100}%` }} /></div>
+      <div className="bg-slate-100 h-2 w-full">
+        <div 
+          className="bg-primary h-full transition-all duration-1000" 
+          style={{ width: `${(currentStep / steps.length) * 100}%` }} 
+        />
+      </div>
       <CardContent className="p-10">
         <div className="flex justify-between mb-12 overflow-x-auto pb-4 no-scrollbar">
           {steps.map(s => (
@@ -302,7 +315,9 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
               )}>
                 {currentStep > s.id ? <CheckCircle2 className="h-5 w-5"/> : s.id}
               </div>
-              <span className={cn("text-[9px] font-black uppercase tracking-tighter", currentStep === s.id ? "text-primary" : "text-slate-300")}>{s.title}</span>
+              <span className={cn("text-[9px] font-black uppercase tracking-tighter", currentStep === s.id ? "text-primary" : "text-slate-300")}>
+                {s.title}
+              </span>
             </div>
           ))}
         </div>
@@ -321,13 +336,19 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
                 </div>
               </div>
             </div>
-            <div className="space-y-2"><Label className="font-bold">Nom de votre service *</Label><Input value={formData.listingName} onChange={e => setFormData({...formData, listingName: e.target.value})} className="h-12 bg-slate-50" placeholder="Ex: Riad El Mansour" /></div>
+            <div className="space-y-2">
+              <Label className="font-bold">Nom de votre service *</Label>
+              <Input value={formData.listingName} onChange={e => setFormData({...formData, listingName: e.target.value})} className="h-12 bg-slate-50" placeholder="Ex: Riad El Mansour" />
+            </div>
           </div>
         )}
 
         {currentStep === 2 && (
           <div className="space-y-6">
-            <div className="space-y-2"><Label className="font-bold">{t('full_address')} *</Label><Input value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="Ville, Algérie..." className="h-12 bg-slate-50" /></div>
+            <div className="space-y-2">
+              <Label className="font-bold">{t('full_address')} *</Label>
+              <Input value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="Ville, Algérie..." className="h-12 bg-slate-50" />
+            </div>
             <OnboardingMap location={formData.address} />
           </div>
         )}
@@ -342,7 +363,9 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
                 {photos.map((p, i) => (
                   <div key={i} className="relative aspect-square rounded-xl overflow-hidden shadow-md">
                     <Image src={p} alt="Listing" fill className="object-cover" />
-                    <button onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-md hover:bg-red-50"><X className="h-3 w-3 text-red-500"/></button>
+                    <button onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-md hover:bg-red-50">
+                      <X className="h-3 w-3 text-red-500"/>
+                    </button>
                   </div>
                 ))}
                 <label className="aspect-square rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 flex flex-col items-center justify-center cursor-pointer hover:bg-primary/10 transition-colors">
@@ -385,7 +408,9 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         )}
 
         <div className="mt-12 pt-8 border-t flex justify-between">
-          <Button variant="ghost" onClick={handlePrev} disabled={currentStep === 1} className="font-bold text-slate-400">← {t('back')}</Button>
+          <Button variant="ghost" onClick={handlePrev} disabled={currentStep === 1} className="font-bold text-slate-400">
+            ← {t('back')}
+          </Button>
           <Button 
             onClick={currentStep === 4 ? handleSubmit : handleNext} 
             disabled={isSubmitting || (currentStep === 4 && !captchaToken)} 
@@ -439,12 +464,12 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
           <div className="space-y-6">
             <div className="p-10 bg-slate-50/50 rounded-[3rem] border border-slate-100">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-                <Counter icon={<Bed className="h-5 w-5"/>} label="Chambres" value={formData.roomsCount} onChange={v => setFormData({...formData, roomsCount: v})} />
-                <Counter icon={<Bath className="h-5 w-5"/>} label="SDB" value={formData.bathroomsCount} onChange={v => setFormData({...formData, bathroomsCount: v})} />
+                <Counter icon={<Bed className="h-5 w-5"/>} label="Chambres" value={formData.roomsCount} onChange={(v: number) => setFormData({...formData, roomsCount: v})} />
+                <Counter icon={<Bath className="h-5 w-5"/>} label="SDB" value={formData.bathroomsCount} onChange={(v: number) => setFormData({...formData, bathroomsCount: v})} />
                 <Counter icon={<Utensils className="h-5 w-5"/>} label="Cuisines" value={0} onChange={() => {}} /> 
                 <Counter icon={<Users className="h-5 w-5"/>} label="Toilettes" value={1} onChange={() => {}} /> 
-                <Counter icon={<Sofa className="h-5 w-5"/>} label="Salons" value={formData.livingRoomsCount} onChange={v => setFormData({...formData, livingRoomsCount: v})} />
-                <Counter icon={<Trees className="h-5 w-5"/>} label="Jardins" value={formData.gardensCount} onChange={v => setFormData({...formData, gardensCount: v})} />
+                <Counter icon={<Sofa className="h-5 w-5"/>} label="Salons" value={formData.livingRoomsCount} onChange={(v: number) => setFormData({...formData, livingRoomsCount: v})} />
+                <Counter icon={<Trees className="h-5 w-5"/>} label="Jardins" value={formData.gardensCount} onChange={(v: number) => setFormData({...formData, gardensCount: v})} />
               </div>
             </div>
           </div>
@@ -455,9 +480,9 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
                 <Star className="h-5 w-5 fill-primary" /> Configuration des chambres de l'hôtel
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Counter icon={<Bed/>} label="Chambres Seules" value={formData.singleRoomsCount} onChange={v => setFormData({...formData, singleRoomsCount: v})} light />
-                <Counter icon={<Users/>} label="Chambres Doubles" value={formData.doubleRoomsCount} onChange={v => setFormData({...formData, doubleRoomsCount: v})} light />
-                <Counter icon={<Star/>} label="Suites Parentales (King)" value={formData.parentalSuitesCount} onChange={v => setFormData({...formData, parentalSuitesCount: v})} light />
+                <Counter icon={<Bed/>} label="Chambres Seules" value={formData.singleRoomsCount} onChange={(v: number) => setFormData({...formData, singleRoomsCount: v})} light />
+                <Counter icon={<Users/>} label="Chambres Doubles" value={formData.doubleRoomsCount} onChange={(v: number) => setFormData({...formData, doubleRoomsCount: v})} light />
+                <Counter icon={<Star/>} label="Suites Parentales (King)" value={formData.parentalSuitesCount} onChange={(v: number) => setFormData({...formData, parentalSuitesCount: v})} light />
               </div>
             </div>
           )}
@@ -560,7 +585,7 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
               <Label className="font-black text-[10px] uppercase text-slate-400 flex items-center gap-2"><Clock className="h-3 w-3 text-primary" /> Durée</Label>
               <Input value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} placeholder="Ex: 3 jours" className="bg-white h-12" />
             </div>
-            <Counter icon={<Users/>} label="Max Groupe" value={formData.maxGroupSize} onChange={v => setFormData({...formData, maxGroupSize: v})} />
+            <Counter icon={<Users/>} label="Max Groupe" value={formData.maxGroupSize} onChange={(v: number) => setFormData({...formData, maxGroupSize: v})} />
             <div className="bg-slate-50 p-4 rounded-2xl space-y-2">
               <Label className="font-black text-[10px] uppercase text-slate-400 flex items-center gap-2"><Globe className="h-3 w-3 text-primary" /> Langues</Label>
               <Input placeholder="Français, Arabe..." className="bg-white h-12" onBlur={(e) => setFormData({...formData, languages: e.target.value.split(',').map(l => l.trim())})} />
@@ -579,10 +604,10 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {formData.availableDates.length > 0 ? (
-                      formData.availableDates.sort((a, b) => a.getTime() - b.getTime()).map((date, idx) => (
+                      formData.availableDates.sort((a: Date, b: Date) => a.getTime() - b.getTime()).map((date: Date, idx: number) => (
                         <Badge key={idx} variant="secondary" className="bg-white border-slate-200 text-slate-700 px-3 py-2 rounded-xl font-bold flex items-center gap-2 shadow-sm animate-in fade-in zoom-in-95">
                           {format(date, "dd MMM yyyy", { locale: fr })}
-                          <X className="h-3.5 w-3.5 cursor-pointer text-red-400 hover:text-red-600 transition-colors" onClick={() => setFormData({...formData, availableDates: formData.availableDates.filter((_, i) => i !== idx)})} />
+                          <X className="h-3.5 w-3.5 cursor-pointer text-red-400 hover:text-red-600 transition-colors" onClick={() => setFormData({...formData, availableDates: formData.availableDates.filter((_: any, i: number) => i !== idx)})} />
                         </Badge>
                       ))
                     ) : (
@@ -668,7 +693,7 @@ function Counter({ icon, label, value, onChange, light = false }: any) {
       <div className="flex items-center gap-4 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
         <button 
           type="button"
-          onClick={() => onChange(Math.max(0, value-1))} 
+          onClick={() => onChange(Math.max(0, value - 1))} 
           className="h-8 w-8 rounded-xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-primary transition-all active:scale-90 hover:bg-primary hover:text-white"
         >
           <Minus className="h-4 w-4"/>
@@ -676,7 +701,7 @@ function Counter({ icon, label, value, onChange, light = false }: any) {
         <span className="font-black text-lg min-w-[20px] text-center text-slate-900">{value}</span>
         <button 
           type="button"
-          onClick={() => onChange(value+1)} 
+          onClick={() => onChange(value + 1)} 
           className="h-8 w-8 rounded-xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-primary transition-all active:scale-90 hover:bg-primary hover:text-white"
         >
           <Plus className="h-4 w-4"/>

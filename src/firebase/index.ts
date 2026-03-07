@@ -6,26 +6,47 @@ import { getAuth as getAuthInstance, Auth } from 'firebase/auth';
 import { getFirestore as getFirestoreInstance, Firestore } from 'firebase/firestore';
 
 /**
- * @fileOverview Initialisation Firebase Singleton résiliente.
- * Utilise une approche compatible avec le HMR de Next.js pour éviter l'erreur ca9.
+ * @fileOverview Initialisation Firebase Singleton ultra-résiliente.
+ * Cette structure empêche la création d'instances multiples des services, 
+ * ce qui est la cause principale de l'erreur "INTERNAL ASSERTION FAILED (ID: ca9)".
  */
 
+let memoApp: FirebaseApp | undefined;
+let memoAuth: Auth | undefined;
+let memoFirestore: Firestore | undefined;
+
 export function initializeFirebase() {
-  let app: FirebaseApp;
-  
-  if (getApps().length > 0) {
-    app = getApp();
-  } else {
-    app = initializeApp(firebaseConfig);
+  if (typeof window === 'undefined') {
+    // Côté serveur, on retourne des instances fraîches ou null
+    const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    return {
+      firebaseApp: app,
+      auth: getAuthInstance(app),
+      firestore: getFirestoreInstance(app),
+    };
   }
 
-  const auth = getAuthInstance(app);
-  const firestore = getFirestoreInstance(app);
+  // Côté client (Navigateur), on utilise un cache strict
+  if (!memoApp) {
+    if (getApps().length > 0) {
+      memoApp = getApp();
+    } else {
+      memoApp = initializeApp(firebaseConfig);
+    }
+  }
+
+  if (!memoAuth) {
+    memoAuth = getAuthInstance(memoApp);
+  }
+
+  if (!memoFirestore) {
+    memoFirestore = getFirestoreInstance(memoApp);
+  }
 
   return {
-    firebaseApp: app,
-    auth,
-    firestore,
+    firebaseApp: memoApp,
+    auth: memoAuth,
+    firestore: memoFirestore,
   };
 }
 

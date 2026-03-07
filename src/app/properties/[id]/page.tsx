@@ -1,17 +1,15 @@
-
 'use client';
 
 import React, { use, useState, useEffect, useRef, useMemo } from 'react';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { 
-  MapPin, Star, Share2, Heart, ShieldCheck, 
+  MapPin, Star, Share2, Heart, 
   Wifi, Coffee, Car, Wind, ChevronLeft, 
-  ChevronRight, Calendar as CalendarIcon, Loader2,
-  CheckCircle, Info, Utensils, Clock, Dog,
-  Sofa, Trees, Camera,
-  Users, Check, MessageSquare,
-  Navigation, Leaf, Search, X, Train, Plane, Map as MapIcon, FerrisWheel, Mountain, Bed, Bath
+  Loader2, Utensils, Clock, 
+  Sofa, Trees,
+  Users, Check,
+  Leaf, Info, Train, Plane, FerrisWheel, Bed, Bath
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,7 +36,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrency } from '@/context/currency-context';
@@ -50,7 +47,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { properties as mockProperties } from '@/lib/data';
 import { OnboardingMap } from '@/components/onboarding-map';
-import Link from 'next/link';
 
 export default function PropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -65,15 +61,9 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Search state from URL or defaults
-  const [dest, setDest] = useState(searchParams.get('dest') || "");
   const [dates, setDates] = useState<{ from: Date; to: Date }>({
     from: searchParams.get('from') ? new Date(searchParams.get('from')!) : new Date(),
     to: searchParams.get('to') ? new Date(searchParams.get('to')!) : addDays(new Date(), 3),
-  });
-  const [occupancy, setOccupancy] = useState({
-    adults: parseInt(searchParams.get('adults') || "2"),
-    children: parseInt(searchParams.get('children') || "0"),
-    rooms: parseInt(searchParams.get('rooms') || "1"),
   });
 
   const docRef = useMemoFirebase(() => doc(db, 'listings', id), [db, id]);
@@ -92,7 +82,6 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
   const surroundingsRef = useRef<HTMLDivElement>(null);
   const locationRef = useRef<HTMLDivElement>(null);
   const rulesRef = useRef<HTMLDivElement>(null);
-  const reviewsRef = useRef<HTMLDivElement>(null);
 
   const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>, tabId: string) => {
     setActiveCategory(tabId);
@@ -111,7 +100,6 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     const types = [];
     const basePrice = property.price || 10000;
 
-    // LOGIQUE SPÉCIFIQUE HÔTEL
     if (details.propertyType === 'hotel' || details.type?.toLowerCase().includes('hôtel') || details.type?.toLowerCase().includes('riad')) {
       const singleCount = details.singleRoomsCount || 0;
       const doubleCount = details.doubleRoomsCount || 0; 
@@ -230,6 +218,21 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     );
   }
 
+  if (!property) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-8">
+        <div className="bg-white p-12 rounded-[2rem] shadow-2xl text-center max-w-md">
+          <Info className="h-16 w-16 text-primary/20 mx-auto mb-6" />
+          <h1 className="text-2xl font-black text-slate-900 mb-2">Hébergement introuvable</h1>
+          <p className="text-slate-500 mb-8">Désolé, nous ne parvenons pas à trouver les détails de cet établissement.</p>
+          <Button className="bg-primary hover:bg-primary/90 font-black px-8 h-12 rounded-xl" onClick={() => router.push('/')}>
+            Retour à l'accueil
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const photos = property.photos || property.images || [];
   const propertyName = property.details?.name || property.name;
   const rating = property.rating || 8.5;
@@ -240,7 +243,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     <div className="min-h-screen bg-white">
       {/* Header Tabs Navigation */}
       <div className="sticky top-16 z-40 bg-white border-b shadow-sm hidden md:block">
-        <div className="max-w-[1100px] auto px-4 flex">
+        <div className="max-w-[1100px] mx-auto px-4 flex">
           <TabButton active={activeTab === 'overview'} label="Vue d'ensemble" onClick={() => scrollToSection(overviewRef, 'overview')} />
           <TabButton active={activeTab === 'availability'} label="Disponibilité" onClick={() => scrollToSection(availabilityRef, 'availability')} />
           <TabButton active={activeTab === 'facilities'} label="Équipements" onClick={() => scrollToSection(facilitiesRef, 'facilities')} />

@@ -2,94 +2,71 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ADMIN STRICT (seulement ces deux comptes ont accès total)
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
     function isAdmin() {
-      return request.auth != null && (
+      return isSignedIn() && (
         request.auth.token.email == "stayflow2025@gmail.com" ||
         request.auth.uid == "G4d04MgUW4fguFOjmhQBbWezheB2"
       );
     }
 
-    // UTILISATEUR CONNECTÉ
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // ADMIN ACCÈS TOTAL (Prioritaire)
-    match /{document=**} {
-      allow read, write: if isAdmin();
-    }
-
-    // USERS : Accès restreint au propriétaire
+    // USERS : Accès restreint au propriétaire ou admin
     match /users/{userId} {
       allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
     }
 
-    // PARTNERS : Accès restreint au partenaire
+    // PARTNERS : Accès restreint au partenaire ou admin
     match /partners/{partnerId} {
       allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == partnerId);
     }
 
-    // LISTINGS : Lecture publique, modification propriétaire
+    // LISTINGS : Lecture publique, création connecté, modification propriétaire
     match /listings/{listingId} {
       allow read: if true;
-      allow create: if true; // Autorise les soumissions anonymes (onboarding)
-      allow update, delete: if isSignedIn() && (isAdmin() || resource.data.ownerId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
-    // BOOKINGS : Correction des permissions list/get pour les dashboards
+    // BOOKINGS : Autorise le listing pour les dashboards, restreint le get individuel
     match /bookings/{bookingId} {
-      // lecture d'un booking spécifique
-      allow get: if isSignedIn() && (
-        isAdmin() ||
-        resource.data.userId == request.auth.uid ||
-        resource.data.partnerId == request.auth.uid
-      );
-
-      // autoriser la liste pour les dashboards (les filtres dans le code assurent l'isolation)
+      // Autoriser le listage global pour les utilisateurs connectés (le filtrage se fait via les queries)
       allow list: if isSignedIn();
-
-      // création réservation
-      allow create: if isSignedIn();
-
-      // modification
-      allow update: if isSignedIn() && (
-        isAdmin() ||
-        resource.data.userId == request.auth.uid ||
+      
+      // Lecture individuelle réservée aux parties concernées
+      allow get: if isAdmin() || (isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
-      );
+      ));
 
-      // suppression seulement admin
+      allow create: if isSignedIn();
+      
+      allow update: if isAdmin() || (isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.partnerId == request.auth.uid
+      ));
+
       allow delete: if isAdmin();
     }
 
-    // CONVERSATIONS : Correction des permissions list/get pour les dashboards
+    // CONVERSATIONS : Autorise le listing, restreint l'accès au contenu
     match /conversations/{convId} {
-      // autoriser la liste pour les dashboards
       allow list: if isSignedIn();
-
-      // lecture d'une conversation spécifique
-      allow get: if isSignedIn() && (
-        isAdmin() ||
-        request.auth.uid in resource.data.participants
-      );
       
-      // création conversation
+      allow get: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
+      
       allow create: if isSignedIn();
-
-      // modification
-      allow update: if isSignedIn() && (
-        isAdmin() ||
-        request.auth.uid in resource.data.participants
-      );
+      
+      allow update: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
 
       allow delete: if isAdmin();
 
       match /messages/{msgId} {
-        allow list, get: if isSignedIn();
-        allow create: if isSignedIn();
-        allow update: if false;
-        allow delete: if false;
+        allow read, create: if isSignedIn();
+        allow update, delete: if false;
       }
     }
 
@@ -97,6 +74,11 @@ service cloud.firestore {
     match /settings/{doc} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // ADMIN PRIORITAIRE (Accès global)
+    match /{document=**} {
+      allow read, write: if isAdmin();
     }
   }
 }

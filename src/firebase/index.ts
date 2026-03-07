@@ -6,36 +6,26 @@ import { getAuth as getAuthInstance, Auth } from 'firebase/auth';
 import { getFirestore as getFirestoreInstance, Firestore } from 'firebase/firestore';
 
 /**
- * @fileOverview Initialisation Firebase Singleton.
- * Garantit qu'une seule instance de chaque service est créée par application.
+ * @fileOverview Initialisation Firebase Singleton résiliente.
+ * Utilise une approche compatible avec le HMR de Next.js pour éviter l'erreur ca9.
  */
 
-let clientApp: FirebaseApp;
-let clientAuth: Auth;
-let clientFirestore: Firestore;
-
 export function initializeFirebase() {
-  // SSR : Retourne des instances fraîches pour chaque requête serveur
-  if (typeof window === 'undefined') {
-    const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    return {
-      firebaseApp: app,
-      auth: getAuthInstance(app),
-      firestore: getFirestoreInstance(app),
-    };
+  let app: FirebaseApp;
+  
+  if (getApps().length > 0) {
+    app = getApp();
+  } else {
+    app = initializeApp(firebaseConfig);
   }
 
-  // CLIENT : Utilisation d'un singleton persistant pour éviter CA9
-  if (!clientApp) {
-    clientApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    clientAuth = getAuthInstance(clientApp);
-    clientFirestore = getFirestoreInstance(clientApp);
-  }
+  const auth = getAuthInstance(app);
+  const firestore = getFirestoreInstance(app);
 
   return {
-    firebaseApp: clientApp,
-    auth: clientAuth,
-    firestore: clientFirestore,
+    firebaseApp: app,
+    auth,
+    firestore,
   };
 }
 

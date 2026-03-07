@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -16,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/badge";
 import { 
   Building, Car, Compass, MapPin, Upload, CheckCircle2, 
   Loader2, Wand2, X, Plus, Minus, Users, Bed, Bath, Sofa, Clock, Globe,
@@ -26,7 +25,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generatePartnerDescription } from '@/ai/flows/partner-description-generator';
-import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { OnboardingMap } from '@/components/onboarding-map';
@@ -193,8 +192,9 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
 
       const finalOwnerId = user?.uid || `guest_partner_${Date.now()}`;
 
+      // Si l'utilisateur est connecté, on met à jour son rôle de manière sécurisée
       if (user) {
-        await updateDoc(doc(db, 'users', user.uid), { role: 'partner' });
+        await setDoc(doc(db, 'users', user.uid), { role: 'partner' }, { merge: true });
       }
 
       const finalData = {
@@ -246,7 +246,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
 
       await setDoc(doc(db, 'listings', listingId), finalData);
 
-      // Envoi de l'email de bienvenue sympa
+      // Envoi de l'email de bienvenue
       await sendWelcomeEmail({
         hostName: formData.firstName,
         submissionType: initialCategory === 'accommodation' ? 'établissement' : initialCategory === 'car_rental' ? 'véhicule' : 'circuit',
@@ -257,7 +257,8 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
 
       setCurrentStep(5);
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Erreur', description: 'Échec de la soumission.' });
+      console.error("Submission Error:", error);
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Échec de la soumission. Veuillez réessayer.' });
     } finally {
       setIsSubmitting(false);
     }

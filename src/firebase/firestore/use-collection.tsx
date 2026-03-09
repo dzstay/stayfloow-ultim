@@ -100,7 +100,11 @@ export function useCollection<T = any>(
     return () => {
       isMounted = false;
       if (typeof unsubscribe === 'function') {
-        unsubscribe();
+        try {
+          unsubscribe();
+        } catch (e) {
+          // Silent catch for HMR/Internal state errors during teardown
+        }
       }
     };
   }, [memoizedTargetRefOrQuery]);

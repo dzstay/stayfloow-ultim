@@ -12,8 +12,7 @@ import { getFirestore as getFirestoreInstance, Firestore } from 'firebase/firest
  */
 
 export function initializeFirebase() {
-  const g = globalThis as any;
-
+  // SSR Path
   if (typeof window === 'undefined') {
     const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     return {
@@ -23,7 +22,9 @@ export function initializeFirebase() {
     };
   }
 
-  // Client side singleton management to prevent ca9 internal assertion failed errors
+  // Client side singleton management via globalThis
+  const g = globalThis as any;
+
   if (!g._firebaseApp) {
     try {
       g._firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);

@@ -83,7 +83,11 @@ export function useDoc<T = any>(
     return () => {
       isMounted = false;
       if (typeof unsubscribe === 'function') {
-        unsubscribe();
+        try {
+          unsubscribe();
+        } catch (e) {
+          // Silent catch for SDK internal state errors during teardown
+        }
       }
     };
   }, [memoizedDocRef]);

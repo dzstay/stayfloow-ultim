@@ -16,67 +16,55 @@ service cloud.firestore {
       );
     }
 
-    // USERS : Accès restreint au propriétaire ou admin
+    // USERS
     match /users/{userId} {
-      // Autoriser la liste pour l'admin ou le dash local (filtrage par UID)
       allow list: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
-      // Lecture individuelle
       allow get: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
-      // Création
       allow create: if isSignedIn();
-      // Mise à jour
       allow update: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
-      // Suppression réservée à l'admin
       allow delete: if isAdmin();
     }
 
-    // PARTNERS : Accès restreint au partenaire ou admin
+    // PARTNERS
     match /partners/{partnerId} {
       allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == partnerId);
     }
 
-    // LISTINGS : Lecture publique, création pour tous (Onboarding), modification propriétaire
+    // LISTINGS
     match /listings/{listingId} {
       allow read: if true;
       allow create: if true;
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
-    // BOOKINGS : Autoriser LIST pour charger les tableaux de bord
+    // BOOKINGS
     match /bookings/{bookingId} {
-      // Liste autorisée pour les membres (la sécurité réelle est dans la query .where('userId', '=='))
+      // Autoriser la liste pour charger les dashboards (le filtrage se fait via la query)
       allow list: if isSignedIn();
-
-      // Lecture d'un booking spécifique : propriétaire, partenaire ou admin uniquement
+      
       allow get: if isAdmin() || (isSignedIn() && (
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
       ));
 
-      // Création réservation autorisée pour tous (Guest booking mode)
       allow create: if true;
 
-      // Modification : propriétaire, partenaire ou admin
       allow update: if isAdmin() || (isSignedIn() && (
         resource.data.userId == request.auth.uid || 
         resource.data.partnerId == request.auth.uid
       ));
 
-      // Suppression seulement admin
       allow delete: if isAdmin();
     }
 
-    // CONVERSATIONS : Autoriser LIST pour charger les messageries
+    // CONVERSATIONS
     match /conversations/{convId} {
       allow list: if isSignedIn();
       
-      // Lecture d'une conversation spécifique : uniquement les participants ou admin
       allow get: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
       
-      // Création conversation
       allow create: if isSignedIn();
       
-      // Modification
       allow update: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
 
       allow delete: if isAdmin();

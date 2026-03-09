@@ -105,9 +105,10 @@ export function useCollection<T = any>(
       isMounted = false;
       if (typeof unsubscribe === 'function') {
         try {
+          // Wrap in try-catch to avoid internal Firebase state errors during teardown
           unsubscribe();
         } catch (e) {
-          // Silent catch for HMR teardown
+          // Ignore teardown errors
         }
       }
     };

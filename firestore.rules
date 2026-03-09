@@ -34,7 +34,7 @@ service cloud.firestore {
     // LISTINGS
     match /listings/{listingId} {
       allow read: if true;
-      allow create: if true;
+      allow create: if true; // Support Guest Mode
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 

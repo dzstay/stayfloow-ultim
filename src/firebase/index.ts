@@ -12,7 +12,7 @@ import { getFirestore as getFirestoreInstance, Firestore } from 'firebase/firest
  */
 
 export function initializeFirebase() {
-  // Gestion du Singleton côté client
+  // Gestion du Singleton côté client via globalThis pour persister entre les rechargements HMR
   if (typeof window !== 'undefined') {
     const g = globalThis as any;
     
@@ -25,7 +25,7 @@ export function initializeFirebase() {
           firestore: getFirestoreInstance(app),
         };
       } catch (e) {
-        // Fallback en cas d'erreur d'initialisation concurrente
+        // Fallback de sécurité en cas d'initialisation concurrente
         const app = getApp();
         g.__STAYFLOOW_FIREBASE_INSTANCE__ = {
           app,
@@ -42,7 +42,7 @@ export function initializeFirebase() {
     };
   }
 
-  // SSR Path (Simple initialisation)
+  // SSR Path (Initialisation simple pour le rendu serveur)
   const ssrApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
   return {
     firebaseApp: ssrApp,

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -10,6 +11,7 @@ import { useAuth } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import ReCAPTCHA from "react-google-recaptcha";
+import { sendRegistrationWelcomeEmail } from "@/lib/mail";
 
 import {
   Form,
@@ -67,9 +69,15 @@ export default function RegisterPage() {
         displayName: values.fullName
       });
 
+      // Envoi de l'email de bienvenue (réel via extension mail)
+      await sendRegistrationWelcomeEmail({
+        userName: values.fullName,
+        userEmail: values.email
+      });
+
       toast({
         title: "Compte créé !",
-        description: `Bienvenue sur StayFloow, ${values.fullName} !`,
+        description: `Bienvenue sur StayFloow, ${values.fullName} ! Un email de bienvenue vous a été envoyé.`,
       });
       
       router.push("/");

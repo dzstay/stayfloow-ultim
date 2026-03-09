@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -35,7 +36,7 @@ service cloud.firestore {
 
     // BOOKINGS - Gestion des réservations
     match /bookings/{bookingId} {
-      // autoriser les dashboards à lister les réservations (Correction Erreur Permission Denied)
+      // autoriser les dashboards à lister les réservations
       allow list: if isSignedIn();
 
       // lecture d'une réservation spécifique
@@ -89,6 +90,11 @@ service cloud.firestore {
     // STRIPE EXTENSION - Sessions de paiement
     match /customers/{uid}/checkout_sessions/{id} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // MAIL EXTENSION - Envoi d'emails
+    match /mail/{mailId} {
+      allow create: if isSignedIn();
     }
   }
 }

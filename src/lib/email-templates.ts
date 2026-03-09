@@ -5,6 +5,7 @@
 
 export type EmailTemplateName = 
   | 'partnerWelcome' 
+  | 'registrationWelcome'
   | 'bookingConfirmation' 
   | 'newBookingNotification' 
   | 'favoriteReminder' 
@@ -12,7 +13,6 @@ export type EmailTemplateName =
   | 'passwordReset';
 
 const BRAND_COLOR = "#10B981";
-const BRAND_LOGO_URL = "https://www.stayfloow.com/logo.png"; // Placeholder
 
 const baseLayout = (content: string) => `
 <!DOCTYPE html>
@@ -48,6 +48,29 @@ const baseLayout = (content: string) => `
 
 export const getEmailTemplate = async (name: EmailTemplateName, data: any): Promise<{ subject: string; body: string }> => {
   switch (name) {
+    case 'registrationWelcome':
+      return {
+        subject: `Bienvenue sur StayFloow.com, ${data.userName} ! 🌍`,
+        body: baseLayout(`
+          <h1>Bienvenue parmi nous ! 😍</h1>
+          <p>Bonjour ${data.userName}, merci d'avoir créé un compte sur StayFloow.com.</p>
+          <p>Vous faites maintenant partie de la communauté de voyageurs la plus dynamique d'Afrique.</p>
+          <div class="card">
+            <p><strong>Avec votre compte, vous pouvez :</strong></p>
+            <ul>
+              <li>Réserver des hébergements, voitures et circuits en un clic.</li>
+              <li>Gérer vos réservations et discuter avec les hôtes.</li>
+              <li>Recevoir des offres exclusives réservées aux membres.</li>
+            </ul>
+          </div>
+          <div style="text-align: center;">
+            <a href="https://www.stayfloow.com" class="btn">Commencer à explorer</a>
+          </div>
+          <p>À très bientôt sur notre plateforme !</p>
+          <p>L'équipe StayFloow 🌍</p>
+        `)
+      };
+
     case 'partnerWelcome':
       return {
         subject: `Bienvenue dans la famille StayFloow ! 🚀 Référence : ${data.referenceNumber}`,
@@ -57,17 +80,15 @@ export const getEmailTemplate = async (name: EmailTemplateName, data: any): Prom
           
           <div class="card">
             <p><strong>C'est presque prêt !</strong> ✨ Nos experts vérifient actuellement les derniers détails pour que votre annonce brille sur notre plateforme et attire un maximum de voyageurs.</p>
-            <p>En attendant la mise en ligne, vous devez <strong>confirmer votre compte</strong>. Cela vous permettra de définir votre mot de passe et d'accéder à votre tableau de bord personnalisé pour gérer vos réservations.</p>
+            <p>En attendant la mise en ligne, vous pouvez accéder à votre tableau de bord partenaire pour suivre l'état de votre validation.</p>
           </div>
 
           <div style="text-align: center;">
-            <a href="${data.setupLink}" class="btn">Confirmer mon compte partenaire</a>
+            <a href="${data.setupLink || '#'}" class="btn">Accéder à mon espace partenaire</a>
           </div>
 
           <p style="margin-top: 30px; font-weight: bold;">À très bientôt pour vos premières réservations !</p>
           <p>L'équipe StayFloow 🌍</p>
-          
-          <p style="font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 20px;">Si vous n'êtes pas à l'origine de cette inscription, vous pouvez ignorer cet e-mail.</p>
         `)
       };
 
@@ -98,36 +119,7 @@ export const getEmailTemplate = async (name: EmailTemplateName, data: any): Prom
             ${data.detailsHtml}
           </div>
           <p>Gérez cette réservation directement sur votre tableau de bord.</p>
-          <a href="${process.env.NEXT_PUBLIC_BASE_URL}/partners/dashboard" class="btn">Gérer mes réservations</a>
-        `)
-      };
-
-    case 'favoriteReminder':
-      return {
-        subject: `Votre coup de cœur vous attend sur StayFloow !`,
-        body: baseLayout(`
-          <h1>Il est toujours là pour vous...</h1>
-          <div style="text-align: center; margin: 20px 0;">
-            <img src="${data.propertyImage}" alt="${data.propertyName}" style="width: 100%; border-radius: 12px; max-height: 200px; object-cover: cover;">
-          </div>
-          <p>Bonjour ${data.customerName}, vous avez ajouté <strong>${data.propertyName}</strong> à vos favoris il y a quelques jours.</p>
-          <p>Réservez votre séjour au meilleur prix avant qu'il ne soit complet !</p>
-          <a href="${data.propertyUrl}" class="btn">Réserver maintenant</a>
-        `)
-      };
-
-    case 'newSubmissionAdminNotification':
-      return {
-        subject: `[ADMIN] Nouvelle soumission : ${data.submissionName}`,
-        body: baseLayout(`
-          <h1>Alerte Nouvelle Inscription</h1>
-          <p>Un nouveau partenaire souhaite rejoindre la plateforme.</p>
-          <div class="card">
-            <p><strong>Type :</strong> ${data.submissionType}</p>
-            <p><strong>Nom :</strong> ${data.submissionName}</p>
-            <p><strong>Partenaire :</strong> ${data.partnerName} (${data.partnerEmail})</p>
-          </div>
-          <a href="${data.adminUrl}" class="btn">Accéder à la validation</a>
+          <a href="https://www.stayfloow.com/partners/dashboard" class="btn">Gérer mes réservations</a>
         `)
       };
 

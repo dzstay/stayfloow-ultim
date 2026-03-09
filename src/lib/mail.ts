@@ -1,17 +1,35 @@
-'use server';
+
+import { collection, addDoc } from 'firebase/firestore';
+import { initializeFirebase } from '@/firebase';
+import { getEmailTemplate } from './email-templates';
 
 /**
- * @fileOverview Système d'envoi d'emails StayFloow.
- * Simulation fiable pour environnement local et build sans erreurs.
+ * @fileOverview Système d'envoi d'emails StayFloow via l'extension Trigger Email de Firebase.
  */
 
-const simulateEmailSend = async (to: string, subject: string, body: string) => {
-  await new Promise(resolve => setTimeout(resolve, 800));
-  console.log("-----------------------------------------");
-  console.log(`[SIMULATED EMAIL] To: ${to}`);
-  console.log(`[SUBJECT]: ${subject}`);
-  console.log("-----------------------------------------");
-  return { success: true, data: { id: `sim_${Date.now()}` } };
+const triggerEmail = async (to: string, subject: string, body: string) => {
+  try {
+    const { firestore } = initializeFirebase();
+    if (!firestore) return;
+
+    await addDoc(collection(firestore, 'mail'), {
+      to: to,
+      message: {
+        subject: subject,
+        html: body,
+      },
+    });
+    console.log(`[STAYFLOOW MAIL] Ordre d'envoi créé pour : ${to}`);
+    return { success: true };
+  } catch (error) {
+    console.error("[STAYFLOOW MAIL] Erreur lors de la création de l'ordre d'envoi:", error);
+    return { success: false, error };
+  }
+};
+
+export const sendRegistrationWelcomeEmail = async ({ userName, userEmail }: { userName: string, userEmail: string }) => {
+  const { subject, body } = await getEmailTemplate("registrationWelcome", { userName });
+  return triggerEmail(userEmail, subject, body);
 };
 
 export const sendWelcomeEmail = async ({
@@ -21,10 +39,7 @@ export const sendWelcomeEmail = async ({
   hostEmail,
   referenceNumber,
 }: any) => {
-  const { getEmailTemplate } = await import("./email-templates");
-  const setupToken = `partner-setup-${Date.now()}`;
-  const setupLink = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:9002"}/auth/reset-password?token=${setupToken}`;
-
+  const setupLink = "https://www.stayfloow.com/partners/dashboard";
   const { subject, body } = await getEmailTemplate("partnerWelcome", {
     hostName,
     submissionType,
@@ -33,7 +48,7 @@ export const sendWelcomeEmail = async ({
     setupLink,
   });
 
-  return simulateEmailSend(hostEmail, subject, body);
+  return triggerEmail(hostEmail, subject, body);
 };
 
 export const sendBookingConfirmationEmail = async ({
@@ -47,8 +62,6 @@ export const sendBookingConfirmationEmail = async ({
   hostPhone,
   bookingDetails,
 }: any) => {
-  const { getEmailTemplate } = await import("./email-templates");
-
   let detailsHtml = "";
   if (bookingDetails.startDate) {
     detailsHtml += `<p><strong>Début :</strong> ${new Date(bookingDetails.startDate).toLocaleDateString("fr-FR")}</p>`;
@@ -68,17 +81,15 @@ export const sendBookingConfirmationEmail = async ({
     itemType,
   });
 
-  return simulateEmailSend(customerEmail, subject, body);
+  return triggerEmail(customerEmail, subject, body);
 };
 
 export const sendPasswordResetEmail = async ({
   userEmail,
-  userType,
-}: { userEmail: string; userType: string }) => {
-  const { getEmailTemplate } = await import("./email-templates");
+}: { userEmail: string; userType?: string }) => {
   const resetToken = "reset-" + Math.random().toString(36).substring(7);
-  const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:9002"}/auth/reset-password?token=${resetToken}`;
+  const resetLink = `https://www.stayfloow.com/auth/reset-password?token=${resetToken}`;
 
   const { subject, body } = await getEmailTemplate("passwordReset", { resetLink });
-  return simulateEmailSend(userEmail, subject, body);
+  return triggerEmail(userEmail, subject, body);
 };

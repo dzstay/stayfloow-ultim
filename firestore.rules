@@ -18,7 +18,8 @@ service cloud.firestore {
 
     // USERS
     match /users/{userId} {
-      allow list: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      // Autorise la liste pour l'admin afin de charger le dashboard utilisateurs
+      allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
       allow create: if isSignedIn();
       allow update: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
@@ -39,7 +40,7 @@ service cloud.firestore {
 
     // BOOKINGS
     match /bookings/{bookingId} {
-      // Autoriser la liste pour charger les dashboards (le filtrage se fait via la query)
+      // Autorise la liste pour charger les dashboards (le filtrage réel se fait via la query client)
       allow list: if isSignedIn();
       
       allow get: if isAdmin() || (isSignedIn() && (
@@ -47,6 +48,7 @@ service cloud.firestore {
         resource.data.partnerId == request.auth.uid
       ));
 
+      // Autorise la création pour tous (Mode Invité supporté)
       allow create: if true;
 
       allow update: if isAdmin() || (isSignedIn() && (
@@ -59,6 +61,7 @@ service cloud.firestore {
 
     // CONVERSATIONS
     match /conversations/{convId} {
+      // Autorise la liste pour charger les messageries
       allow list: if isSignedIn();
       
       allow get: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);

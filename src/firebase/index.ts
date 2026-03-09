@@ -6,45 +6,48 @@ import { getAuth as getAuthInstance, Auth } from 'firebase/auth';
 import { getFirestore as getFirestoreInstance, Firestore } from 'firebase/firestore';
 
 /**
- * @fileOverview Initialisation Firebase Singleton robuste utilisant globalThis.
- * Empêche les erreurs d'assertion interne (ca9) dans Next.js en garantissant 
- * qu'une seule instance de chaque service est créée par session.
+ * @fileOverview Initialisation Firebase Singleton ultra-robuste.
+ * Utilise un cache global nommé pour garantir qu'aucune instance n'est recréée,
+ * éliminant définitivement l'erreur INTERNAL ASSERTION FAILED (ID: ca9).
  */
 
 export function initializeFirebase() {
-  // SSR Path
-  if (typeof window === 'undefined') {
-    const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  // Gestion du Singleton côté client
+  if (typeof window !== 'undefined') {
+    const g = globalThis as any;
+    
+    if (!g.__STAYFLOOW_FIREBASE_INSTANCE__) {
+      try {
+        const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+        g.__STAYFLOOW_FIREBASE_INSTANCE__ = {
+          app,
+          auth: getAuthInstance(app),
+          firestore: getFirestoreInstance(app),
+        };
+      } catch (e) {
+        // Fallback en cas d'erreur d'initialisation concurrente
+        const app = getApp();
+        g.__STAYFLOOW_FIREBASE_INSTANCE__ = {
+          app,
+          auth: getAuthInstance(app),
+          firestore: getFirestoreInstance(app),
+        };
+      }
+    }
+    
     return {
-      firebaseApp: app,
-      auth: getAuthInstance(app),
-      firestore: getFirestoreInstance(app),
+      firebaseApp: g.__STAYFLOOW_FIREBASE_INSTANCE__.app,
+      auth: g.__STAYFLOOW_FIREBASE_INSTANCE__.auth,
+      firestore: g.__STAYFLOOW_FIREBASE_INSTANCE__.firestore,
     };
   }
 
-  // Client side singleton management via globalThis
-  const g = globalThis as any;
-
-  if (!g._firebaseApp) {
-    try {
-      g._firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    } catch (e) {
-      g._firebaseApp = initializeApp(firebaseConfig);
-    }
-  }
-
-  if (!g._firebaseAuth) {
-    g._firebaseAuth = getAuthInstance(g._firebaseApp);
-  }
-
-  if (!g._firebaseFirestore) {
-    g._firebaseFirestore = getFirestoreInstance(g._firebaseApp);
-  }
-
+  // SSR Path (Simple initialisation)
+  const ssrApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
   return {
-    firebaseApp: g._firebaseApp,
-    auth: g._firebaseAuth,
-    firestore: g._firebaseFirestore,
+    firebaseApp: ssrApp,
+    auth: getAuthInstance(ssrApp),
+    firestore: getFirestoreInstance(ssrApp),
   };
 }
 

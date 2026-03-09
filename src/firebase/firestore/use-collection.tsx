@@ -74,10 +74,14 @@ export function useCollection<T = any>(
         async (serverError: FirestoreError) => {
           if (!isMounted) return;
           
-          const path: string =
-            memoizedTargetRefOrQuery.type === 'collection'
+          let path = "unknown";
+          try {
+            path = memoizedTargetRefOrQuery.type === 'collection'
               ? (memoizedTargetRefOrQuery as CollectionReference).path
               : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString();
+          } catch (e) {
+            // fallback path
+          }
 
           const contextualError = new FirestorePermissionError({
             operation: 'list',
@@ -103,7 +107,7 @@ export function useCollection<T = any>(
         try {
           unsubscribe();
         } catch (e) {
-          // Silent catch for HMR/Internal state errors during teardown
+          // Silent catch for HMR teardown
         }
       }
     };

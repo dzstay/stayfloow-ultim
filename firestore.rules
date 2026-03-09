@@ -16,19 +16,18 @@ service cloud.firestore {
       );
     }
 
+    // ADMIN PRIORITAIRE (Accès global)
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+
     // USERS
     match /users/{userId} {
-      // Autorise la liste pour l'admin afin de charger le dashboard utilisateurs
       allow list: if isAdmin();
       allow get: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
       allow create: if isSignedIn();
       allow update: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
       allow delete: if isAdmin();
-    }
-
-    // PARTNERS
-    match /partners/{partnerId} {
-      allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == partnerId);
     }
 
     // LISTINGS
@@ -40,7 +39,7 @@ service cloud.firestore {
 
     // BOOKINGS
     match /bookings/{bookingId} {
-      // Autorise la liste pour charger les dashboards (le filtrage réel se fait via la query client)
+      // Autorise la liste pour charger les dashboards sans erreur de permission
       allow list: if isSignedIn();
       
       allow get: if isAdmin() || (isSignedIn() && (
@@ -88,11 +87,6 @@ service cloud.firestore {
     // STRIPE EXTENSION PATHS
     match /customers/{uid}/checkout_sessions/{id} {
       allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
-    }
-
-    // ADMIN PRIORITAIRE (Accès global)
-    match /{document=**} {
-      allow read, write: if isAdmin();
     }
   }
 }

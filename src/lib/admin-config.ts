@@ -9,9 +9,10 @@ export const ADMIN_EMAILS = [
 
 export const ADMIN_UIDS = [
   "G4d04MgUW4fguFOjmhQBbWezheB2",
-  "Kb7jQGxp4pf1cjdfbMwz4HnujQi2",
+  "Kb7jQGxp4pf1cjdfbMwz4HnujQi2", 
   "CChLqb7OxdbbSpjNRKMAt2vJNa12",
-  "3rixbVLeMaUARuODthz3ds80WeS2"
+  "3rixbVLeMaUARuODthz3ds80WeS2",
+  "dqUISCFanPajTlrvC23iAXTr4BI2"
 ];
 
 /**

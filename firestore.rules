@@ -18,7 +18,7 @@ service cloud.firestore {
       );
     }
 
-    // ADMIN accès total prioritaire
+    // ADMIN - Accès total prioritaire
     match /{document=**} {
       allow read, write: if isAdmin();
     }
@@ -29,52 +29,41 @@ service cloud.firestore {
       allow list: if isAdmin();
     }
 
-    // LISTINGS - Lecture publique, création connectée
+    // LISTINGS - Lecture publique, création par utilisateur connecté
     match /listings/{listingId} {
       allow read: if true;
+      // Autoriser la création si l'utilisateur est connecté (Admin ou Partenaire)
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      // Autoriser la modification si c'est le propriétaire ou un admin
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
     // BOOKINGS - Gestion des réservations
     match /bookings/{bookingId} {
-      // Autoriser les dashboards à lister les réservations (Correction pour dashboard client/partenaire)
       allow list: if isSignedIn();
-
-      // Lecture d'une réservation spécifique
-      allow get: if isSignedIn() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.partnerId == request.auth.uid ||
-        isAdmin()
-      );
-
-      // Création réservation (Autoriser invité pour ne pas bloquer le tunnel de vente)
+      allow get: if isAdmin() || (isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.partnerId == request.auth.uid
+      ));
       allow create: if true; 
-
-      // Modification réservation
-      allow update: if isSignedIn() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.partnerId == request.auth.uid ||
-        isAdmin()
-      );
-
+      allow update: if isAdmin() || (isSignedIn() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.partnerId == request.auth.uid
+      ));
       allow delete: if isAdmin();
     }
 
     // PARTNERS - Profils professionnels
     match /partners/{partnerId} {
-      allow read, write: if isSignedIn() && (request.auth.uid == partnerId || isAdmin());
+      allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == partnerId);
     }
 
-    // CONVERSATIONS - Messagerie sécurisée
+    // CONVERSATIONS - Messagerie
     match /conversations/{convId} {
       allow list: if isSignedIn();
-      allow get: if isSignedIn() && (
-        request.auth.uid in resource.data.participants || 
-        isAdmin()
-      );
+      allow get: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
       allow create: if isSignedIn();
-      allow update: if isSignedIn() && (request.auth.uid in resource.data.participants);
+      allow update: if isSignedIn() && request.auth.uid in resource.data.participants;
       allow delete: if isAdmin();
 
       match /messages/{msgId} {
@@ -89,14 +78,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // STRIPE EXTENSION - Sessions de paiement
+    // STRIPE & MAIL
     match /customers/{uid}/checkout_sessions/{id} {
-      allow read, write: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
     }
-
-    // MAIL EXTENSION - Envoi d'emails
     match /mail/{mailId} {
-      allow create: if isSignedIn() || true; // Autoriser la création d'ordre d'envoi même en invité
+      allow create: if true;
     }
   }
 }

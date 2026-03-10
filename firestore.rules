@@ -30,12 +30,12 @@ service cloud.firestore {
 
     match /listings/{listingId} {
       allow read: if true;
-      // Correction : Autoriser les admins ou valider les données pour les partenaires
-      allow create: if isAdmin() || (
-                    isSignedIn() &&
-                    request.resource.data.status == "pending" &&
-                    request.resource.data.keys().hasAll(['partnerInfo', 'details', 'price', 'category'])
-                    );
+      // Correction finale : Autoriser la création par tout le monde (invités inclus) 
+      // tant que l'annonce est "pending" et possède les champs requis.
+      allow create: if request.resource.data.status == "pending" &&
+                    request.resource.data.keys().hasAll(['partnerInfo', 'details', 'price', 'category']);
+      
+      // La mise à jour et la suppression restent réservées aux propriétaires connectés ou aux admins.
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 

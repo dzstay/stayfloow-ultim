@@ -18,47 +18,45 @@ service cloud.firestore {
       );
     }
 
-    // ADMIN - Accès total prioritaire
+    // Accès total pour les administrateurs sur tous les documents
     match /{document=**} {
       allow read, write: if isAdmin();
     }
 
-    // USERS - Lecture/Écriture par le propriétaire
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
       allow list: if isAdmin();
     }
 
-    // LISTINGS - Lecture publique, création par utilisateur connecté
     match /listings/{listingId} {
       allow read: if true;
-      // Autoriser la création/écriture si l'utilisateur est connecté
-      allow create: if isSignedIn();
-      // Autoriser la modification si c'est le propriétaire ou un admin
+      // Correction : Autoriser les admins ou valider les données pour les partenaires
+      allow create: if isAdmin() || (
+                    isSignedIn() &&
+                    request.resource.data.status == "pending" &&
+                    request.resource.data.keys().hasAll(['partnerInfo', 'details', 'price', 'category'])
+                    );
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
-    // BOOKINGS - Gestion des réservations
     match /bookings/{bookingId} {
       allow list: if isSignedIn();
       allow get: if isAdmin() || (isSignedIn() && (
-        resource.data.userId == request.auth.uid || 
+        resource.data.userId == request.auth.uid ||
         resource.data.partnerId == request.auth.uid
       ));
-      allow create: if true; 
+      allow create: if true;
       allow update: if isAdmin() || (isSignedIn() && (
-        resource.data.userId == request.auth.uid || 
+        resource.data.userId == request.auth.uid ||
         resource.data.partnerId == request.auth.uid
       ));
       allow delete: if isAdmin();
     }
 
-    // PARTNERS - Profils professionnels
     match /partners/{partnerId} {
       allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == partnerId);
     }
 
-    // CONVERSATIONS - Messagerie
     match /conversations/{convId} {
       allow list: if isSignedIn();
       allow get: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
@@ -72,16 +70,15 @@ service cloud.firestore {
       }
     }
 
-    // SETTINGS - Configuration site
     match /settings/{doc} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // STRIPE & MAIL
     match /customers/{uid}/checkout_sessions/{id} {
       allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
     }
+
     match /mail/{mailId} {
       allow create: if true;
     }

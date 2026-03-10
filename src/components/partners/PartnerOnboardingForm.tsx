@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -638,7 +637,14 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
                   <Calendar
                     mode="multiple"
                     selected={formData.availableDates}
-                    onSelect={(dates) => setFormData({...formData, availableDates: dates || []})}
+                    onSelect={(dates) => {
+                      const newDates = dates || [];
+                      setFormData(prev => ({
+                        ...prev,
+                        availableDates: newDates,
+                        duration: newDates.length > 0 ? `${newDates.length} jour${newDates.length > 1 ? 's' : ''}` : prev.duration
+                      }));
+                    }}
                     locale={fr}
                     disabled={{ before: new Date() }}
                     className="border-none p-0"

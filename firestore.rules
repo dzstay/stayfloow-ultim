@@ -32,7 +32,7 @@ service cloud.firestore {
     // LISTINGS - Lecture publique, création par utilisateur connecté
     match /listings/{listingId} {
       allow read: if true;
-      // Autoriser la création si l'utilisateur est connecté (Admin ou Partenaire)
+      // Autoriser la création/écriture si l'utilisateur est connecté
       allow create: if isSignedIn();
       // Autoriser la modification si c'est le propriétaire ou un admin
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);

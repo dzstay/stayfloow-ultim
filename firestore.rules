@@ -13,7 +13,8 @@ service cloud.firestore {
         request.auth.uid == "G4d04MgUW4fguFOjmhQBbWezheB2" ||
         request.auth.uid == "Kb7jQGxp4pf1cjdfbMwz4HnujQi2" ||
         request.auth.uid == "CChLqb7OxdbbSpjNRKMAt2vJNa12" ||
-        request.auth.uid == "3rixbVLeMaUARuODthz3ds80WeS2"
+        request.auth.uid == "3rixbVLeMaUARuODthz3ds80WeS2" ||
+        request.auth.uid == "dqUISCFanPajTlrvC23iAXTr4BI2"
       );
     }
 
@@ -32,25 +33,25 @@ service cloud.firestore {
     match /listings/{listingId} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
     }
 
     // BOOKINGS - Gestion des réservations
     match /bookings/{bookingId} {
-      // autoriser les dashboards à lister les réservations (Correction demandée)
+      // Autoriser les dashboards à lister les réservations (Correction pour dashboard client/partenaire)
       allow list: if isSignedIn();
 
-      // lecture d'une réservation spécifique
+      // Lecture d'une réservation spécifique
       allow get: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.partnerId == request.auth.uid ||
         isAdmin()
       );
 
-      // création réservation
-      allow create: if isSignedIn(); 
+      // Création réservation (Autoriser invité pour ne pas bloquer le tunnel de vente)
+      allow create: if true; 
 
-      // modification réservation
+      // Modification réservation
       allow update: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.partnerId == request.auth.uid ||
@@ -90,12 +91,12 @@ service cloud.firestore {
 
     // STRIPE EXTENSION - Sessions de paiement
     match /customers/{uid}/checkout_sessions/{id} {
-      allow read, write: if isSignedIn() && request.auth.uid == uid;
+      allow read, write: if isSignedIn() && (request.auth.uid == uid || isAdmin());
     }
 
     // MAIL EXTENSION - Envoi d'emails
     match /mail/{mailId} {
-      allow create: if isSignedIn();
+      allow create: if isSignedIn() || true; // Autoriser la création d'ordre d'envoi même en invité
     }
   }
 }

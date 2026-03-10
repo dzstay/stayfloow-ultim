@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -24,8 +25,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generatePartnerDescription } from '@/ai/flows/partner-description-generator';
-import { doc, setDoc } from 'firebase/firestore';
-import { useFirestore, useUser } from '@/firebase';
+import { doc, collection } from 'firebase/firestore';
+import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { OnboardingMap } from '@/components/onboarding-map';
 import { useLanguage } from '@/context/language-context';
@@ -194,10 +195,13 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
 
       const finalOwnerId = user?.uid || `guest_partner_${Date.now()}`;
 
+      // 1. Mise à jour du rôle utilisateur (Non-bloquant)
       if (user) {
-        await setDoc(doc(db, 'users', user.uid), { role: 'partner' }, { merge: true });
+        const userRef = doc(db, 'users', user.uid);
+        setDocumentNonBlocking(userRef, { role: 'partner' }, { merge: true });
       }
 
+      // 2. Préparation des données finales
       const finalData = {
         id: listingId,
         ownerId: finalOwnerId,
@@ -248,9 +252,12 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         createdAt: new Date().toISOString()
       };
 
-      await setDoc(doc(db, 'listings', listingId), finalData);
+      // 3. Création de l'annonce (Non-bloquant)
+      const listingRef = doc(db, 'listings', listingId);
+      setDocumentNonBlocking(listingRef, finalData, { merge: false });
 
-      await sendWelcomeEmail({
+      // 4. Envoi de l'email de bienvenue (Non-bloquant)
+      sendWelcomeEmail({
         hostName: formData.firstName,
         submissionType: initialCategory === 'accommodation' ? 'établissement' : initialCategory === 'car_rental' ? 'véhicule' : 'circuit',
         submissionName: formData.listingName,
@@ -258,6 +265,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         referenceNumber: listingId.substring(5, 11).toUpperCase()
       });
 
+      // 5. Passage immédiat à l'étape finale (Succès optimiste)
       setCurrentStep(5);
     } catch (error) {
       console.error("Submission Error:", error);

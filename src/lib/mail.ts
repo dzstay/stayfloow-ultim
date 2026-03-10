@@ -1,10 +1,11 @@
 
-import { collection, addDoc } from 'firebase/firestore';
-import { initializeFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { initializeFirebase, addDocumentNonBlocking } from '@/firebase';
 import { getEmailTemplate } from './email-templates';
 
 /**
  * @fileOverview Système d'envoi d'emails StayFloow via l'extension Trigger Email de Firebase.
+ * Utilise des écritures non-bloquantes pour une meilleure performance UI.
  */
 
 const triggerEmail = async (to: string, subject: string, body: string) => {
@@ -12,17 +13,21 @@ const triggerEmail = async (to: string, subject: string, body: string) => {
     const { firestore } = initializeFirebase();
     if (!firestore) return;
 
-    await addDoc(collection(firestore, 'mail'), {
+    const mailCol = collection(firestore, 'mail');
+    
+    // Utiliser une écriture non-bloquante pour ne pas ralentir le tunnel de vente
+    addDocumentNonBlocking(mailCol, {
       to: to,
       message: {
         subject: subject,
         html: body,
       },
     });
-    console.log(`[STAYFLOOW MAIL] Ordre d'envoi créé pour : ${to}`);
+    
+    console.log(`[STAYFLOOW MAIL] Ordre d'envoi initié pour : ${to}`);
     return { success: true };
   } catch (error) {
-    console.error("[STAYFLOOW MAIL] Erreur lors de la création de l'ordre d'envoi:", error);
+    console.error("[STAYFLOOW MAIL] Erreur lors de l'initiation de l'envoi:", error);
     return { success: false, error };
   }
 };

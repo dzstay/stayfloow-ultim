@@ -4,11 +4,11 @@ import React, { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { doc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, addDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, CheckCircle, CreditCard, ShieldCheck, Calendar as CalendarIcon, Users, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, CreditCard, ShieldCheck, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
@@ -44,6 +44,7 @@ function CircuitBookingContent() {
     
     const tourId = searchParams.get('id');
     const tourDate = searchParams.get('date');
+    const endDate = searchParams.get('endDate');
     const tickets = searchParams.get('tickets') ? JSON.parse(searchParams.get('tickets')!) : {};
     const totalAmount = Number(searchParams.get('total')) || 0;
 
@@ -77,6 +78,7 @@ function CircuitBookingContent() {
               totalPrice: totalAmount,
               status: 'approved',
               startDate: tourDate,
+              endDate: endDate || tourDate,
               createdAt: new Date().toISOString(),
               reservationNumber: resNum
             });
@@ -90,7 +92,12 @@ function CircuitBookingContent() {
                 hostName: "StayFloow Guide", 
                 hostEmail: "contact@stayfloow.com", 
                 hostPhone: "+213 550 00 00 00",
-                bookingDetails: { startDate: tourDate, participants: Object.values(tickets).reduce((a: any, b: any) => a + b, 0) as number, totalPrice: totalAmount }
+                bookingDetails: { 
+                  startDate: tourDate, 
+                  endDate: endDate,
+                  participants: Object.values(tickets).reduce((a: any, b: any) => a + b, 0) as number, 
+                  totalPrice: totalAmount 
+                }
             });
             setIsConfirmed(true);
             toast({ title: "Réservation réussie !" });
@@ -188,7 +195,7 @@ function CircuitBookingContent() {
                                 </FormItem>
                             )}/>
 
-                            <Button type="submit" disabled={isSubmitting} className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 shadow-xl rounded-2xl">
+                            <Button type="submit" disabled={!form.getValues('agreeToTerms') || isSubmitting} className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 shadow-xl rounded-2xl">
                                 {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : `Confirmer et Payer ${formatPrice(totalAmount)}`}
                             </Button>
                         </form>
@@ -202,7 +209,10 @@ function CircuitBookingContent() {
                         <CardContent className="p-8 pt-0 space-y-6">
                             <Separator />
                             <div className="space-y-4">
-                                <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><CalendarIcon className="h-4 w-4" /> {tourDate ? format(new Date(tourDate), "dd MMM yyyy") : "Date à confirmer"}</div>
+                                <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest"><CalendarIcon className="h-4 w-4" /> 
+                                  {tourDate ? format(new Date(tourDate), "dd MMM") : "..."} 
+                                  {endDate && ` au ${format(new Date(endDate), "dd MMM yyyy")}`}
+                                </div>
                                 <div className="space-y-2">
                                     {Object.entries(tickets).map(([tid, count]: [string, any]) => {
                                         if (count === 0) return null;

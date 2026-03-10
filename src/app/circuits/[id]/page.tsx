@@ -17,7 +17,7 @@ import { useCurrency } from '@/context/currency-context';
 import { useLanguage } from '@/context/language-context';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { circuits as mockCircuits } from '@/lib/data';
@@ -39,10 +39,21 @@ export default function CircuitDetailsPage({ params }: { params: Promise<{ id: s
 
   const circuit = dbCircuit || mockCircuits.find(c => c.id === id);
 
+  const durationStr = circuit?.details?.duration || circuit?.duration || "1";
+  const durationDays = parseInt(durationStr) || 1;
+
   const allowedDates = useMemo(() => {
     const datesStr = circuit?.details?.availableDates || circuit?.availableDates || [];
     return datesStr.map((d: string) => new Date(d));
   }, [circuit]);
+
+  const selectedRange = useMemo(() => {
+    if (!selectedDate) return undefined;
+    return {
+      from: selectedDate,
+      to: addDays(selectedDate, durationDays - 1)
+    };
+  }, [selectedDate, durationDays]);
 
   useEffect(() => {
     if (allowedDates.length > 0 && !selectedDate) {
@@ -51,18 +62,13 @@ export default function CircuitDetailsPage({ params }: { params: Promise<{ id: s
   }, [allowedDates, selectedDate]);
 
   useEffect(() => {
-    if (circuit?.details?.ticketTypes) {
+    const ticketTypes = circuit?.details?.ticketTypes || circuit?.ticketTypes || [];
+    if (ticketTypes.length > 0) {
       const initialCounts: Record<string, number> = {};
-      circuit.details.ticketTypes.forEach((t: any) => {
+      ticketTypes.forEach((t: any) => {
         initialCounts[t.id] = t.id === 'adult' ? 1 : 0;
       });
       setTicketCounts(initialCounts);
-    } else if (circuit?.ticketTypes) {
-        const initialCounts: Record<string, number> = {};
-        circuit.ticketTypes.forEach((t: any) => {
-          initialCounts[t.id] = t.id === 'adult' ? 1 : 0;
-        });
-        setTicketCounts(initialCounts);
     }
   }, [circuit]);
 
@@ -81,6 +87,7 @@ export default function CircuitDetailsPage({ params }: { params: Promise<{ id: s
     const params = new URLSearchParams({
       id: id,
       date: selectedDate?.toISOString() || '',
+      endDate: selectedRange?.to.toISOString() || '',
       tickets: JSON.stringify(ticketCounts),
       total: total.toString()
     });
@@ -93,7 +100,7 @@ export default function CircuitDetailsPage({ params }: { params: Promise<{ id: s
   const amenities = circuit.details?.amenities || circuit.amenities || [];
   const photos = circuit.photos || circuit.images || ['https://picsum.photos/seed/hero/800/600'];
   const name = circuit.details?.name || circuit.title;
-  const duration = circuit.details?.duration || circuit.duration;
+  const durationLabel = circuit.details?.duration || circuit.duration;
   const location = circuit.location?.address || circuit.location;
   const description = circuit.details?.description || circuit.description;
   const languages = circuit.details?.languages || circuit.languages || ['Français', 'Arabe'];
@@ -121,7 +128,7 @@ export default function CircuitDetailsPage({ params }: { params: Promise<{ id: s
             </div>
             <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">{name}</h1>
             <div className="flex flex-wrap items-center gap-6 text-sm font-bold text-slate-500">
-              <div className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> {duration}</div>
+              <div className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> {durationLabel}</div>
               <div className="flex items-center gap-1.5 text-primary"><MapPin className="h-4 w-4" /> {location}</div>
             </div>
           </div>
@@ -198,12 +205,12 @@ export default function CircuitDetailsPage({ params }: { params: Promise<{ id: s
               </CardHeader>
               <CardContent className="p-8 space-y-8">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">1. Choisir une date</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">1. Choisir une date de départ</label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full h-14 justify-start font-black text-lg border-slate-200 rounded-2xl">
                         <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
-                        {selectedDate ? format(selectedDate, "dd MMMM yyyy", { locale: fr }) : "Choisir parmi dates dispo"}
+                        {selectedDate ? format(selectedDate, "dd MMMM yyyy", { locale: fr }) : "Dates de départ dispo"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 border-none shadow-2xl" align="start">
@@ -222,10 +229,12 @@ export default function CircuitDetailsPage({ params }: { params: Promise<{ id: s
                       />
                     </PopoverContent>
                   </Popover>
-                  {allowedDates.length > 0 && (
-                    <p className="text-[9px] text-primary font-black uppercase tracking-widest text-center mt-2">
-                      {allowedDates.length} dates ouvertes par le guide
-                    </p>
+                  {selectedRange && (
+                    <div className="bg-primary/5 p-3 rounded-xl border border-primary/10 animate-in fade-in">
+                      <p className="text-[10px] font-black text-primary uppercase text-center">
+                        Séjour du {format(selectedRange.from, "dd/MM")} au {format(selectedRange.to, "dd/MM/yyyy")}
+                      </p>
+                    </div>
                   )}
                 </div>
 

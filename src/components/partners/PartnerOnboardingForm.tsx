@@ -135,7 +135,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     transmission: 'Manuelle',
     fuel: 'Essence',
     seats: 5,
-    duration: '1 jour',
+    duration: '5 jours', // Valeur par défaut pour l'image
     maxGroupSize: 10,
     languages: [] as string[],
     amenities: [] as string[],
@@ -194,13 +194,11 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
 
       const finalOwnerId = user?.uid || `guest_partner_${Date.now()}`;
 
-      // 1. Mise à jour du rôle utilisateur (Non-bloquant)
       if (user) {
         const userRef = doc(db, 'users', user.uid);
         setDocumentNonBlocking(userRef, { role: 'partner' }, { merge: true });
       }
 
-      // 2. Préparation des données finales
       const finalData = {
         id: listingId,
         ownerId: finalOwnerId,
@@ -251,11 +249,9 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         createdAt: new Date().toISOString()
       };
 
-      // 3. Création de l'annonce (Non-bloquant)
       const listingRef = doc(db, 'listings', listingId);
       setDocumentNonBlocking(listingRef, finalData, { merge: false });
 
-      // 4. Envoi de l'email de bienvenue (Non-bloquant)
       sendWelcomeEmail({
         hostName: formData.firstName,
         submissionType: initialCategory === 'accommodation' ? 'établissement' : initialCategory === 'car_rental' ? 'véhicule' : 'circuit',
@@ -264,7 +260,6 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         referenceNumber: listingId.substring(5, 11).toUpperCase()
       });
 
-      // 5. Passage immédiat à l'étape finale (Succès optimiste)
       setCurrentStep(5);
     } catch (error) {
       console.error("Submission Error:", error);
@@ -596,25 +591,30 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
         <div className="space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-slate-50 p-4 rounded-2xl space-y-2">
-              <Label className="font-black text-[10px] uppercase text-slate-400 flex items-center gap-2"><Clock className="h-3 w-3 text-primary" /> Durée</Label>
-              <Input value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} placeholder="Ex: 3 jours" className="bg-white h-12" />
+              <Label className="font-black text-[10px] uppercase text-slate-400 flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-primary" /> Nombre de jours</Label>
+              <Input 
+                type="number" 
+                value={parseInt(formData.duration) || 1} 
+                onChange={e => setFormData({...formData, duration: `${e.target.value} jours`})} 
+                className="bg-white h-12 font-bold" 
+              />
             </div>
             <Counter icon={<Users/>} label="Max Groupe" value={formData.maxGroupSize} onChange={(v: number) => setFormData({...formData, maxGroupSize: v})} />
             <div className="bg-slate-50 p-4 rounded-2xl space-y-2">
-              <Label className="font-black text-[10px] uppercase text-slate-400 flex items-center gap-2"><Globe className="h-3 w-3 text-primary" /> Langues</Label>
+              <Label className="font-black text-[10px] uppercase text-slate-400 flex items-center gap-2"><Globe className="h-3.5 w-3.5 text-primary" /> Langues</Label>
               <Input placeholder="Français, Arabe..." className="bg-white h-12" onBlur={(e) => setFormData({...formData, languages: e.target.value.split(',').map(l => l.trim())})} />
             </div>
           </div>
 
           <div className="space-y-4">
             <Label className="font-black text-xl text-slate-900 flex items-center gap-2">
-              <CalendarIcon className="h-6 w-6 text-primary" /> Dates de disponibilité *
+              <CalendarIcon className="h-6 w-6 text-primary" /> Dates de départs disponibles *
             </Label>
             <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-slate-50 p-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                 <div className="space-y-6">
                   <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                    Sélectionnez les jours où ce circuit est ouvert à la réservation.
+                    Sélectionnez les <strong>dates de début</strong> du circuit. Le système affichera automatiquement la plage complète de {formData.duration} aux clients.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {formData.availableDates.length > 0 ? (
@@ -627,7 +627,7 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
                     ) : (
                       <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
                         <p className="text-xs font-bold text-amber-600 flex items-center gap-2">
-                          <Info className="h-4 w-4" /> Aucune date sélectionnée
+                          <Info className="h-4 w-4" /> Aucune date de départ sélectionnée
                         </p>
                       </div>
                     )}
@@ -641,8 +641,7 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
                       const newDates = dates || [];
                       setFormData(prev => ({
                         ...prev,
-                        availableDates: newDates,
-                        duration: newDates.length > 0 ? `${newDates.length} jour${newDates.length > 1 ? 's' : ''}` : prev.duration
+                        availableDates: newDates
                       }));
                     }}
                     locale={fr}

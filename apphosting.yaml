@@ -1,8 +1,9 @@
-# Configuration StayFloow pour Firebase App Hosting
+# Configuration robuste pour Firebase App Hosting
 runConfig:
   maxInstances: 10
   minInstances: 0
   memory: 1Gi
+  cpu: 1
   runCommand: node .next/standalone/server.js
 
 env:

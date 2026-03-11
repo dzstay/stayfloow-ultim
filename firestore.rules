@@ -29,7 +29,7 @@ service cloud.firestore {
 
     match /listings/{listingId} {
       allow read: if true;
-      // Autoriser la création par les invités ou admins pour les annonces en attente
+      // Autoriser la création par les invités (status pending) ou admins
       allow create: if (request.resource.data.status == "pending") || isAdmin();
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }

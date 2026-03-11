@@ -83,17 +83,16 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              window.addEventListener('error', (event) => {
-                const isChunkError = event.message && (
-                  event.message.includes('ChunkLoadError') || 
-                  event.message.includes('Loading chunk') ||
-                  event.message.includes('Failed to fetch dynamically imported module')
-                );
-                if (isChunkError) {
-                  console.warn('StayFloow Recovery: Reloading due to chunk error...');
-                  window.location.reload();
-                }
-              }, true);
+              (function() {
+                window.addEventListener('error', function(event) {
+                  var message = event.message || '';
+                  var isChunkError = /ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module/i.test(message);
+                  if (isChunkError) {
+                    console.warn('StayFloow Recovery: Reloading due to chunk error...');
+                    window.location.reload();
+                  }
+                }, true);
+              })();
             `,
           }}
         />

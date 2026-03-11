@@ -9,7 +9,7 @@ import { fr, enUS, es, arDZ } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 import { useLanguage } from '@/context/language-context';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ export default function AdvancedSearchBar() {
   const { t, locale } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   
   const [isClient, setIsClient] = useState(false);
   const [activeCategory, setActiveCategory] = useState<Category>('accommodations');
@@ -47,8 +48,34 @@ export default function AdvancedSearchBar() {
 
   const [isOccupancyOpen, setIsOccupancyOpen] = useState(false);
 
+  // Initialize state from URL params
   useEffect(() => {
     setIsClient(true);
+    
+    const dest = searchParams.get('dest');
+    if (dest) setDestination(dest);
+    
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
+    if (from && to) {
+      setDateRange({ from: new Date(from), to: new Date(to) });
+    }
+
+    const adults = searchParams.get('adults');
+    const children = searchParams.get('children');
+    const rooms = searchParams.get('rooms');
+    const pets = searchParams.get('pets');
+    
+    if (adults || children || rooms) {
+      setOccupancy(prev => ({
+        ...prev,
+        adults: adults ? parseInt(adults) : prev.adults,
+        children: children ? parseInt(children) : prev.children,
+        rooms: rooms ? parseInt(rooms) : prev.rooms,
+        pets: pets === 'true'
+      }));
+    }
+
     if (pathname.startsWith('/cars')) {
       setActiveCategory('cars');
     } else if (pathname.startsWith('/circuits')) {
@@ -56,7 +83,7 @@ export default function AdvancedSearchBar() {
     } else {
       setActiveCategory('accommodations');
     }
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   // Handle outside click for suggestions
   useEffect(() => {

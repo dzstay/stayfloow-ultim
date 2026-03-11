@@ -49,6 +49,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { properties as mockProperties } from '@/lib/data';
 import { OnboardingMap } from '@/components/onboarding-map';
+import AdvancedSearchBar from '@/components/search/AdvancedSearchBar';
 
 export default function PropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -60,7 +61,6 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
   
   const [activeTab, setActiveCategory] = useState('overview');
   const [selectedRooms, setSelectedRooms] = useState<Record<string, number>>({});
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Search state from URL or defaults
   const [dates, setDates] = useState<{ from: Date; to: Date }>({
@@ -76,6 +76,15 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     if (dbProperty) return dbProperty;
     return mockProperties.find(p => p.id === id);
   }, [dbProperty, id]);
+
+  // Sync dates with URL changes
+  useEffect(() => {
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
+    if (from && to) {
+      setDates({ from: new Date(from), to: new Date(to) });
+    }
+  }, [searchParams]);
 
   // Refs for smooth scroll
   const overviewRef = useRef<HTMLDivElement>(null);
@@ -94,7 +103,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     return Math.max(1, differenceInDays(dates.to, dates.from));
   }, [dates]);
 
-  // Derive Room Types from actual partner data or mock data
+  // Room types calculation...
   const roomTypes = useMemo(() => {
     if (!property) return [];
     
@@ -102,7 +111,6 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     const types = [];
     const basePrice = property.price || 10000;
 
-    // Si c'est un hôtel ou riad, on sépare les types de chambres
     if (details.propertyType === 'hotel' || details.type?.toLowerCase().includes('hôtel') || details.type?.toLowerCase().includes('riad')) {
       const singleCount = details.singleRoomsCount || 0;
       const doubleCount = details.doubleRoomsCount || 0; 
@@ -144,7 +152,6 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
         });
       }
     } else {
-      // Pour les appartements ou villas, c'est le logement entier
       types.push({
         id: 'entire',
         name: `Logement entier (${details.roomsCount || 1} pièces)`,
@@ -324,25 +331,10 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
           </div>
         </section>
 
-        {/* Section 2: Availability Section - IMPROVED FOR SEPARATE ROOMS */}
+        {/* Section 2: Availability Section with Advanced Search Bar */}
         <section ref={availabilityRef} className="space-y-6 pt-10">
-          <div className="flex flex-col md:flex-row justify-between items-end gap-4">
-            <div className="space-y-4">
-              <h2 className="text-2xl font-black text-slate-900">Disponibilité de l'hébergement</h2>
-              <div className="bg-[#FEBA02] px-4 py-2 rounded-sm inline-flex items-center gap-2 mt-2 shadow-sm">
-                <CalendarIcon className="h-4 w-4" />
-                <span className="text-[12px] font-black uppercase">
-                  Période : {format(dates.from, "dd MMM", { locale: fr })} — {format(dates.to, "dd MMM yyyy", { locale: fr })} ({nights} nuits)
-                </span>
-              </div>
-            </div>
-            <Button 
-              onClick={() => setIsEditModalOpen(true)}
-              variant="outline" 
-              className="border-primary text-primary font-black h-12 px-8 rounded-md hover:bg-primary/5 transition-all"
-            >
-              Modifier mes dates
-            </Button>
+          <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+            <AdvancedSearchBar />
           </div>
 
           <div className="border rounded-md overflow-hidden shadow-sm">
@@ -525,33 +517,6 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
           </div>
         </section>
       </main>
-
-      {/* SEARCH MODIFIER DIALOG */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[500px] rounded-2xl p-8">
-          <DialogHeader><DialogTitle className="text-2xl font-black text-slate-900">Sélectionnez vos dates</DialogTitle></DialogHeader>
-          <div className="space-y-6 py-6">
-            <div className="space-y-2">
-              <span className="text-[10px] font-black text-slate-400 uppercase">Dates de votre voyage</span>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full h-14 justify-start font-black text-lg border-slate-200 rounded-xl bg-slate-50">
-                    <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
-                    {dates.from ? `${format(dates.from, "dd MMM")} — ${format(dates.to, "dd MMM")}` : "Choisir les dates"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 border-none shadow-2xl" align="center">
-                  <Calendar mode="range" selected={dates} onSelect={(range: any) => range && setDates(range)} locale={fr} disabled={{ before: new Date() }} />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <div className="flex justify-end gap-3 border-t pt-6">
-            <Button variant="ghost" onClick={() => setIsEditModalOpen(false)}>Annuler</Button>
-            <Button onClick={() => setIsEditModalOpen(false)} className="bg-primary text-white font-black px-8 h-12 rounded-xl">Rechercher</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

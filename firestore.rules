@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -30,7 +31,7 @@ service cloud.firestore {
     match /listings/{listingId} {
       allow read: if true;
       // Autoriser la création par les invités (status pending) ou admins
-      allow create: if (request.resource.data.status == "pending") || isAdmin();
+      allow create: if isAdmin() || request.resource.data.status == "pending";
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 

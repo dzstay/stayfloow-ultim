@@ -13,17 +13,18 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#10B981',
-    lang: 'fr',
     icons: [
       {
         src: 'https://picsum.photos/seed/stayfloow-192/192/192',
         sizes: '192x192',
         type: 'image/png',
+        purpose: 'any',
       },
       {
         src: 'https://picsum.photos/seed/stayfloow-512/512/512',
         sizes: '512x512',
         type: 'image/png',
+        purpose: 'any',
       },
     ],
   };

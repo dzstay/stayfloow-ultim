@@ -17,7 +17,7 @@ service cloud.firestore {
       );
     }
 
-    // Accès total pour les administrateurs sur tous les documents
+    // Accès total pour les administrateurs
     match /{document=**} {
       allow read, write: if isAdmin();
     }
@@ -29,12 +29,8 @@ service cloud.firestore {
 
     match /listings/{listingId} {
       allow read: if true;
-      // Autoriser la création par tout le monde (invités inclus) 
-      // tant que l'annonce est "pending" et possède les champs requis.
-      allow create: if request.resource.data.status == "pending" &&
-                    request.resource.data.keys().hasAll(['partnerInfo', 'details', 'price', 'category']);
-      
-      // La mise à jour et la suppression restent réservées aux propriétaires connectés ou aux admins.
+      // Autoriser la création par les invités ou admins pour les annonces en attente
+      allow create: if (request.resource.data.status == "pending") || isAdmin();
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 

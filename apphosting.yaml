@@ -1,4 +1,4 @@
-# Configuration StayFloow pour Firebase App Hosting (Région Europe-West4)
+# Configuration StayFloow pour Firebase App Hosting
 runConfig:
   maxInstances: 10
   minInstances: 0

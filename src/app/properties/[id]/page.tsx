@@ -332,9 +332,9 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
         </section>
 
         {/* Section 2: Availability Section with Advanced Search Bar */}
-        <section ref={availabilityRef} className="space-y-6 pt-10">
+        <section ref={availabilityRef} className="space-y-6 pt-10 border-t">
           <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-            <AdvancedSearchBar />
+            <AdvancedSearchBar hideTabs />
           </div>
 
           <div className="border rounded-md overflow-hidden shadow-sm">

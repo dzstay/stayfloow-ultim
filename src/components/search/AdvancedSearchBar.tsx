@@ -18,7 +18,11 @@ import { Separator } from '@/components/ui/separator';
 
 type Category = 'accommodations' | 'cars' | 'circuits';
 
-export default function AdvancedSearchBar() {
+interface AdvancedSearchBarProps {
+  hideTabs?: boolean;
+}
+
+export default function AdvancedSearchBar({ hideTabs = false }: AdvancedSearchBarProps) {
   const { t, locale } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
@@ -201,26 +205,28 @@ export default function AdvancedSearchBar() {
 
   return (
     <div className="w-full">
-      <div className="flex gap-3 mb-6 overflow-x-auto no-scrollbar py-1">
-        <TabButton 
-          active={activeCategory === 'accommodations'} 
-          icon={<Building className="h-5 w-5" />} 
-          label={t("accommodations")} 
-          onClick={() => router.push('/')}
-        />
-        <TabButton 
-          active={activeCategory === 'cars'} 
-          icon={<Car className="h-5 w-5" />} 
-          label={t("car_rental")} 
-          onClick={() => router.push('/cars')}
-        />
-        <TabButton 
-          active={activeCategory === 'circuits'} 
-          icon={<Compass className="h-5 w-5" />} 
-          label={t("tours")} 
-          onClick={() => router.push('/circuits')}
-        />
-      </div>
+      {!hideTabs && (
+        <div className="flex gap-3 mb-6 overflow-x-auto no-scrollbar py-1">
+          <TabButton 
+            active={activeCategory === 'accommodations'} 
+            icon={<Building className="h-5 w-5" />} 
+            label={t("accommodations")} 
+            onClick={() => router.push('/')}
+          />
+          <TabButton 
+            active={activeCategory === 'cars'} 
+            icon={<Car className="h-5 w-5" />} 
+            label={t("car_rental")} 
+            onClick={() => router.push('/cars')}
+          />
+          <TabButton 
+            active={activeCategory === 'circuits'} 
+            icon={<Compass className="h-5 w-5" />} 
+            label={t("tours")} 
+            onClick={() => router.push('/circuits')}
+          />
+        </div>
+      )}
 
       <form onSubmit={handleSearch} className="bg-[#FEBA02] p-[2px] rounded-xl shadow-2xl flex flex-col md:flex-row items-stretch gap-0 border-2 border-[#FEBA02] relative z-40">
         <div className={cn(

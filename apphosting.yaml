@@ -1,10 +1,9 @@
-# Configuration robuste pour Firebase App Hosting
+# Configuration pour Firebase App Hosting
 runConfig:
   maxInstances: 10
   minInstances: 0
   memory: 1Gi
   cpu: 1
-  runCommand: node .next/standalone/server.js
 
 env:
   - variable: NEXT_PUBLIC_BASE_URL

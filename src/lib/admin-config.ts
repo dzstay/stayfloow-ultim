@@ -1,6 +1,6 @@
-
 /**
- * @fileOverview Configuration centralisée des accès administrateur pour StayFloow.com
+ * @fileOverview Configuration centralisée des accès administrateur pour StayFloow.com.
+ * Synchronisé avec les règles de sécurité Firestore.
  */
 
 export const ADMIN_EMAILS = [
@@ -17,7 +17,9 @@ export const ADMIN_UIDS = [
 ];
 
 /**
- * Vérifie si un utilisateur Firebase est l'administrateur maître
+ * Vérifie si un utilisateur Firebase est l'administrateur maître.
+ * @param user L'utilisateur Firebase ou un objet contenant l'UID et l'email.
+ * @returns boolean True si l'utilisateur a des droits d'administration.
  */
 export function checkIsAdmin(user: { uid: string; email?: string | null } | null | undefined): boolean {
   if (!user) return false;

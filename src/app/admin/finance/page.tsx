@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { 
@@ -25,6 +25,12 @@ export default function AdminFinancePage() {
   // Détection robuste de l'administrateur
   const isAdmin = useMemo(() => checkIsAdmin(user), [user]);
 
+  useEffect(() => {
+    if (!isUserLoading && (!user || !isAdmin)) {
+      router.replace("/");
+    }
+  }, [user, isUserLoading, isAdmin, router]);
+
   // Chargement sécurisé des réservations uniquement si Admin confirmé
   const bookingsRef = useMemoFirebase(() => {
     if (!isAdmin || !db || isUserLoading || !user) return null;
@@ -39,14 +45,7 @@ export default function AdminFinancePage() {
     return { total, commission, netPartner: total - commission };
   }, [bookings]);
 
-  if (isUserLoading) return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
-
-  if (!user || !isAdmin) {
-    if (!isUserLoading) {
-      router.replace("/");
-    }
-    return null;
-  }
+  if (isUserLoading || !user || !isAdmin) return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">

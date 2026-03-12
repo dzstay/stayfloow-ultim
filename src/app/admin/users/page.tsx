@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, doc, updateDoc } from "firebase/firestore";
 import { 
@@ -29,6 +29,12 @@ export default function AdminUsersPage() {
 
   const isAdmin = useMemo(() => checkIsAdmin(adminUser), [adminUser]);
 
+  useEffect(() => {
+    if (!isUserLoading && (!adminUser || !isAdmin)) {
+      router.replace("/");
+    }
+  }, [adminUser, isUserLoading, isAdmin, router]);
+
   const usersRef = useMemoFirebase(() => {
     if (!isAdmin || !db || isUserLoading || !adminUser) return null;
     return query(collection(db, "users"), orderBy("createdAt", "desc"));
@@ -41,14 +47,7 @@ export default function AdminUsersPage() {
     await updateDoc(doc(db, "users", id), { status: newStatus });
   };
 
-  if (isUserLoading) return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
-
-  if (!adminUser || !isAdmin) {
-    if (!isUserLoading) {
-      router.replace("/");
-    }
-    return null;
-  }
+  if (isUserLoading || !adminUser || !isAdmin) return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
 
   const filteredUsers = users?.filter(u => 
     u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||

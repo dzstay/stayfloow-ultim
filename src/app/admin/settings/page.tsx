@@ -41,6 +41,12 @@ export default function AdminSettingsPage() {
   });
 
   useEffect(() => {
+    if (!isUserLoading && (!user || !isAdmin)) {
+      router.replace("/");
+    }
+  }, [user, isUserLoading, isAdmin, router]);
+
+  useEffect(() => {
     if (config) {
       setFormData({
         siteName: config.siteName || "StayFloow.com",
@@ -71,12 +77,7 @@ export default function AdminSettingsPage() {
     }
   };
 
-  if (isUserLoading || configLoading) return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
-
-  if (!user || !isAdmin) {
-    router.replace("/");
-    return null;
-  }
+  if (isUserLoading || configLoading || !user || !isAdmin) return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">

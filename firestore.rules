@@ -14,7 +14,8 @@ service cloud.firestore {
         request.auth.uid == "Kb7jQGxp4pf1cjdfbMwz4HnujQi2" ||
         request.auth.uid == "CChLqb7OxdbbSpjNRKMAt2vJNa12" ||
         request.auth.uid == "3rixbVLeMaUARuODthz3ds80WeS2" ||
-        request.auth.uid == "dqUISCFanPajTlrvC23iAXTr4BI2"
+        request.auth.uid == "dqUISCFanPajTlrvC23iAXTr4BI2" ||
+        request.auth.uid == "cJujCOjr1nRe4YSBZ9FY3WLLvO93"
       );
     }
 
@@ -36,7 +37,7 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      allow list: if isSignedIn();
+      allow list: if isSignedIn() && (isAdmin() || resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid);
       allow get: if isAdmin() || (isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.partnerId == request.auth.uid

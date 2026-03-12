@@ -11,7 +11,8 @@ export const ADMIN_UIDS = [
   "Kb7jQGxp4pf1cjdfbMwz4HnujQi2", 
   "CChLqb7OxdbbSpjNRKMAt2vJNa12",
   "3rixbVLeMaUARuODthz3ds80WeS2",
-  "dqUISCFanPajTlrvC23iAXTr4BI2"
+  "dqUISCFanPajTlrvC23iAXTr4BI2",
+  "cJujCOjr1nRe4YSBZ9FY3WLLvO93"
 ];
 
 /**

@@ -13,6 +13,7 @@ const triggerEmail = async (to: string, subject: string, body: string) => {
     const { firestore } = initializeFirebase();
     if (!firestore) return;
 
+    // La collection doit correspondre au nom configuré dans l'extension (par défaut 'mail')
     const mailCol = collection(firestore, 'mail');
     
     // Structure compatible avec l'extension Firebase Trigger Email
@@ -24,9 +25,10 @@ const triggerEmail = async (to: string, subject: string, body: string) => {
       },
     });
     
+    console.log(`[STAYFLOOW MAIL] Demande d'envoi générée pour : ${to}`);
     return { success: true };
   } catch (error) {
-    console.error("[STAYFLOOW MAIL] Erreur lors de l'envoi:", error);
+    console.error("[STAYFLOOW MAIL] Erreur lors de la génération de la demande:", error);
     return { success: false, error };
   }
 };

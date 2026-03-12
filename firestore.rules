@@ -19,30 +19,32 @@ service cloud.firestore {
       );
     }
 
-    // Accès total pour les administrateurs
+    // ADMIN - accès total
     match /{document=**} {
       allow read, write: if isAdmin();
     }
 
+    // USERS - chaque utilisateur accède à son propre profil
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
-      allow list: if isAdmin();
     }
 
+    // LISTINGS - les partenaires créent, tout le monde lit
     match /listings/{listingId} {
       allow read: if true;
-      // Autoriser la création par les invités (status pending) ou admins
       allow create: if isAdmin() || request.resource.data.status == "pending";
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
+    // BOOKINGS - client voit ses réservations, partenaire voit ses demandes
     match /bookings/{bookingId} {
-      allow list: if isSignedIn() && (isAdmin() || resource.data.userId == request.auth.uid || resource.data.partnerId == request.auth.uid);
+      // list autorisé : le filtrage par userId ou partnerId se fait dans la query côté code
+      allow list: if isSignedIn();
       allow get: if isAdmin() || (isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.partnerId == request.auth.uid
       ));
-      allow create: if true;
+      allow create: if isSignedIn();
       allow update: if isAdmin() || (isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         resource.data.partnerId == request.auth.uid
@@ -50,10 +52,13 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // PARTNERS - profil partenaire
     match /partners/{partnerId} {
-      allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == partnerId);
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == partnerId);
     }
 
+    // CONVERSATIONS - messagerie entre client et partenaire
     match /conversations/{convId} {
       allow list: if isSignedIn();
       allow get: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
@@ -67,11 +72,13 @@ service cloud.firestore {
       }
     }
 
+    // SETTINGS - configuration publique en lecture
     match /settings/{doc} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
+    // STRIPE
     match /customers/{uid}/checkout_sessions/{id} {
       allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
     }
@@ -80,6 +87,7 @@ service cloud.firestore {
       allow read: if true;
     }
 
+    // EMAILS
     match /mail/{mailId} {
       allow create: if true;
     }

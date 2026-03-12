@@ -59,6 +59,21 @@
         "endDate": { "type": "string" },
         "createdAt": { "type": "string" }
       }
+    },
+    "EmailRequest": {
+      "title": "EmailRequest",
+      "type": "object",
+      "description": "Structure requise par l'extension Trigger Email",
+      "properties": {
+        "to": { "type": "string" },
+        "message": {
+          "type": "object",
+          "properties": {
+            "subject": { "type": "string" },
+            "html": { "type": "string" }
+          }
+        }
+      }
     }
   },
   "auth": {
@@ -74,6 +89,6 @@
     "/conversations/{convId}": { "schema": { "type": "object" }, "description": "Chat sessions" },
     "/customers/{uid}/checkout_sessions/{id}": { "schema": { "type": "object" }, "description": "Stripe Checkout Sessions (Extension)" },
     "/products/{id}": { "schema": { "type": "object" }, "description": "Stripe Products (Extension)" },
-    "/mail/{mailId}": { "schema": { "type": "object" }, "description": "Trigger Email requests" }
+    "/mail/{mailId}": { "schema": { "$ref": "#/backend/entities/EmailRequest" }, "description": "Trigger Email requests collection" }
   }
 }

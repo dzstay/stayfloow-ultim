@@ -5,7 +5,7 @@ import { getEmailTemplate } from './email-templates';
 
 /**
  * @fileOverview Système d'envoi d'emails StayFloow via l'extension Trigger Email de Firebase.
- * Utilise des écritures non-bloquantes pour une meilleure performance UI.
+ * Utilise des écritures non-bloquantes pour une performance optimale de l'interface.
  */
 
 const triggerEmail = async (to: string, subject: string, body: string) => {
@@ -15,7 +15,7 @@ const triggerEmail = async (to: string, subject: string, body: string) => {
 
     const mailCol = collection(firestore, 'mail');
     
-    // Utiliser une écriture non-bloquante pour ne pas ralentir le tunnel de vente
+    // Structure compatible avec l'extension Firebase Trigger Email
     addDocumentNonBlocking(mailCol, {
       to: to,
       message: {
@@ -24,19 +24,24 @@ const triggerEmail = async (to: string, subject: string, body: string) => {
       },
     });
     
-    console.log(`[STAYFLOOW MAIL] Ordre d'envoi initié pour : ${to}`);
     return { success: true };
   } catch (error) {
-    console.error("[STAYFLOOW MAIL] Erreur lors de l'initiation de l'envoi:", error);
+    console.error("[STAYFLOOW MAIL] Erreur lors de l'envoi:", error);
     return { success: false, error };
   }
 };
 
+/**
+ * Envoie un email de bienvenue après l'inscription d'un nouveau client.
+ */
 export const sendRegistrationWelcomeEmail = async ({ userName, userEmail }: { userName: string, userEmail: string }) => {
   const { subject, body } = await getEmailTemplate("registrationWelcome", { userName });
   return triggerEmail(userEmail, subject, body);
 };
 
+/**
+ * Envoie un email de bienvenue à un nouveau partenaire après sa soumission.
+ */
 export const sendWelcomeEmail = async ({
   hostName,
   submissionType,
@@ -56,6 +61,9 @@ export const sendWelcomeEmail = async ({
   return triggerEmail(hostEmail, subject, body);
 };
 
+/**
+ * Envoie une confirmation de réservation au client.
+ */
 export const sendBookingConfirmationEmail = async ({
   customerName,
   customerEmail,
@@ -69,7 +77,7 @@ export const sendBookingConfirmationEmail = async ({
 }: any) => {
   let detailsHtml = "";
   if (bookingDetails.startDate) {
-    detailsHtml += `<p><strong>Début :</strong> ${new Date(bookingDetails.startDate).toLocaleDateString("fr-FR")}</p>`;
+    detailsHtml += `<p><strong>Date de début :</strong> ${new Date(bookingDetails.startDate).toLocaleDateString("fr-FR")}</p>`;
   }
   if (bookingDetails.totalPrice) {
     detailsHtml += `<p><strong>Montant Total :</strong> ${bookingDetails.totalPrice.toLocaleString('fr-DZ')} DZD</p>`;
@@ -89,6 +97,9 @@ export const sendBookingConfirmationEmail = async ({
   return triggerEmail(customerEmail, subject, body);
 };
 
+/**
+ * Envoie un lien de réinitialisation de mot de passe.
+ */
 export const sendPasswordResetEmail = async ({
   userEmail,
 }: { userEmail: string; userType?: string }) => {

@@ -26,8 +26,10 @@ import Link from "next/link";
 import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { collection, query, where, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, limit } from "firebase/firestore";
 import { useCurrency } from "@/context/currency-context";
+import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
 
 export default function ProfilePage() {
   const { user, loading } = useUser();
@@ -37,17 +39,24 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const { formatPrice } = useCurrency();
 
-  // 1. Charger les réservations du client
+  // 1. Charger les réservations du client - Sans OrderBy pour éviter les erreurs d'index composite
   const bookingsRef = useMemoFirebase(() => {
     if (!user) return null;
     return query(
       collection(db, "bookings"),
       where("userId", "==", user.uid),
-      orderBy("createdAt", "desc"),
-      limit(5)
+      limit(10)
     );
   }, [db, user]);
-  const { data: bookings, isLoading: bookingsLoading } = useCollection(bookingsRef);
+  const { data: rawBookings, isLoading: bookingsLoading } = useCollection(bookingsRef);
+
+  // Tri manuel côté client pour la stabilité
+  const bookings = useMemo(() => {
+    if (!rawBookings) return [];
+    return [...rawBookings].sort((a, b) => 
+      new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    ).slice(0, 5);
+  }, [rawBookings]);
 
   // 2. Charger les conversations
   const convsRef = useMemoFirebase(() => {
@@ -55,7 +64,6 @@ export default function ProfilePage() {
     return query(
       collection(db, "conversations"),
       where("participants", "array-contains", user.uid),
-      orderBy("lastAt", "desc"),
       limit(3)
     );
   }, [db, user]);
@@ -68,13 +76,13 @@ export default function ProfilePage() {
   }, [user, loading, router]);
 
   const stats = useMemo(() => {
-    if (!bookings) return { upcoming: 0, totalSpent: 0 };
+    if (!rawBookings) return { upcoming: 0, totalSpent: 0 };
     const now = new Date();
     return {
-      upcoming: bookings.filter(b => new Date(b.startDate) > now).length,
-      totalSpent: bookings.filter(b => b.status === 'approved').reduce((acc, curr) => acc + (curr.totalPrice || 0), 0)
+      upcoming: rawBookings.filter(b => new Date(b.startDate) > now).length,
+      totalSpent: rawBookings.filter(b => b.status === 'approved').reduce((acc, curr) => acc + (curr.totalPrice || 0), 0)
     };
-  }, [bookings]);
+  }, [rawBookings]);
 
   const handleSignOut = async () => {
     try {

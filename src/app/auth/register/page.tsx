@@ -7,7 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
+import { doc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import ReCAPTCHA from "react-google-recaptcha";
@@ -24,7 +25,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, UserPlus, ArrowLeft } from "lucide-react";
 
 const signupSchema = z.object({
@@ -36,6 +37,7 @@ const signupSchema = z.object({
 export default function RegisterPage() {
   const router = useRouter();
   const auth = useAuth();
+  const db = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -63,13 +65,28 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      // 1. Création du compte Auth
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const firebaseUser = userCredential.user;
       
-      await updateProfile(userCredential.user, {
+      // 2. Mise à jour du profil Auth
+      await updateProfile(firebaseUser, {
         displayName: values.fullName
       });
 
-      // Envoi de l'email de bienvenue (réel via extension mail)
+      // 3. Création du document utilisateur dans Firestore (Crucial pour le dashboard)
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      setDocumentNonBlocking(userRef, {
+        id: firebaseUser.uid,
+        email: values.email,
+        firstName: values.fullName.split(' ')[0] || values.fullName,
+        lastName: values.fullName.split(' ').slice(1).join(' ') || "",
+        role: 'client',
+        status: 'active',
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
+      // 4. Envoi de l'email de bienvenue
       await sendRegistrationWelcomeEmail({
         userName: values.fullName,
         userEmail: values.email
@@ -77,10 +94,10 @@ export default function RegisterPage() {
 
       toast({
         title: "Compte créé !",
-        description: `Bienvenue sur StayFloow, ${values.fullName} ! Un email de bienvenue vous a été envoyé.`,
+        description: `Bienvenue sur StayFloow, ${values.fullName} !`,
       });
       
-      router.push("/");
+      router.push("/profile");
     } catch (error: any) {
       toast({
         variant: "destructive",

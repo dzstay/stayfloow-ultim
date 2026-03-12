@@ -1,6 +1,7 @@
 
 /**
  * @fileOverview Templates HTML premium pour StayFloow.com
+ * Design épuré, mobile-responsive et aux couleurs de la marque.
  */
 
 export type EmailTemplateName = 
@@ -8,38 +9,44 @@ export type EmailTemplateName =
   | 'registrationWelcome'
   | 'bookingConfirmation' 
   | 'newBookingNotification' 
-  | 'favoriteReminder' 
-  | 'newSubmissionAdminNotification' 
   | 'passwordReset';
 
 const BRAND_COLOR = "#10B981";
+const ACCENT_COLOR = "#39FF14";
 
 const baseLayout = (content: string) => `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: 'Inter', Helvetica, Arial, sans-serif; line-height: 1.6; color: #334155; margin: 0; padding: 0; }
-    .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-    .header { text-align: center; margin-bottom: 40px; }
-    .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #94a3b8; }
-    .btn { display: inline-block; padding: 16px 35px; background-color: ${BRAND_COLOR}; color: #ffffff !important; text-decoration: none; border-radius: 14px; font-weight: 900; margin: 25px 0; text-transform: uppercase; font-size: 14px; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); }
-    .card { background: #f8fafc; border-radius: 20px; padding: 30px; border: 1px solid #e2e8f0; margin: 25px 0; }
-    h1 { color: #0f172a; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 20px; }
-    p { margin-bottom: 15px; font-size: 16px; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #334155; margin: 0; padding: 0; background-color: #f8fafc; }
+    .wrapper { width: 100%; table-layout: fixed; background-color: #f8fafc; padding-bottom: 40px; }
+    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; overflow: hidden; margin-top: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    .header { padding: 40px 20px; text-align: center; background-color: ${BRAND_COLOR}; }
+    .content { padding: 40px; }
+    .footer { text-align: center; padding: 30px; font-size: 12px; color: #94a3b8; }
+    .btn { display: inline-block; padding: 16px 40px; background-color: ${BRAND_COLOR}; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 800; margin: 30px 0; text-transform: uppercase; font-size: 14px; letter-spacing: 0.5px; }
+    .card { background: #f1f5f9; border-radius: 16px; padding: 25px; margin: 25px 0; border: 1px solid #e2e8f0; }
+    h1 { color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.5px; }
+    p { margin-bottom: 15px; font-size: 16px; color: #475569; }
     strong { color: #0f172a; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h2 style="color: ${BRAND_COLOR}; font-weight: 900; letter-spacing: -1.5px; font-size: 32px; margin: 0;">StayFloow<span style="color: #39FF14">.com</span></h2>
-    </div>
-    ${content}
-    <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} StayFloow.com — Votre partenaire croissance en Afrique.</p>
-      <p>Service Partenaires • Hydra, Alger, Algérie</p>
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <h2 style="color: #ffffff; font-weight: 900; letter-spacing: -1.5px; font-size: 32px; margin: 0;">StayFloow<span style="color: ${ACCENT_COLOR}">.com</span></h2>
+      </div>
+      <div class="content">
+        ${content}
+      </div>
+      <div class="footer">
+        <p style="margin-bottom: 5px;">&copy; ${new Date().getFullYear()} StayFloow.com — Votre partenaire voyage en Afrique.</p>
+        <p>Service Client • Hydra, Alger, Algérie</p>
+      </div>
     </div>
   </div>
 </body>
@@ -50,21 +57,21 @@ export const getEmailTemplate = async (name: EmailTemplateName, data: any): Prom
   switch (name) {
     case 'registrationWelcome':
       return {
-        subject: `Bienvenue sur StayFloow.com, ${data.userName} ! 🌍`,
+        subject: `Bienvenue chez StayFloow, ${data.userName} ! 🌍`,
         body: baseLayout(`
-          <h1>Bienvenue parmi nous ! 😍</h1>
-          <p>Bonjour ${data.userName}, merci d'avoir créé un compte sur StayFloow.com.</p>
-          <p>Vous faites maintenant partie de la communauté de voyageurs la plus dynamique d'Afrique.</p>
+          <h1>Bienvenue dans l'aventure ! 😍</h1>
+          <p>Bonjour <strong>${data.userName}</strong>,</p>
+          <p>Nous sommes ravis de vous compter parmi nos nouveaux membres. StayFloow est conçu pour vous offrir les meilleures expériences de voyage en Algérie, au Maroc et en Égypte.</p>
           <div class="card">
-            <p><strong>Avec votre compte, vous pouvez :</strong></p>
-            <ul>
-              <li>Réserver des hébergements, voitures et circuits en un clic.</li>
-              <li>Gérer vos réservations et discuter avec les hôtes.</li>
-              <li>Recevoir des offres exclusives réservées aux membres.</li>
+            <p style="margin-bottom: 10px;"><strong>Ce que vous pouvez faire maintenant :</strong></p>
+            <ul style="margin: 0; padding-left: 20px;">
+              <li>Réserver des Riads et Villas d'exception.</li>
+              <li>Louer un véhicule pour vos déplacements.</li>
+              <li>Participer à des circuits guidés inoubliables.</li>
             </ul>
           </div>
           <div style="text-align: center;">
-            <a href="https://www.stayfloow.com" class="btn">Commencer à explorer</a>
+            <a href="https://www.stayfloow.com" class="btn">Explorer les offres</a>
           </div>
           <p>À très bientôt sur notre plateforme !</p>
           <p>L'équipe StayFloow 🌍</p>
@@ -73,64 +80,62 @@ export const getEmailTemplate = async (name: EmailTemplateName, data: any): Prom
 
     case 'partnerWelcome':
       return {
-        subject: `Bienvenue dans la famille StayFloow ! 🚀 Référence : ${data.referenceNumber}`,
+        subject: `Dossier reçu ! Bienvenue chez StayFloow Pro 🚀 [Réf: ${data.referenceNumber}]`,
         body: baseLayout(`
-          <h1>Bienvenue à bord, ${data.hostName} ! 😍</h1>
-          <p>C'est un véritable plaisir de vous compter parmi nos nouveaux partenaires. Nous avons bien reçu votre demande pour enregistrer votre <strong>${data.submissionType}</strong> : <strong>${data.submissionName}</strong>.</p>
+          <h1>Bienvenue à bord, ${data.hostName} ! 🤝</h1>
+          <p>Votre demande d'enregistrement pour <strong>${data.submissionName}</strong> (${data.submissionType}) a bien été réceptionnée.</p>
           
           <div class="card">
-            <p><strong>C'est presque prêt !</strong> ✨ Nos experts vérifient actuellement les derniers détails pour que votre annonce brille sur notre plateforme et attire un maximum de voyageurs.</p>
-            <p>En attendant la mise en ligne, vous pouvez accéder à votre tableau de bord partenaire pour suivre l'état de votre validation.</p>
+            <p><strong>Prochaine étape :</strong> Nos experts vérifient votre annonce pour garantir une qualité optimale à nos voyageurs. Vous recevrez une notification dès que votre offre sera en ligne.</p>
+            <p>En attendant, vous pouvez compléter votre profil sur votre tableau de bord.</p>
           </div>
 
           <div style="text-align: center;">
-            <a href="${data.setupLink || '#'}" class="btn">Accéder à mon espace partenaire</a>
+            <a href="${data.setupLink}" class="btn">Mon Espace Partenaire</a>
           </div>
 
-          <p style="margin-top: 30px; font-weight: bold;">À très bientôt pour vos premières réservations !</p>
-          <p>L'équipe StayFloow 🌍</p>
+          <p>Merci de votre confiance.</p>
+          <p>L'équipe StayFloow Business 🌍</p>
         `)
       };
 
     case 'bookingConfirmation':
       return {
-        subject: `Confirmation de réservation - ${data.itemName}`,
+        subject: `Réservation Confirmée ! ✅ - ${data.itemName}`,
         body: baseLayout(`
-          <h1>Félicitations ${data.customerName} !</h1>
-          <p>Votre réservation pour <strong>${data.itemName}</strong> est confirmée.</p>
+          <h1>C'est confirmé, préparez vos valises ! ✈️</h1>
+          <p>Bonjour ${data.customerName}, votre réservation pour <strong>${data.itemName}</strong> est validée.</p>
+          
           <div class="card">
-            <p><strong>Numéro de réservation :</strong> ${data.reservationNumber}</p>
+            <p style="margin-bottom: 5px;"><strong>Référence :</strong> #${data.reservationNumber}</p>
             ${data.detailsHtml}
           </div>
-          <p>Votre <strong>${data.itemType}</strong> (${data.hostName}) vous attend. Vous pouvez le contacter au <strong>${data.hostPhone}</strong> ou par email à ${data.hostEmail}.</p>
-          <p>Préparez vos valises, StayFloow s'occupe du reste !</p>
-        `)
-      };
 
-    case 'newBookingNotification':
-      return {
-        subject: `Nouvelle réservation reçue ! - #${data.reservationNumber}`,
-        body: baseLayout(`
-          <h1>Bonne nouvelle ${data.partnerName} !</h1>
-          <p>Vous venez de recevoir une nouvelle réservation pour <strong>${data.itemName}</strong> via StayFloow.com.</p>
-          <div class="card">
-            <p><strong>Client :</strong> ${data.customerName}</p>
-            <p><strong>Contact :</strong> ${data.customerEmail} / ${data.customerPhone}</p>
-            ${data.detailsHtml}
+          <p><strong>Contact de votre hôte :</strong></p>
+          <p style="font-size: 14px; color: #64748b;">
+            ${data.hostName}<br>
+            📞 ${data.hostPhone}<br>
+            ✉️ ${data.hostEmail}
+          </p>
+
+          <p style="margin-top: 20px;">Retrouvez tous les détails de votre voyage dans votre espace client.</p>
+          <div style="text-align: center;">
+            <a href="https://www.stayfloow.com/profile/bookings" class="btn">Mes Réservations</a>
           </div>
-          <p>Gérez cette réservation directement sur votre tableau de bord.</p>
-          <a href="https://www.stayfloow.com/partners/dashboard" class="btn">Gérer mes réservations</a>
         `)
       };
 
     case 'passwordReset':
       return {
-        subject: `Réinitialisation de votre mot de passe - StayFloow`,
+        subject: `Réinitialisation de votre mot de passe StayFloow 🔐`,
         body: baseLayout(`
-          <h1>Sécurité de votre compte</h1>
-          <p>Vous avez demandé la réinitialisation de votre mot de passe StayFloow.com.</p>
-          <p>Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :</p>
-          <a href="${data.resetLink}" class="btn">Réinitialiser mon mot de passe</a>
+          <h1>Besoin d'un nouveau mot de passe ?</h1>
+          <p>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte StayFloow.com.</p>
+          <p>Cliquez sur le bouton ci-dessous pour en choisir un nouveau. Ce lien est valable pendant 1 heure.</p>
+          <div style="text-align: center;">
+            <a href="${data.resetLink}" class="btn">Réinitialiser mon mot de passe</a>
+          </div>
+          <p style="font-size: 12px; color: #94a3b8;">Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité.</p>
         `)
       };
 

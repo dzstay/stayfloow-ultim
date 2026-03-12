@@ -1,11 +1,11 @@
 
 import { collection } from 'firebase/firestore';
 import { initializeFirebase, addDocumentNonBlocking } from '@/firebase';
-import { getEmailTemplate } from './email-templates';
+import { getEmailTemplate, type EmailTemplateName } from './email-templates';
 
 /**
  * @fileOverview Système d'envoi d'emails StayFloow via l'extension Trigger Email de Firebase.
- * Utilise des écritures non-bloquantes pour une performance optimale de l'interface.
+ * Synchronisé avec les paramètres SMTP Gmail (port 465).
  */
 
 const triggerEmail = async (to: string, subject: string, body: string) => {
@@ -13,10 +13,10 @@ const triggerEmail = async (to: string, subject: string, body: string) => {
     const { firestore } = initializeFirebase();
     if (!firestore) return;
 
-    // La collection doit correspondre au nom configuré dans l'extension (par défaut 'mail')
+    // La collection 'mail' est celle configurée dans l'extension
     const mailCol = collection(firestore, 'mail');
     
-    // Structure compatible avec l'extension Firebase Trigger Email
+    // Structure requise par l'extension Firebase Trigger Email
     addDocumentNonBlocking(mailCol, {
       to: to,
       message: {
@@ -51,13 +51,12 @@ export const sendWelcomeEmail = async ({
   hostEmail,
   referenceNumber,
 }: any) => {
-  const setupLink = "https://www.stayfloow.com/partners/dashboard";
   const { subject, body } = await getEmailTemplate("partnerWelcome", {
     hostName,
     submissionType,
     submissionName,
     referenceNumber,
-    setupLink,
+    setupLink: "https://www.stayfloow.com/partners/dashboard",
   });
 
   return triggerEmail(hostEmail, subject, body);
@@ -77,13 +76,17 @@ export const sendBookingConfirmationEmail = async ({
   hostPhone,
   bookingDetails,
 }: any) => {
-  let detailsHtml = "";
+  let detailsHtml = `<div style="margin: 20px 0; padding: 20px; background: #f1f5f9; border-radius: 12px;">`;
   if (bookingDetails.startDate) {
-    detailsHtml += `<p><strong>Date de début :</strong> ${new Date(bookingDetails.startDate).toLocaleDateString("fr-FR")}</p>`;
+    detailsHtml += `<p style="margin: 5px 0;"><strong>📅 Début :</strong> ${new Date(bookingDetails.startDate).toLocaleDateString("fr-FR")}</p>`;
+  }
+  if (bookingDetails.endDate) {
+    detailsHtml += `<p style="margin: 5px 0;"><strong>🏁 Fin :</strong> ${new Date(bookingDetails.endDate).toLocaleDateString("fr-FR")}</p>`;
   }
   if (bookingDetails.totalPrice) {
-    detailsHtml += `<p><strong>Montant Total :</strong> ${bookingDetails.totalPrice.toLocaleString('fr-DZ')} DZD</p>`;
+    detailsHtml += `<p style="margin: 5px 0; color: #10B981; font-size: 18px;"><strong>💰 Total :</strong> ${bookingDetails.totalPrice.toLocaleString('fr-DZ')} DZD</p>`;
   }
+  detailsHtml += `</div>`;
 
   const { subject, body } = await getEmailTemplate("bookingConfirmation", {
     customerName,

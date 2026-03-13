@@ -3,20 +3,22 @@
 Ceci est l'application officielle de StayFloow.com, construite avec NextJS, React, et Firebase.
 
 ## Configuration du Domaine (Cloudflare)
-Pour que le site fonctionne sur https://www.stayfloow.com, suivez ces étapes :
+Pour que le site fonctionne sur https://www.stayfloow.com, configurez vos enregistrements DNS dans Cloudflare comme suit (Proxy : **Gris / DNS Only**) :
 
-### 1. Nettoyage Firebase
-Dans la console Firebase (Hosting ou App Hosting), supprimez tout domaine "Inactif" qui pointe vers `.pages.dev`. Recréez le domaine en choisissant **Héberger (Pointer vers le site)** et non Rediriger.
-
-### 2. Records DNS dans Cloudflare
-Configurez vos enregistrements DNS comme suit (Proxy : **Gris / DNS Only**) :
+### Records DNS Actuels (Dernière Mise à jour Firebase)
 
 | Type | Nom | Valeur / Cible | Note |
 | :--- | :--- | :--- | :--- |
-| **A** | `@` | `35.219.200.13` | IP Firebase App Hosting |
-| **CNAME** | `www` | `stayfloow.com` | Lie le sous-domaine au domaine racine |
-| **TXT** | `www` | `fah-claim=002-02-7224e988-9c8a-457f-8d2d-121f54080e8f` | Validation de propriété |
-| **CNAME** | `_acme-challenge_4frcmtvf5fdmdejs` | `11ddb6dc-532b-4399-817d-4b0afb87c47b.18.authorize.certificatemanager.goog.` | Certificat SSL |
+| **A** | `www` | `35.219.200.6` | IP Firebase App Hosting |
+| **TXT** | `www` | `fah-claim=002-02-203fc86a-2c35-42bf-a3a2-e11642fd1763` | Validation de propriété |
+| **CNAME** | `_acme-challenge_ch6d4t7ytio3ccze` | `8ab470c1-fa77-4130-a395-84ab396ec8be.16.authorize.certificatemanager.goog.` | Certificat SSL (HTTPS) |
+
+### Étapes à suivre :
+1. Supprimez tout ancien record CNAME `www`.
+2. Ajoutez le record **A** pour `www`.
+3. Ajoutez le record **TXT** pour `www`.
+4. Ajoutez le record **CNAME** pour le challenge SSL.
+5. Cliquez sur **"Valider les enregistrements"** dans la console Firebase.
 
 ## Fonctionnalités
 - Réservation d'hébergements (Hôtels, Riads, Villas)

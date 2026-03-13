@@ -129,8 +129,21 @@ function CircuitBookingContent() {
         }
     };
 
-    if (loading) return <div className="p-20 text-center"><Loader2 className="animate-spin h-10 w-10 mx-auto text-primary" /></div>;
-    if (!circuit) return <div className="p-20 text-center font-bold">Erreur de chargement de l'offre.</div>;
+    if (loading) {
+        return (
+            <div className="p-20 text-center">
+                <Loader2 className="animate-spin h-10 w-10 mx-auto text-primary" />
+            </div>
+        );
+    }
+
+    if (!circuit) {
+        return (
+            <div className="p-20 text-center font-bold">
+                Erreur de chargement de l'offre.
+            </div>
+        );
+    }
 
     if (isConfirmed) {
         return (

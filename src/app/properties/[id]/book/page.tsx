@@ -80,7 +80,9 @@ function PropertyBookingContent({ id }: { id: string }) {
   });
 
   const nights = Math.max(1, differenceInDays(date.to, date.from));
-  const totalPrice = totalParam ? parseFloat(totalParam) : (property?.price || 85) * nights;
+  const fullPrice = totalParam ? parseFloat(totalParam) : (property?.price || 85) * nights;
+  const depositPrice = fullPrice * 0.14;
+  const onSitePrice = fullPrice * 0.86;
 
   const onSubmit = async (values: BookingValues) => {
     setIsSubmitting(true);
@@ -97,7 +99,8 @@ function PropertyBookingContent({ id }: { id: string }) {
         itemImage: property?.photos?.[0] || "",
         customerName: values.fullName,
         customerEmail: values.email,
-        totalPrice: totalPrice,
+        totalPrice: fullPrice,
+        depositPaid: depositPrice,
         status: 'approved',
         startDate: date.from.toISOString(),
         endDate: date.to.toISOString(),
@@ -118,7 +121,8 @@ function PropertyBookingContent({ id }: { id: string }) {
           startDate: date.from.toISOString(),
           endDate: date.to.toISOString(),
           nights,
-          totalPrice,
+          totalPrice: fullPrice,
+          depositAmount: depositPrice
         }
       });
 
@@ -327,7 +331,7 @@ function PropertyBookingContent({ id }: { id: string }) {
                       {isSubmitting ? (
                         <Loader2 className="h-6 w-6 animate-spin" />
                       ) : (
-                        `Confirmer la réservation — ${formatPrice(totalPrice)}`
+                        `Régler les frais de service — ${formatPrice(depositPrice)}`
                       )}
                     </Button>
                   </form>
@@ -370,19 +374,24 @@ function PropertyBookingContent({ id }: { id: string }) {
 
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">{formatPrice(totalPrice / nights)} x {nights} nuits</span>
-                      <span className="font-bold">{formatPrice(totalPrice)}</span>
+                      <span className="text-slate-500 font-medium">Prix total ({nights} nuits)</span>
+                      <span className="font-black text-slate-900">{formatPrice(fullPrice)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">TVA et taxes locales</span>
-                      <span className="text-green-600 font-bold">Inclus</span>
+                    <div className="flex justify-between items-center p-3 bg-primary/5 rounded-xl border border-primary/10">
+                      <span className="text-xs font-bold text-primary">À PAYER EN LIGNE (14%)</span>
+                      <span className="font-black text-primary">{formatPrice(depositPrice)}</span>
                     </div>
-                    <div className="pt-4 flex justify-between items-end border-t border-slate-50">
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total (TTC)</p>
-                        <p className="text-3xl font-black text-primary tracking-tighter">{formatPrice(totalPrice)}</p>
-                      </div>
+                    <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-xs font-bold text-slate-500">À PAYER SUR PLACE (86%)</span>
+                      <span className="font-black text-slate-700">{formatPrice(onSitePrice)}</span>
                     </div>
+                  </div>
+
+                  <div className="bg-blue-50 p-4 rounded-xl flex gap-3 border border-blue-100">
+                    <Info className="h-5 w-5 text-blue-600 shrink-0" />
+                    <p className="text-[11px] text-blue-800 font-bold leading-relaxed">
+                      ℹ Notre plateforme prélève uniquement 14% du montant total à titre de frais de service lors de votre réservation en ligne. Le solde restant (86%) est réglé directement sur place auprès du prestataire à votre arrivée.
+                    </p>
                   </div>
 
                   <div className="bg-slate-50 p-4 rounded-xl flex items-center gap-3 border border-dashed border-slate-200">

@@ -8,7 +8,7 @@ import { doc, collection, addDoc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, CheckCircle, CreditCard, ShieldCheck, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, CreditCard, ShieldCheck, Calendar as CalendarIcon, Loader2, Info } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
@@ -46,7 +46,9 @@ function CircuitBookingContent() {
     const tourDate = searchParams.get('date');
     const endDate = searchParams.get('endDate');
     const tickets = searchParams.get('tickets') ? JSON.parse(searchParams.get('tickets')!) : {};
-    const totalAmount = Number(searchParams.get('total')) || 0;
+    const fullTotalAmount = Number(searchParams.get('total')) || 0;
+    const depositAmount = fullTotalAmount * 0.14;
+    const onSiteAmount = fullTotalAmount * 0.86;
 
     const circuitRef = useMemoFirebase(() => tourId ? doc(db, 'listings', tourId) : null, [db, tourId]);
     const { data: dbCircuit, loading } = useDoc(circuitRef);
@@ -75,7 +77,8 @@ function CircuitBookingContent() {
               itemImage: circuit?.photos?.[0] || circuit?.images?.[0] || "",
               customerName: values.fullName,
               customerEmail: values.email,
-              totalPrice: totalAmount,
+              totalPrice: fullTotalAmount,
+              depositPaid: depositAmount,
               status: 'approved',
               startDate: tourDate,
               endDate: endDate || tourDate,
@@ -96,7 +99,8 @@ function CircuitBookingContent() {
                   startDate: tourDate, 
                   endDate: endDate,
                   participants: Object.values(tickets).reduce((a: any, b: any) => a + b, 0) as number, 
-                  totalPrice: totalAmount 
+                  totalPrice: fullTotalAmount,
+                  depositAmount: depositAmount
                 }
             });
             setIsConfirmed(true);
@@ -196,7 +200,7 @@ function CircuitBookingContent() {
                             )}/>
 
                             <Button type="submit" disabled={!form.getValues('agreeToTerms') || isSubmitting} className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 shadow-xl rounded-2xl">
-                                {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : `Confirmer et Payer ${formatPrice(totalAmount)}`}
+                                {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : `Confirmer et Payer ${formatPrice(depositAmount)}`}
                             </Button>
                         </form>
                     </Form>
@@ -228,8 +232,32 @@ function CircuitBookingContent() {
                                 </div>
                             </div>
                             <Separator />
+                            
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-500 font-medium">Prix total circuit</span>
+                                    <span className="font-black text-slate-900">{formatPrice(fullTotalAmount)}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                    <span className="text-xs font-bold text-primary">À PAYER EN LIGNE (14%)</span>
+                                    <span className="font-black text-primary">{formatPrice(depositAmount)}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                    <span className="text-xs font-bold text-slate-500">À PAYER SUR PLACE (86%)</span>
+                                    <span className="font-black text-slate-700">{formatPrice(onSiteAmount)}</span>
+                                </div>
+                            </div>
+
+                            <div className="bg-blue-50 p-4 rounded-xl flex gap-3 border border-blue-100">
+                                <Info className="h-5 w-5 text-blue-600 shrink-0" />
+                                <p className="text-[11px] text-blue-800 font-bold leading-relaxed">
+                                    ℹ Notre plateforme prélève uniquement 14% du montant total à titre de frais de service lors de votre réservation en ligne. Le solde restant (86%) est réglé directement sur place auprès du prestataire à votre arrivée.
+                                </p>
+                            </div>
+
+                            <Separator />
                             <div className="flex justify-between items-end pt-2">
-                                <div><p className="text-[10px] font-black text-slate-400 uppercase">Total TTC</p><p className="text-3xl font-black text-primary tracking-tighter">{formatPrice(totalAmount)}</p></div>
+                                <div><p className="text-[10px] font-black text-slate-400 uppercase">Total TTC</p><p className="text-3xl font-black text-primary tracking-tighter">{formatPrice(fullTotalAmount)}</p></div>
                                 <ShieldCheck className="h-10 w-10 text-primary opacity-20" />
                             </div>
                         </CardContent>

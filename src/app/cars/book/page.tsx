@@ -67,11 +67,14 @@ function BookCarContent() {
     };
   }, [dbCar, carId]);
 
-  const total = useMemo(() => {
+  const fullTotal = useMemo(() => {
     if (totalParam) return parseFloat(totalParam);
     const optionsCost = options.length * 10;
     return (displayCar.price * days) + optionsCost;
   }, [totalParam, displayCar.price, days, options.length]);
+
+  const depositTotal = fullTotal * 0.14;
+  const onSiteTotal = fullTotal * 0.86;
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +92,8 @@ function BookCarContent() {
         itemImage: displayCar.image,
         customerName: `${formData.firstName} ${formData.lastName}`,
         customerEmail: formData.email,
-        totalPrice: total,
+        totalPrice: fullTotal,
+        depositPaid: depositTotal,
         status: 'approved',
         startDate: fromParam || new Date().toISOString(),
         endDate: toParam || addDays(new Date(), days).toISOString(),
@@ -110,7 +114,8 @@ function BookCarContent() {
         bookingDetails: { 
           startDate: fromParam || new Date().toISOString(), 
           endDate: toParam || addDays(new Date(), days).toISOString(),
-          totalPrice: total 
+          totalPrice: fullTotal,
+          depositAmount: depositTotal
         }
       });
 
@@ -231,7 +236,7 @@ function BookCarContent() {
                     <h4 className="text-xl font-black mb-4 flex items-center gap-2"><ShieldCheck className="text-secondary" /> Finaliser ma location</h4>
                     <p className="text-white/60 text-sm mb-8">Paiement 100% sécurisé via StayFloow Pay.</p>
                     <Button type="submit" disabled={isSubmitting} className="w-full h-16 bg-secondary text-primary font-black text-xl rounded-2xl shadow-xl">
-                      {isSubmitting ? <Loader2 className="animate-spin" /> : "Payer " + formatPrice(total)}
+                      {isSubmitting ? <Loader2 className="animate-spin" /> : "Régler " + formatPrice(depositTotal)}
                     </Button>
                   </div>
                 </CardContent>
@@ -257,10 +262,34 @@ function BookCarContent() {
                     </div>
                   </div>
                   <Separator />
-                  <div className="flex justify-between items-end pt-2">
-                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Total TTC ({days}j)</p>
-                      <p className="text-4xl font-black text-primary tracking-tighter">{formatPrice(total)}</p>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500 font-medium">Prix total ({days}j)</span>
+                      <span className="font-black text-slate-900">{formatPrice(fullTotal)}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-primary/5 rounded-xl border border-primary/10">
+                      <span className="text-xs font-bold text-primary">À PAYER EN LIGNE (14%)</span>
+                      <span className="font-black text-primary">{formatPrice(depositTotal)}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-xs font-bold text-slate-500">À PAYER SUR PLACE (86%)</span>
+                      <span className="font-black text-slate-700">{formatPrice(onSiteTotal)}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 p-4 rounded-xl flex gap-3 border border-blue-100">
+                    <Info className="h-5 w-5 text-blue-600 shrink-0" />
+                    <p className="text-[11px] text-blue-800 font-bold leading-relaxed">
+                      ℹ Notre plateforme prélève uniquement 14% du montant total à titre de frais de service lors de votre réservation en ligne. Le solde restant (86%) est réglé directement sur place auprès du prestataire à votre arrivée.
+                    </p>
+                  </div>
+
+                  <div className="pt-2">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Total Réservation</p>
+                        <p className="text-4xl font-black text-primary tracking-tighter">{formatPrice(fullTotal)}</p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

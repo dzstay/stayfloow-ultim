@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense, useMemo } from "react";
+import React, { useState, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -8,16 +8,24 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  ArrowLeft, Calendar as CalendarIcon, ShieldCheck, 
-  Info, CreditCard, Users, Briefcase, Settings2, Fuel, 
-  CheckCircle, Loader2, Globe, Phone, Mail, User as UserIcon, MapPin, Lock
+  ArrowLeft, 
+  Calendar as CalendarIcon, 
+  ShieldCheck, 
+  Info, 
+  CreditCard, 
+  CheckCircle, 
+  Loader2, 
+  Mail, 
+  Phone, 
+  User as UserIcon, 
+  MapPin, 
+  Lock 
 } from "lucide-react";
 import Image from "next/image";
 import { useCurrency } from "@/context/currency-context";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
 import { CrossSellCard } from "@/components/cross-sell-card";
 import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { collection, addDoc, doc } from "firebase/firestore";
@@ -39,14 +47,14 @@ function BookCarContent() {
 
   const carId = searchParams.get('id') || 'mock';
   const pickupLocation = searchParams.get('pickup') || "Alger, Algérie";
-  const options = searchParams.get('options')?.split(',').filter(o => o) || [];
+  const options = useMemo(() => searchParams.get('options')?.split(',').filter(o => o) || [], [searchParams]);
   const fromParam = searchParams.get('from');
   const toParam = searchParams.get('to');
   const totalParam = searchParams.get('total');
   const days = parseInt(searchParams.get('days') || '3');
 
   const carRef = useMemoFirebase(() => carId.startsWith('mock') ? null : doc(db, 'listings', carId), [db, carId]);
-  const { data: dbCar, loading: carLoading } = useDoc(carRef);
+  const { data: dbCar, isLoading: carLoading } = useDoc(carRef);
 
   const [formData, setFormData] = useState({
     firstName: user?.displayName?.split(' ')[0] || "",
@@ -134,7 +142,13 @@ function BookCarContent() {
     }
   };
 
-  if (carLoading) return <div className="h-screen flex items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
+  if (carLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="animate-spin text-primary h-12 w-12" />
+      </div>
+    );
+  }
 
   if (isSuccess) {
     return (
@@ -193,22 +207,22 @@ function BookCarContent() {
                 <CardContent className="p-10 space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-3">
-                      <Label className="font-black text-slate-700 flex items-center gap-2"><UserIcon className="h-4 w-4 text-primary" /> Prénom *</Label>
+                      <Label className="font-bold text-slate-700 flex items-center gap-2"><UserIcon className="h-4 w-4 text-primary" /> Prénom *</Label>
                       <Input value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} placeholder="Ex: Sofiane" className="h-14 rounded-xl bg-slate-50 border-slate-100" required />
                     </div>
                     <div className="space-y-3">
-                      <Label className="font-black text-slate-700 flex items-center gap-2"><UserIcon className="h-4 w-4 text-primary" /> Nom *</Label>
+                      <Label className="font-bold text-slate-700 flex items-center gap-2"><UserIcon className="h-4 w-4 text-primary" /> Nom *</Label>
                       <Input value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} placeholder="Ex: Belkacem" className="h-14 rounded-xl bg-slate-50 border-slate-100" required />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-3">
-                      <Label className="font-black text-slate-700 flex items-center gap-2"><Mail className="h-4 w-4 text-primary" /> Email *</Label>
+                      <Label className="font-bold text-slate-700 flex items-center gap-2"><Mail className="h-4 w-4 text-primary" /> Email *</Label>
                       <Input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} type="email" placeholder="votre@email.com" className="h-14 rounded-xl bg-slate-50 border-slate-100" required />
                     </div>
                     <div className="space-y-3">
-                      <Label className="font-black text-slate-700 flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /> Téléphone *</Label>
+                      <Label className="font-bold text-slate-700 flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /> Téléphone *</Label>
                       <div className="flex gap-2">
                         <Input 
                           value={formData.dialCode} 

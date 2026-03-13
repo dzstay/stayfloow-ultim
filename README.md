@@ -16,7 +16,7 @@ Pour que le site fonctionne sur https://www.stayfloow.com, configurez vos enregi
 1. Allez dans l'onglet **DNS** de votre domaine `stayfloow.com`.
 2. Assurez-vous qu'il n'y a pas d'autre record `www`.
 3. Ajoutez le record **A** pour `www` pointant vers `35.219.200.6`.
-4. Ajoutez le record **CNAME** pour le challenge SSL ACME.
+4. Ajoutez le record **CNAME** pour le challenge SSL ACME (nommé `_acme-challenge_ch6d4t7ytio3ccze.www`).
 5. **IMPORTANT** : Vérifiez que les nuages sont **GRIS** (DNS Only) pour ces deux enregistrements.
 6. Cliquez sur **"Valider les enregistrements"** dans la console Firebase.
 

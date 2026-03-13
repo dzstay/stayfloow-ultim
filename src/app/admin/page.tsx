@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { 
   LayoutDashboard, Building, Clock, 
   TrendingUp, Users, ArrowRight, Loader2, Tag, 
-  ShieldCheck, Wallet, MessageSquare
+  ShieldCheck, Wallet, MessageSquare, Puzzle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export default function AdminDashboardMaster() {
 
   const bookingsRef = useMemoFirebase(() => {
     if (!isAdmin || !db || isUserLoading || !user) return null;
-    return query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
+    return query(collection(db, "bookings"), orderBy("createdAt", "desc"));
   }, [db, isAdmin, isUserLoading, user]);
   const { data: bookings } = useCollection(bookingsRef);
 
@@ -101,6 +101,7 @@ export default function AdminDashboardMaster() {
             <SidebarItem icon={<Building />} label="Catalogue Maître" onClick={() => router.push('/admin/catalog')} />
             <SidebarItem icon={<Users />} label="Utilisateurs" onClick={() => router.push('/admin/users')} />
             <SidebarItem icon={<Clock />} label="Validations" onClick={() => router.push('/admin/validate')} />
+            <SidebarItem icon={<Puzzle />} label="Extensions" onClick={() => router.push('/admin/extensions')} />
             <SidebarItem icon={<Wallet />} label="Finance & Paiements" onClick={() => router.push('/admin/finance')} />
             <SidebarItem icon={<MessageSquare />} label="Support Client" onClick={() => router.push('/admin/messaging')} />
             <SidebarItem icon={<Tag />} label="Paramètres Site" onClick={() => router.push('/admin/settings')} />

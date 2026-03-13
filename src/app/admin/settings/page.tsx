@@ -5,7 +5,8 @@ import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { 
   Settings, Globe, Shield, Mail, Wallet, 
-  ArrowLeft, Loader2, Save, Sparkles, Sliders, ToggleRight, Type
+  ArrowLeft, Loader2, Save, Sparkles, Sliders, ToggleRight, Type,
+  Instagram, Facebook, Share2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,10 @@ export default function AdminSettingsPage() {
     supportEmail: "support@stayfloow.com",
     currency: "DZD",
     heroTitle: "",
-    heroSubtitle: ""
+    heroSubtitle: "",
+    instagramUrl: "https://instagram.com/stayfloow",
+    facebookUrl: "https://facebook.com/stayfloow",
+    tiktokUrl: "https://tiktok.com/@stayfloow"
   });
 
   useEffect(() => {
@@ -56,7 +60,10 @@ export default function AdminSettingsPage() {
         supportEmail: config.supportEmail || "support@stayfloow.com",
         currency: config.currency || "DZD",
         heroTitle: config.heroTitle || "",
-        heroSubtitle: config.heroSubtitle || ""
+        heroSubtitle: config.heroSubtitle || "",
+        instagramUrl: config.instagramUrl || "https://instagram.com/stayfloow",
+        facebookUrl: config.facebookUrl || "https://facebook.com/stayfloow",
+        tiktokUrl: config.tiktokUrl || "https://tiktok.com/@stayfloow"
       });
     }
   }, [config]);
@@ -116,6 +123,29 @@ export default function AdminSettingsPage() {
               <div className="space-y-2">
                 <Label className="font-bold text-slate-700">Email support officiel</Label>
                 <Input value={formData.supportEmail} onChange={e => setFormData({...formData, supportEmail: e.target.value})} className="h-12 bg-slate-50" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* RÉSEAUX SOCIAUX */}
+          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+            <CardHeader className="bg-slate-50 border-b">
+              <CardTitle className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                <Share2 className="h-4 w-4 text-pink-500" /> Réseaux Sociaux
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="space-y-2">
+                <Label className="font-bold text-slate-700 flex items-center gap-2"><Instagram className="h-4 w-4 text-pink-500" /> Instagram</Label>
+                <Input value={formData.instagramUrl} onChange={e => setFormData({...formData, instagramUrl: e.target.value})} placeholder="https://..." className="h-12 bg-slate-50" />
+              </div>
+              <div className="space-y-2">
+                <Label className="font-bold text-slate-700 flex items-center gap-2"><Facebook className="h-4 w-4 text-blue-600" /> Facebook</Label>
+                <Input value={formData.facebookUrl} onChange={e => setFormData({...formData, facebookUrl: e.target.value})} placeholder="https://..." className="h-12 bg-slate-50" />
+              </div>
+              <div className="space-y-2">
+                <Label className="font-bold text-slate-700 flex items-center gap-2">TikTok</Label>
+                <Input value={formData.tiktokUrl} onChange={e => setFormData({...formData, tiktokUrl: e.target.value})} placeholder="https://..." className="h-12 bg-slate-50" />
               </div>
             </CardContent>
           </Card>

@@ -16,38 +16,20 @@ import type { Currency } from "@/context/currency-context";
 import type { Locale } from "@/context/language-context";
 import { SiInstagram, SiFacebook, SiTiktok } from "@icons-pack/react-simple-icons";
 import { useState, useEffect } from "react";
-
-type SocialLinks = {
-  instagram: string;
-  facebook: string;
-  tiktok: string;
-};
+import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 export function Footer() {
   const { currency, setCurrency, getCurrencySymbol, getCurrencyFlag } = useCurrency();
   const { locale, setLocale, t, getLocaleDetails, availableLocales } = useLanguage();
   const pathname = usePathname();
+  const db = useFirestore();
+  
   const isAdminPage = pathname?.startsWith("/admin");
-  const [socialLinks, setSocialLinks] = useState<SocialLinks | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const savedLinks = localStorage.getItem("socialMediaSettings");
-        if (savedLinks) {
-          setSocialLinks(JSON.parse(savedLinks));
-        } else {
-          setSocialLinks({
-            instagram: "https://instagram.com/stayfloow",
-            facebook: "https://facebook.com/stayfloow",
-            tiktok: "https://tiktok.com/@stayfloow"
-          });
-        }
-      } catch (error) {
-        console.error("Could not load social media links from localStorage", error);
-      }
-    }
-  }, []);
+  // Récupération dynamique des liens réseaux sociaux depuis Firestore
+  const configRef = useMemoFirebase(() => doc(db, "settings", "siteConfig"), [db]);
+  const { data: siteConfig } = useDoc(configRef);
 
   const handleCurrencyChange = (newCurrency: Currency) => {
     setCurrency(newCurrency);
@@ -58,6 +40,10 @@ export function Footer() {
   };
 
   const currencies: Currency[] = ["DZD", "EUR", "USD", "GBP", "CHF", "EGP"];
+
+  const instagramUrl = siteConfig?.instagramUrl || "https://instagram.com/stayfloow";
+  const facebookUrl = siteConfig?.facebookUrl || "https://facebook.com/stayfloow";
+  const tiktokUrl = siteConfig?.tiktokUrl || "https://tiktok.com/@stayfloow";
 
   return (
     <footer className="border-t bg-card">
@@ -89,19 +75,17 @@ export function Footer() {
 
             <p className="text-sm text-slate-500 font-medium leading-relaxed">{t("footer_tagline")}</p>
 
-            {socialLinks && (
-                <div className="flex items-center gap-5 mt-2">
-                  <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-primary transition-colors">
-                    <SiInstagram className="h-6 w-6" />
-                  </a>
-                  <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-primary transition-colors">
-                    <SiFacebook className="h-6 w-6" />
-                  </a>
-                  <a href={socialLinks.tiktok} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-primary transition-colors">
-                    <SiTiktok className="h-6 w-6" />
-                  </a>
-                </div>
-              )}
+            <div className="flex items-center gap-5 mt-2">
+              <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-primary transition-colors">
+                <SiInstagram className="h-6 w-6" />
+              </a>
+              <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-primary transition-colors">
+                <SiFacebook className="h-6 w-6" />
+              </a>
+              <a href={tiktokUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-primary transition-colors">
+                <SiTiktok className="h-6 w-6" />
+              </a>
+            </div>
           </div>
 
           <div>

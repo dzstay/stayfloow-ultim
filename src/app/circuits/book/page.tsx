@@ -247,7 +247,7 @@ function CircuitBookingContent() {
                                                     )}/>
                                                     <FormField control={form.control} name="cardCvc" render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel className="font-bold text-slate-700">CVC</FormLabel>
+                                                            <FormLabel className="font-bold text-slate-700">CVC</Label>
                                                             <FormControl><Input placeholder="123" className="h-14 bg-white border-slate-200 rounded-xl" {...field} /></FormControl>
                                                         </FormItem>
                                                     )}/>

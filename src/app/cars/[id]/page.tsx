@@ -333,7 +333,7 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
       </main>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[700px] rounded-[2rem] p-8">
+        <DialogContent className="sm:max-w-[700px] rounded-[2rem] p-8 z-[100] pointer-events-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-slate-900 flex items-center gap-3">
               <Search className="h-6 w-6 text-primary" /> Modifier la recherche
@@ -369,7 +369,7 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[150] bg-white" align="center">
+                <PopoverContent className="w-auto p-0 border-none shadow-2xl z-[150] bg-white pointer-events-auto" align="center">
                   <Calendar
                     mode="range"
                     selected={tempRange}
@@ -378,6 +378,7 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
                     locale={fr}
                     numberOfMonths={2}
                     disabled={{ before: new Date() }}
+                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>

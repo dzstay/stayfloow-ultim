@@ -18,7 +18,7 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3 bg-white", className)}
+      className={cn("p-3 bg-white pointer-events-auto", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
@@ -27,21 +27,21 @@ function Calendar({
         nav: "flex items-center",
         button_previous: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-white p-0 opacity-100 hover:opacity-100 absolute left-1 z-[60] border border-slate-200 shadow-sm rounded-full cursor-pointer pointer-events-auto transition-transform active:scale-90"
+          "h-7 w-7 bg-white p-0 opacity-100 hover:opacity-100 absolute left-1 z-[160] border border-slate-200 shadow-sm rounded-full cursor-pointer pointer-events-auto transition-transform active:scale-90"
         ),
         button_next: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-white p-0 opacity-100 hover:opacity-100 absolute right-1 z-[60] border border-slate-200 shadow-sm rounded-full cursor-pointer pointer-events-auto transition-transform active:scale-90"
+          "h-7 w-7 bg-white p-0 opacity-100 hover:opacity-100 absolute right-1 z-[160] border border-slate-200 shadow-sm rounded-full cursor-pointer pointer-events-auto transition-transform active:scale-90"
         ),
         month_grid: "w-full border-collapse space-y-1",
         weekdays: "flex mb-2",
         weekday:
           "text-slate-400 rounded-md w-9 font-black text-[11px] uppercase text-center",
         week: "flex w-full mt-1",
-        day: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-primary/10 first:[&:has([aria-selected])]:rounded-l-full last:[&:has([aria-selected])]:rounded-r-full focus-within:relative focus-within:z-20",
+        day: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-primary/10 first:[&:has([aria-selected])]:rounded-l-full last:[&:has([aria-selected])]:rounded-r-full focus-within:relative focus-within:z-20 pointer-events-auto",
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-bold aria-selected:opacity-100 rounded-full hover:bg-primary hover:text-white transition-all"
+          "h-9 w-9 p-0 font-bold aria-selected:opacity-100 rounded-full hover:bg-primary hover:text-white transition-all pointer-events-auto"
         ),
         selected:
           "bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white rounded-full shadow-lg",

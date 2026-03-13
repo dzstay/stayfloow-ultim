@@ -20,7 +20,7 @@ Pour que le site fonctionne sur https://www.stayfloow.com, configurez vos enregi
 5. **IMPORTANT** : Vérifiez que les nuages sont **GRIS** (DNS Only) pour ces deux enregistrements.
 6. Cliquez sur **"Valider les enregistrements"** dans la console Firebase.
 
-*Note : Ignorez les suggestions de Cloudflare Pages (stayfloow.pages.dev), nous utilisons Firebase App Hosting.*
+*Note : Si vous voyez des avertissements 404 dans les logs concernant `.well-known/cf-custom-hostname-challenge`, c'est normal. Ce sont des résidus de la configuration Cloudflare Pages qui disparaîtront une fois DNS propagé.*
 
 ## Fonctionnalités
 - Réservation d'hébergements (Hôtels, Riads, Villas)

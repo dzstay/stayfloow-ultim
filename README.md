@@ -9,16 +9,14 @@ Pour que le site fonctionne sur https://www.stayfloow.com, configurez vos enregi
 
 | Type | Nom | Valeur / Cible | Note |
 | :--- | :--- | :--- | :--- |
-| **A** | `www` | `35.219.200.6` | IP Firebase App Hosting |
-| **TXT** | `www` | `fah-claim=002-02-203fc86a-2c35-42bf-a3a2-e11642fd1763` | Validation de propriété (OK) |
+| **A** | `www` | `35.219.200.6` | IP Firebase App Hosting (OK) |
 | **CNAME** | `_acme-challenge_ch6d4t7ytio3ccze.www` | `8ab470c1-fa77-4130-a395-84ab396ec8be.16.authorize.certificatemanager.goog.` | Certificat SSL (HTTPS) |
 
 ### Étapes à suivre :
-1. Supprimez tout ancien record CNAME `www`.
-2. Ajoutez le record **A** pour `www` pointant vers `35.219.200.6`.
-3. Ajoutez le record **CNAME** pour le challenge SSL ACME.
-4. Assurez-vous que le nuage est **GRIS** (DNS Only) dans Cloudflare.
-5. Cliquez sur **"Valider les enregistrements"** dans la console Firebase.
+1. Assurez-vous que le record **A** pour `www` pointe vers `35.219.200.6`.
+2. Ajoutez le record **CNAME** pour le challenge SSL ACME.
+3. Vérifiez que les nuages sont **GRIS** (DNS Only) dans Cloudflare.
+4. Cliquez sur **"Valider les enregistrements"** dans la console Firebase.
 
 ## Fonctionnalités
 - Réservation d'hébergements (Hôtels, Riads, Villas)

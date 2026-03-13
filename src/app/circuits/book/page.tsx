@@ -131,8 +131,8 @@ function CircuitBookingContent() {
 
     if (loading) {
         return (
-            <div className="p-20 text-center">
-                <Loader2 className="animate-spin h-10 w-10 mx-auto text-primary" />
+            <div className="flex h-screen items-center justify-center">
+                <Loader2 className="animate-spin h-10 w-10 text-primary" />
             </div>
         );
     }
@@ -336,7 +336,7 @@ function CircuitBookingContent() {
 
 export default function CircuitBookingPage() {
     return (
-      <Suspense fallback={<div className="p-20 text-center"><Loader2 className="animate-spin mx-auto h-10 w-10 text-primary" /></div>}>
+      <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>}>
         <CircuitBookingContent />
       </Suspense>
     );

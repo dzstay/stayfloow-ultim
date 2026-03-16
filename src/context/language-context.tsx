@@ -86,7 +86,7 @@ const translations: Record<string, Record<Locale, string>> = {
     "last_name": { fr: "Nom", en: "Last Name", ar: "اللقب", es: "Apellido" },
     "pro_email": { fr: "Email professionnel", en: "Professional Email", ar: "البريد الإلكتروني المهني", es: "Correo electrónico profesional" },
     "phone_whatsapp": { fr: "Téléphone (WhatsApp)", en: "Phone (WhatsApp)", ar: "الهاتف (واتساب)", es: "Teléfono (WhatsApp)" },
-    "full_address": { fr: "Adresse complète", en: "Full Address", ar: "العنوان الكامل", es: "Dirección completa" },
+    "full_address": { fr: "Adresse complète", en: "Full Address", ar: "العنوان الكامل", es: "Dirección complète" },
     "back": { fr: "Précédent", en: "Back", ar: "رجوع", es: "Atrás" },
     "continue": { fr: "Continuer", en: "Continue", ar: "استمرار", es: "Continuar" },
     "partner_cta_title": { fr: "Devenez partenaire StayFloow", en: "Become a StayFloow partner", ar: "كن شريكاً في StayFloow", es: "Conviértase en socio de StayFloow" },
@@ -95,6 +95,18 @@ const translations: Record<string, Record<Locale, string>> = {
     "year_label": { fr: "an", en: "year", ar: "سنة", es: "año" },
     "years_label": { fr: "ans", en: "years", ar: "سنوات", es: "años" },
     "free_label": { fr: "Gratuit", en: "Free", ar: "مجاني", es: "Gratis" },
+
+    // === CONTACT PAGE ===
+    "contact.title": { fr: "Contactez-nous", en: "Contact Us", ar: "اتصل بنا", es: "Contáctenos" },
+    "contact.name": { fr: "Nom complet", en: "Full Name", ar: "الاسم الكامل", es: "Nombre completo" },
+    "contact.email": { fr: "Email", en: "Email", ar: "البريد الإلكتروني", es: "Correo electrónico" },
+    "contact.message": { fr: "Votre message", en: "Your message", ar: "رسالتك", es: "Tu mensaje" },
+    "contact.send": { fr: "Envoyer le message", en: "Send Message", ar: "إرسال الرسالة", es: "Enviar mensaje" },
+    "contact.successTitle": { fr: "Message envoyé !", en: "Message Sent!", ar: "تم إرسال الرسالة!", es: "¡Mensaje enviado!" },
+    "contact.successMessage": { fr: "Notre équipe reviendra vers vous très rapidement.", en: "Our team will get back to you very shortly.", ar: "سيعاود فريقنا الاتصال بك في أقرب وقت ممكن.", es: "Nuestro equipo se pondrá en contacto con usted muy pronto." },
+    "contact.namePlaceholder": { fr: "Votre nom", en: "Your name", ar: "اسمك", es: "Su nombre" },
+    "contact.emailPlaceholder": { fr: "votre@email.com", en: "your@email.com", ar: "بريدك@الإلكتروني.com", es: "tu@email.com" },
+    "contact.messagePlaceholder": { fr: "Comment pouvons-nous vous aider ?", en: "How can we help you?", ar: "كيف يمكننا مساعدتك؟", es: "¿Cómo podemos ayudarle?" },
 };
 
 interface LanguageContextType {

@@ -106,9 +106,9 @@ export default function RootLayout({
             <div className="flex-grow">
               {children}
             </div>
-            <Footer />
-            <ChatLoader />
             <Toaster />
+            <ChatLoader />
+            <Footer />
           </ClientProviders>
         </FirebaseClientProvider>
       </body>

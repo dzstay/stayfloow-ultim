@@ -1,15 +1,28 @@
+
 "use client";
 
 import React, { useMemo, useEffect, useState } from "react";
-import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { useFirestore, useUser } from "@/firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { 
   Puzzle, ArrowLeft, Loader2, Download, CheckCircle2, 
-  Settings2, Plus, Zap, ShieldCheck, Mail, Wallet, BrainCircuit
+  Settings2, Plus, Zap, ShieldCheck, Mail, Wallet, BrainCircuit,
+  Save, X, Globe, Smartphone, Bell
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/navigation";
 import { checkIsAdmin } from "@/lib/admin-config";
 import { useToast } from "@/hooks/use-toast";
@@ -72,6 +85,9 @@ export default function AdminExtensionsPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const [installing, setInstalling] = useState<string | null>(null);
+  const [selectedExt, setSelectedExt] = useState<any | null>(null);
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const isAdmin = useMemo(() => checkIsAdmin(user), [user]);
 
@@ -90,6 +106,23 @@ export default function AdminExtensionsPage() {
         description: "Le module est désormais actif sur votre plateforme StayFloow."
       });
     }, 1500);
+  };
+
+  const openConfig = (ext: any) => {
+    setSelectedExt(ext);
+    setIsConfigOpen(true);
+  };
+
+  const saveConfig = async () => {
+    setIsSaving(true);
+    // Simuler sauvegarde Firestore
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsSaving(false);
+    setIsConfigOpen(false);
+    toast({
+      title: "Configuration enregistrée",
+      description: `Les paramètres de ${selectedExt.name} ont été mis à jour.`
+    });
   };
 
   if (isUserLoading || !user || !isAdmin) return <div className="h-screen flex items-center justify-center bg-slate-900"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
@@ -120,7 +153,7 @@ export default function AdminExtensionsPage() {
           </div>
           <div className="flex-1 text-center md:text-left">
             <h2 className="text-2xl font-black text-slate-900">Étendez les capacités de StayFloow</h2>
-            <p className="text-slate-500 font-medium max-w-2xl">Téléchargez et installez des applications directement sur votre plateforme pour améliorer l'expérience utilisateur et simplifier la gestion partenaire.</p>
+            <p className="text-slate-500 font-medium max-w-2xl">Téléchargez et installez des applications directement sur votre plateforme pour améliorer l'expérience utilisateur.</p>
           </div>
           <Button className="bg-slate-900 text-white font-black h-14 px-8 rounded-2xl shadow-xl hover:bg-slate-800">
             Scanner les mises à jour
@@ -149,7 +182,11 @@ export default function AdminExtensionsPage() {
                 <p className="text-sm text-slate-500 font-medium leading-relaxed">{ext.description}</p>
                 <div className="pt-6 flex gap-3">
                   {ext.status === 'installed' ? (
-                    <Button variant="outline" className="flex-1 rounded-xl font-black text-xs border-slate-100 bg-slate-50">
+                    <Button 
+                      onClick={() => openConfig(ext)}
+                      variant="outline" 
+                      className="flex-1 rounded-xl font-black text-xs border-slate-100 bg-slate-50"
+                    >
                       <Settings2 className="mr-2 h-4 w-4" /> Configurer
                     </Button>
                   ) : (
@@ -170,6 +207,82 @@ export default function AdminExtensionsPage() {
           ))}
         </div>
       </main>
+
+      {/* MODAL DE CONFIGURATION DYNAMIQUE */}
+      <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+        <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
+          <div className="bg-slate-900 p-8 text-white">
+            <div className="flex justify-between items-center mb-4">
+              <div className="bg-white/10 p-3 rounded-2xl">
+                {selectedExt?.icon}
+              </div>
+              <Badge className="bg-primary text-white font-black text-[10px]">VERSION 2.4.0</Badge>
+            </div>
+            <DialogTitle className="text-2xl font-black">{selectedExt?.name}</DialogTitle>
+            <DialogDescription className="text-white/60 font-medium">Paramètres avancés du module {selectedExt?.category}.</DialogDescription>
+          </div>
+
+          <div className="p-8 space-y-6">
+            {selectedExt?.id === 'stripe-payments' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="font-bold">Clé secrète Stripe (Live)</Label>
+                  <Input type="password" placeholder="sk_live_..." className="h-12 bg-slate-50" />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-blue-900">Mode Test</p>
+                    <p className="text-[10px] text-blue-700">Utiliser les clés de test Stripe</p>
+                  </div>
+                  <Switch />
+                </div>
+              </div>
+            )}
+
+            {selectedExt?.id === 'trigger-email' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="font-bold">Hôte SMTP (Gmail recommandé)</Label>
+                  <Input placeholder="smtp.gmail.com" defaultValue="smtp.gmail.com" className="h-12 bg-slate-50" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="font-bold">Port</Label>
+                    <Input defaultValue="465" className="h-12 bg-slate-50" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-bold">Sécurité</Label>
+                    <Input defaultValue="SSL" className="h-12 bg-slate-50" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedExt?.id === 'genkit-ai' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="font-bold">Modèle de langage (LLM)</Label>
+                  <Input defaultValue="gemini-2.5-flash" className="h-12 bg-slate-50" />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-emerald-900">Support Client Actif</p>
+                    <p className="text-[10px] text-emerald-700">Réponses auto via Genkit</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </div>
+            )}
+
+            <div className="pt-4 border-t flex gap-3">
+              <Button variant="ghost" onClick={() => setIsConfigOpen(false)} className="flex-1 font-bold text-slate-400">Annuler</Button>
+              <Button onClick={saveConfig} disabled={isSaving} className="flex-1 bg-primary text-white font-black h-12 rounded-xl">
+                {isSaving ? <Loader2 className="animate-spin" /> : <><Save className="mr-2 h-4 w-4" /> Sauvegarder</>}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

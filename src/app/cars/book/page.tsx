@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, Suspense, useMemo } from "react";
@@ -32,6 +33,7 @@ import { collection, addDoc, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { sendBookingConfirmationEmail } from "@/lib/mail";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { createStripeCheckout } from "@/lib/stripe-payment";
 
 function BookCarContent() {
   const router = useRouter();
@@ -92,10 +94,23 @@ function BookCarContent() {
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const resNum = `ST-CAR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const finalUserId = user?.uid || `guest_${Date.now()}`;
+    const resNum = `ST-CAR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     try {
+      // Initialisation Stripe si carte
+      if (paymentMethod === 'card') {
+        const url = await createStripeCheckout(
+          db, 
+          finalUserId, 
+          "price_car_placeholder", 
+          window.location.origin + "/profile/bookings?success=true",
+          window.location.href
+        );
+        window.location.href = url;
+        return;
+      }
+
       await addDoc(collection(db, "bookings"), {
         userId: finalUserId,
         partnerId: dbCar?.ownerId || "stayfloow_fleet",
@@ -134,48 +149,25 @@ function BookCarContent() {
 
       setIsSuccess(true);
       toast({ title: "Véhicule réservé !" });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
-      toast({ variant: "destructive", title: "Erreur lors de la réservation." });
+      toast({ variant: "destructive", title: "Erreur Stripe." });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (carLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="animate-spin text-primary h-12 w-12" />
-      </div>
-    );
-  }
+  if (carLoading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>;
 
   if (isSuccess) {
     return (
       <div className="min-h-screen bg-slate-50 py-20 px-6">
-        <div className="max-w-5xl mx-auto space-y-12">
-          <Card className="max-w-md w-full mx-auto border-none shadow-2xl rounded-[2.5rem] p-12 text-center bg-white animate-in zoom-in-95">
-            <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8">
-              <CheckCircle className="h-16 w-16 text-primary" />
-            </div>
-            <h1 className="text-3xl font-black text-slate-900 mb-4">Réservation Confirmée !</h1>
-            <p className="text-slate-500 mb-10 leading-relaxed text-lg font-medium">
-              Votre véhicule est réservé. Retrouvez les détails dans votre portail client StayFloow.
-            </p>
-            <div className="space-y-3">
-              <Button className="w-full h-14 bg-primary text-white font-black rounded-xl text-lg shadow-xl" onClick={() => router.push('/profile/bookings')}>
-                Voir mes réservations
-              </Button>
-              <Button variant="ghost" className="w-full font-bold text-slate-400" onClick={() => router.push('/')}>
-                Retour à l'accueil
-              </Button>
-            </div>
+        <div className="max-w-5xl mx-auto text-center space-y-12">
+          <Card className="max-w-md w-full mx-auto border-none shadow-2xl rounded-3xl p-12 bg-white">
+            <CheckCircle className="h-16 w-16 text-primary mx-auto mb-8" />
+            <h1 className="text-3xl font-black mb-4">Réservation Confirmée !</h1>
+            <Button className="w-full h-14 bg-primary text-white font-black rounded-xl" onClick={() => router.push('/profile/bookings')}>Voir mes réservations</Button>
           </Card>
-
-          <CrossSellCard 
-            location={pickupLocation.split(',')[0].trim()} 
-            bookedItemType="car" 
-          />
+          <CrossSellCard location={pickupLocation.split(',')[0].trim()} bookedItemType="car" />
         </div>
       </div>
     );
@@ -183,207 +175,56 @@ function BookCarContent() {
 
   return (
     <div className="min-h-screen bg-[#f8faff] flex flex-col">
-      <header className="bg-primary text-white py-6 px-8 shadow-md">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <button onClick={() => router.back()} className="flex items-center gap-2 font-black hover:opacity-80 transition-all">
-            <ArrowLeft className="h-5 w-5" /> Retour à l'offre
-          </button>
-          <div className="text-2xl font-black tracking-tighter">StayFloow<span className="text-secondary">.com</span></div>
-          <div className="w-10 hidden md:block" />
-        </div>
+      <header className="bg-primary text-white py-6 px-8 shadow-md flex justify-between items-center">
+        <button onClick={() => router.back()} className="flex items-center gap-2 font-black hover:opacity-80 transition-all"><ArrowLeft className="h-5 w-5" /> Retour</button>
+        <div className="text-2xl font-black">StayFloow<span className="text-secondary">.com</span></div>
+        <div className="w-10" />
       </header>
 
       <main className="container mx-auto px-4 py-12 max-w-7xl">
         <form onSubmit={handleBooking} className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          
           <div className="lg:col-span-2 space-y-8">
-            <section className="space-y-6">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-black">1</div>
-                <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Coordonnées du conducteur</h2>
-              </div>
-
-              <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
-                <CardContent className="p-10 space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <Label className="font-bold text-slate-700 flex items-center gap-2"><UserIcon className="h-4 w-4 text-primary" /> Prénom *</Label>
-                      <Input value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} placeholder="Ex: Sofiane" className="h-14 rounded-xl bg-slate-50 border-slate-100" required />
-                    </div>
-                    <div className="space-y-3">
-                      <Label className="font-bold text-slate-700 flex items-center gap-2"><UserIcon className="h-4 w-4 text-primary" /> Nom *</Label>
-                      <Input value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} placeholder="Ex: Belkacem" className="h-14 rounded-xl bg-slate-50 border-slate-100" required />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <Label className="font-bold text-slate-700 flex items-center gap-2"><Mail className="h-4 w-4 text-primary" /> Email *</Label>
-                      <Input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} type="email" placeholder="votre@email.com" className="h-14 rounded-xl bg-slate-50 border-slate-100" required />
-                    </div>
-                    <div className="space-y-3">
-                      <Label className="font-bold text-slate-700 flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /> Téléphone *</Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          value={formData.dialCode} 
-                          onChange={(e) => setFormData({...formData, dialCode: e.target.value})}
-                          className="w-24 h-14 text-center font-bold bg-slate-50 border-slate-100 rounded-xl" 
-                        />
-                        <Input 
-                          placeholder="550 00 00 00" 
-                          value={formData.phone}
-                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                          className="flex-1 h-14 rounded-xl bg-slate-50 border-slate-100" 
-                          required 
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            <section className="space-y-6">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-black">2</div>
-                <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Paiement Sécurisé</h2>
-              </div>
-
-              <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
-                <CardContent className="p-10 space-y-8">
+            <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
+              <CardHeader className="bg-slate-900 text-white p-8"><CardTitle className="text-2xl font-black uppercase">Conducteur & Paiement Stripe</CardTitle></CardHeader>
+              <CardContent className="p-10 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-3"><Label className="font-bold">Prénom</Label><Input value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} className="h-14 rounded-xl" required /></div>
+                  <div className="space-y-3"><Label className="font-bold">Nom</Label><Input value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} className="h-14 rounded-xl" required /></div>
+                </div>
+                <div className="space-y-3"><Label className="font-bold">Email</Label><Input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} type="email" className="h-14 rounded-xl" required /></div>
+                
+                <div className="pt-8 border-t">
                   <RadioGroup onValueChange={setPaymentMethod} defaultValue="card" className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Label 
-                      htmlFor="card" 
-                      className={cn(
-                        "flex items-center justify-between p-6 border-2 rounded-2xl cursor-pointer transition-all",
-                        paymentMethod === 'card' ? "border-primary bg-primary/5" : "border-slate-100 hover:border-slate-200"
-                      )}
-                    >
-                      <div className="flex items-center gap-4">
-                        <RadioGroupItem value="card" id="card" className="sr-only" />
-                        <CreditCard className="h-6 w-6 text-primary" />
-                        <span className="font-bold">Carte Bancaire</span>
-                      </div>
+                    <Label htmlFor="card" className={cn("flex items-center gap-4 p-6 border-2 rounded-2xl cursor-pointer transition-all", paymentMethod === 'card' ? "border-primary bg-primary/5" : "border-slate-100")}>
+                      <RadioGroupItem value="card" id="card" className="sr-only" /><CreditCard className="h-6 w-6 text-primary" /><span className="font-bold">Carte Bancaire (Stripe)</span>
                     </Label>
-
-                    <Label 
-                      htmlFor="paypal" 
-                      className={cn(
-                        "flex items-center justify-between p-6 border-2 rounded-2xl cursor-pointer transition-all",
-                        paymentMethod === 'paypal' ? "border-primary bg-primary/5" : "border-slate-100 hover:border-slate-200"
-                      )}
-                    >
-                      <div className="flex items-center gap-4">
-                        <RadioGroupItem value="paypal" id="paypal" className="sr-only" />
-                        <div className="w-6 h-6 bg-[#0070ba] rounded-full flex items-center justify-center text-white text-[10px] font-bold">P</div>
-                        <span className="font-bold">PayPal</span>
-                      </div>
+                    <Label htmlFor="paypal" className={cn("flex items-center gap-4 p-6 border-2 rounded-2xl cursor-pointer transition-all", paymentMethod === 'paypal' ? "border-primary bg-primary/5" : "border-slate-100")}>
+                      <RadioGroupItem value="paypal" id="paypal" className="sr-only" /><div className="w-6 h-6 bg-[#0070ba] rounded-full flex items-center justify-center text-white text-[10px] font-bold">P</div><span className="font-bold">PayPal</span>
                     </Label>
                   </RadioGroup>
+                </div>
 
-                  {paymentMethod === 'card' && (
-                    <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 space-y-6 animate-in slide-in-from-top-4 duration-500">
-                      <div className="flex items-center gap-2">
-                        <Lock className="h-4 w-4 text-primary" />
-                        <span className="text-[10px] font-black text-primary uppercase tracking-widest">Informations de paiement sécurisées</span>
-                      </div>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="font-bold text-slate-700">Numéro de carte</Label>
-                          <Input 
-                            placeholder="0000 0000 0000 0000" 
-                            className="h-14 bg-white border-slate-200 rounded-xl font-mono text-lg" 
-                            value={formData.cardNumber}
-                            onChange={e => setFormData({...formData, cardNumber: e.target.value})}
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label className="font-bold text-slate-700">Date d'expiration</Label>
-                            <Input 
-                              placeholder="MM/AA" 
-                              className="h-14 bg-white border-slate-200 rounded-xl" 
-                              value={formData.cardExpiry}
-                              onChange={e => setFormData({...formData, cardExpiry: e.target.value})}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="font-bold text-slate-700">CVC</Label>
-                            <Input 
-                              placeholder="123" 
-                              className="h-14 bg-white border-slate-200 rounded-xl" 
-                              value={formData.cardCvc}
-                              onChange={e => setFormData({...formData, cardCvc: e.target.value})}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="bg-slate-900 rounded-3xl p-8 text-white">
-                    <h4 className="text-xl font-black mb-4 flex items-center gap-2"><ShieldCheck className="text-secondary" /> Finaliser ma location</h4>
-                    <p className="text-white/60 text-sm mb-8">Paiement 100% sécurisé via StayFloow Pay.</p>
-                    <Button type="submit" disabled={isSubmitting} className="w-full h-16 bg-secondary text-primary font-black text-xl rounded-2xl shadow-xl">
-                      {isSubmitting ? <Loader2 className="animate-spin" /> : "Payez maintenant " + formatPrice(depositTotal)}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
+                <Button type="submit" disabled={isSubmitting} className="w-full h-16 bg-primary text-white font-black text-xl rounded-2xl shadow-xl mt-8">
+                  {isSubmitting ? <Loader2 className="animate-spin" /> : `Payer ${formatPrice(depositTotal)} via Stripe`}
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="lg:col-span-1">
-            <div className="sticky top-28 space-y-6">
-              <Card className="overflow-hidden shadow-2xl border-none rounded-[2.5rem] bg-white">
-                <div className="relative h-56 w-full">
-                  <Image src={displayCar.image} alt="Vehicle" fill className="object-cover" />
+            <Card className="overflow-hidden shadow-2xl border-none rounded-[2.5rem] bg-white">
+              <div className="relative h-56 w-full"><Image src={displayCar.image} alt="Vehicle" fill className="object-cover" /></div>
+              <CardContent className="p-8 space-y-6">
+                <h3 className="text-2xl font-black">{displayCar.name}</h3>
+                <Separator />
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-sm"><span className="text-slate-500">Prix total</span><span className="font-black">{formatPrice(fullTotal)}</span></div>
+                  <div className="flex justify-between items-center p-3 bg-primary/5 rounded-xl border border-primary/10"><span className="text-xs font-bold text-primary">EN LIGNE (14%)</span><span className="font-black text-primary">{formatPrice(depositTotal)}</span></div>
+                  <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100"><span className="text-xs font-bold text-slate-500">SUR PLACE (86%)</span><span className="font-black text-slate-700">{formatPrice(onSiteTotal)}</span></div>
                 </div>
-                <CardContent className="p-8 space-y-6">
-                  <h3 className="text-2xl font-black text-slate-900 leading-tight">{displayCar.name}</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-                      <CalendarIcon className="h-4 w-4 text-primary" /> 
-                      {fromParam ? format(new Date(fromParam), "dd MMM") : "..."} — {toParam ? format(new Date(toParam), "dd MMM yyyy") : "..."}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-                      <MapPin className="h-4 w-4 text-primary" /> {pickupLocation}
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">Prix total ({days}j)</span>
-                      <span className="font-black text-slate-900">{formatPrice(fullTotal)}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-primary/5 rounded-xl border border-primary/10">
-                      <span className="text-xs font-bold text-primary">À PAYER EN LIGNE (14%)</span>
-                      <span className="font-black text-primary">{formatPrice(depositTotal)}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <span className="text-xs font-bold text-slate-500">À PAYER SUR PLACE (86%)</span>
-                      <span className="font-black text-slate-700">{formatPrice(onSiteTotal)}</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-50 p-4 rounded-xl flex gap-3 border border-blue-100">
-                    <Info className="h-5 w-5 text-blue-600 shrink-0" />
-                    <p className="text-[11px] text-blue-800 font-bold leading-relaxed">
-                      ℹ Notre plateforme prélève uniquement 14% du montant total à titre de frais de service lors de votre réservation en ligne. Le solde restant (86%) est réglé directement sur place auprès du prestataire à votre arrivée.
-                    </p>
-                  </div>
-
-                  <div className="pt-2">
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Total Réservation</p>
-                        <p className="text-4xl font-black text-primary tracking-tighter">{formatPrice(fullTotal)}</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                <div className="pt-4 border-t flex justify-between items-end"><div><p className="text-[10px] font-black text-slate-400 uppercase">Total Transaction</p><p className="text-4xl font-black text-primary tracking-tighter">{formatPrice(fullTotal)}</p></div><ShieldCheck className="h-8 w-8 text-primary opacity-20" /></div>
+              </CardContent>
+            </Card>
           </div>
         </form>
       </main>

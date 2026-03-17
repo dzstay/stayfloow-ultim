@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, Suspense, useMemo } from "react";
+import React, { useState, Suspense, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -16,7 +16,6 @@ import {
   CheckCircle, 
   Loader2, 
   Lock,
-  User as UserIcon,
   MapPin
 } from "lucide-react";
 import Image from "next/image";
@@ -40,9 +39,14 @@ function BookCarContent() {
   const { user } = useUser();
   const { toast } = useToast();
   
+  const [isMounted, setIsMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("card");
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const carId = searchParams.get('id') || 'mock';
   const pickupLocation = searchParams.get('pickup') || "Alger, Algérie";
@@ -66,7 +70,7 @@ function BookCarContent() {
   const displayCar = useMemo(() => {
     if (dbCar) return {
       name: dbCar.details?.brand + " " + (dbCar.details?.model || dbCar.details?.name),
-      image: dbCar.photos?.[0] || "https://placehold.co/800x600?text=StayFloow+Car",
+      image: dbCar.photos?.[0] || "https://picsum.photos/seed/car/800/600",
       price: dbCar.price || 85
     };
     return {
@@ -106,7 +110,7 @@ function BookCarContent() {
             return;
           }
         } catch (err) {
-          console.warn("Stripe Extension non connectée, passage en mode direct.");
+          console.warn("Mode direct activé.");
         }
       }
 
@@ -184,7 +188,7 @@ function BookCarContent() {
         <form onSubmit={handleBooking} className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
             <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
-              <CardHeader className="bg-slate-900 text-white p-8"><CardTitle className="text-2xl font-black uppercase tracking-tight">Conducteur & Paiement Direct</CardTitle></CardHeader>
+              <CardHeader className="bg-slate-900 text-white p-8"><CardTitle className="text-2xl font-black uppercase tracking-tight">Conducteur & Paiement</CardTitle></CardHeader>
               <CardContent className="p-10 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3"><Label className="font-bold text-slate-700">Prénom</Label><Input value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} className="h-14 rounded-xl bg-slate-50" required /></div>
@@ -211,24 +215,24 @@ function BookCarContent() {
                   {paymentMethod === 'card' && (
                     <div className="space-y-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100 animate-in slide-in-from-top-4 duration-500">
                       <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest mb-2">
-                        <Lock className="h-4 w-4" /> Transactions sécurisées par StayFloow
+                        <Lock className="h-4 w-4" /> Transactions sécurisées StayFloow
                       </div>
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <Label className="font-bold">Numéro de carte</Label>
                           <div className="relative">
-                            <Input placeholder="0000 0000 0000 0000" className="h-14 pl-12 rounded-xl bg-white border-slate-200 shadow-sm" />
+                            <Input placeholder="0000 0000 0000 0000" className="h-14 pl-12 rounded-xl bg-white border-slate-200" />
                             <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label className="font-bold">Expiration (MM/AA)</Label>
-                            <Input placeholder="MM/AA" className="h-14 rounded-xl bg-white border-slate-200 shadow-sm" />
+                            <Input placeholder="MM/AA" className="h-14 rounded-xl bg-white border-slate-200" />
                           </div>
                           <div className="space-y-2">
                             <Label className="font-bold">CVC</Label>
-                            <Input placeholder="123" className="h-14 rounded-xl bg-white border-slate-200 shadow-sm" />
+                            <Input placeholder="123" className="h-14 rounded-xl bg-white border-slate-200" />
                           </div>
                         </div>
                       </div>
@@ -237,7 +241,9 @@ function BookCarContent() {
                 </div>
 
                 <Button type="submit" disabled={isSubmitting} className="w-full h-16 bg-primary text-white font-black text-xl rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95 mt-8">
-                  {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : `Finaliser la réservation (${formatPrice(depositTotal)})`}
+                  {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : (
+                    <span>Finaliser la réservation {isMounted && `(${formatPrice(depositTotal)})`}</span>
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -245,7 +251,7 @@ function BookCarContent() {
 
           <div className="lg:col-span-1">
             <Card className="overflow-hidden shadow-2xl border-none rounded-[2.5rem] bg-white sticky top-24">
-              <div className="relative h-56 w-full">
+              <div className="relative h-56 w-full bg-slate-100">
                 <Image src={displayCar.image} alt="Vehicle" fill className="object-cover" />
                 <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg">STAYFLOOW FLEET</div>
               </div>
@@ -259,21 +265,21 @@ function BookCarContent() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center text-sm font-medium">
                     <span className="text-slate-500">Prix total</span>
-                    <span className="font-black text-slate-900">{formatPrice(fullTotal)}</span>
+                    <span className="font-black text-slate-900">{isMounted ? formatPrice(fullTotal) : "..."}</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-primary/5 rounded-xl border border-primary/10">
                     <span className="text-[10px] font-black text-primary uppercase">Payé en ligne (14%)</span>
-                    <span className="font-black text-primary">{formatPrice(depositTotal)}</span>
+                    <span className="font-black text-primary">{isMounted ? formatPrice(depositTotal) : "..."}</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                     <span className="text-[10px] font-black text-slate-500 uppercase">Sur place (86%)</span>
-                    <span className="font-black text-slate-700">{formatPrice(onSiteTotal)}</span>
+                    <span className="font-black text-slate-700">{isMounted ? formatPrice(onSiteTotal) : "..."}</span>
                   </div>
                 </div>
                 <div className="pt-4 border-t flex justify-between items-end border-slate-50 mt-4">
                   <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Transaction</p>
-                    <p className="text-4xl font-black text-primary tracking-tighter">{formatPrice(fullTotal)}</p>
+                    <p className="text-4xl font-black text-primary tracking-tighter">{isMounted ? formatPrice(fullTotal) : "..."}</p>
                   </div>
                   <ShieldCheck className="h-10 w-10 text-primary opacity-20" />
                 </div>

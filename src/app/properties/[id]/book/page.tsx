@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, use, Suspense } from "react";
+import React, { useState, use, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDoc, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { doc, collection, addDoc } from "firebase/firestore";
@@ -52,6 +52,14 @@ function PropertyBookingContent({ id }: { id: string }) {
   const db = useFirestore();
   const { user } = useUser();
   
+  const [isMounted, setIsMounted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const fromParam = searchParams.get('from');
   const toParam = searchParams.get('to');
   const totalParam = searchParams.get('total');
@@ -61,9 +69,6 @@ function PropertyBookingContent({ id }: { id: string }) {
     to: toParam ? new Date(toParam) : addDays(new Date(), 3),
   });
   
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-
   const docRef = useMemoFirebase(() => doc(db, 'listings', id), [db, id]);
   const { data: property, loading } = useDoc(docRef);
 
@@ -91,19 +96,13 @@ function PropertyBookingContent({ id }: { id: string }) {
     try {
       if (values.paymentMethod === 'card') {
         try {
-          const checkoutUrl = await createStripeCheckout(
-            db, 
-            finalUserId, 
-            "price_accommodation_placeholder",
-            window.location.origin + "/profile/bookings?success=true",
-            window.location.href
-          );
+          const checkoutUrl = await createStripeCheckout(db, finalUserId, "price_accommodation_placeholder", window.location.origin + "/profile/bookings?success=true", window.location.href);
           if (checkoutUrl) {
             window.location.href = checkoutUrl;
             return;
           }
         } catch (stripeErr) {
-          console.warn("Stripe Extension non active, passage en mode direct.");
+          console.warn("Paiement direct activé.");
         }
       }
 
@@ -113,7 +112,7 @@ function PropertyBookingContent({ id }: { id: string }) {
         listingId: id,
         itemName: property?.details?.name || "Hébergement StayFloow",
         itemType: 'accommodation',
-        itemImage: property?.photos?.[0] || "https://placehold.co/800x600?text=StayFloow+Stay",
+        itemImage: property?.photos?.[0] || "https://picsum.photos/seed/stay/800/600",
         customerName: values.fullName,
         customerEmail: values.email,
         totalPrice: fullPrice,
@@ -145,7 +144,7 @@ function PropertyBookingContent({ id }: { id: string }) {
 
       setIsSuccess(true);
     } catch (error) {
-      toast({ variant: "destructive", title: "Erreur de paiement", description: "Une erreur est survenue lors de la réservation." });
+      toast({ variant: "destructive", title: "Erreur lors de la réservation." });
     } finally {
       setIsSubmitting(false);
     }
@@ -169,7 +168,7 @@ function PropertyBookingContent({ id }: { id: string }) {
     );
   }
 
-  const propertyImage = property?.photos?.[0] || "https://placehold.co/800x600?text=StayFloow+Stay";
+  const propertyImage = property?.photos?.[0] || "https://picsum.photos/seed/stay/800/600";
 
   return (
     <div className="min-h-screen bg-[#f8faff] flex flex-col">
@@ -184,7 +183,7 @@ function PropertyBookingContent({ id }: { id: string }) {
           <div className="lg:col-span-2 space-y-8">
             <Card className="border-none shadow-xl rounded-3xl overflow-hidden bg-white">
               <CardHeader className="bg-slate-900 text-white p-8">
-                <CardTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-3"><Users className="h-6 w-6 text-secondary" /> Coordonnées & Paiement Direct</CardTitle>
+                <CardTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-3"><Users className="h-6 w-6 text-secondary" /> Coordonnées & Paiement</CardTitle>
               </CardHeader>
               <CardContent className="p-10 space-y-8">
                 <div className="space-y-6">
@@ -223,24 +222,21 @@ function PropertyBookingContent({ id }: { id: string }) {
                   {form.watch('paymentMethod') === 'card' && (
                     <div className="space-y-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100 animate-in slide-in-from-top-4 duration-500">
                       <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest mb-2">
-                        <Lock className="h-4 w-4" /> StayFloow Pay — Transaction chiffrée
+                        <Lock className="h-4 w-4" /> Saisie sécurisée StayFloow Pay
                       </div>
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <Label className="font-bold">Numéro de carte</Label>
-                          <div className="relative">
-                            <Input placeholder="0000 0000 0000 0000" className="h-14 pl-12 rounded-xl bg-white border-slate-200 shadow-sm" />
-                            <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
-                          </div>
+                          <Input placeholder="0000 0000 0000 0000" className="h-14 rounded-xl bg-white border-slate-200" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label className="font-bold">Expiration (MM/AA)</Label>
-                            <Input placeholder="MM/AA" className="h-14 rounded-xl bg-white border-slate-200 shadow-sm" />
+                            <Input placeholder="MM/AA" className="h-14 rounded-xl bg-white border-slate-200" />
                           </div>
                           <div className="space-y-2">
                             <Label className="font-bold">CVC</Label>
-                            <Input placeholder="123" className="h-14 rounded-xl bg-white border-slate-200 shadow-sm" />
+                            <Input placeholder="123" className="h-14 rounded-xl bg-white border-slate-200" />
                           </div>
                         </div>
                       </div>
@@ -249,7 +245,9 @@ function PropertyBookingContent({ id }: { id: string }) {
                 </div>
 
                 <Button type="submit" disabled={isSubmitting} className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-95 mt-10">
-                  {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : `Confirmer & Payer ${formatPrice(depositPrice)}`}
+                  {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : (
+                    <span>Confirmer & Payer {isMounted && `(${formatPrice(depositPrice)})`}</span>
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -257,7 +255,7 @@ function PropertyBookingContent({ id }: { id: string }) {
 
           <div className="lg:col-span-1">
             <Card className="sticky top-28 shadow-2xl border-none rounded-[2.5rem] bg-white overflow-hidden">
-              <div className="relative h-48 w-full">
+              <div className="relative h-48 w-full bg-slate-100">
                 <Image src={propertyImage} alt="Stay" fill className="object-cover" />
                 <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg">STAYFLOOW SELECTION</div>
               </div>
@@ -271,21 +269,21 @@ function PropertyBookingContent({ id }: { id: string }) {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center text-sm font-medium">
                     <span className="text-slate-500">Prix total</span>
-                    <span className="font-black text-slate-900">{formatPrice(fullPrice)}</span>
+                    <span className="font-black text-slate-900">{isMounted ? formatPrice(fullPrice) : "..."}</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-primary/5 rounded-xl border border-primary/10">
                     <span className="text-[10px] font-black text-primary uppercase">Payé en ligne (14%)</span>
-                    <span className="font-black text-primary">{formatPrice(depositPrice)}</span>
+                    <span className="font-black text-primary">{isMounted ? formatPrice(depositPrice) : "..."}</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                     <span className="text-[10px] font-black text-slate-500 uppercase">Sur place (86%)</span>
-                    <span className="font-black text-slate-700">{formatPrice(onSitePrice)}</span>
+                    <span className="font-black text-slate-700">{isMounted ? formatPrice(onSitePrice) : "..."}</span>
                   </div>
                 </div>
                 <div className="pt-4 border-t flex justify-between items-end border-slate-50 mt-4">
                   <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Transaction</p>
-                    <p className="text-4xl font-black text-primary tracking-tighter">{formatPrice(fullPrice)}</p>
+                    <p className="text-4xl font-black text-primary tracking-tighter">{isMounted ? formatPrice(fullPrice) : "..."}</p>
                   </div>
                   <ShieldCheck className="h-10 w-10 text-primary opacity-20" />
                 </div>

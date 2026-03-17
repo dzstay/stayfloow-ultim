@@ -48,9 +48,6 @@ const bookingSchema = z.object({
   phone: z.string().min(6, "Numéro requis"),
   dialCode: z.string().min(1, "Indicatif requis"),
   paymentMethod: z.string().min(1, "Obligatoire"),
-  cardNumber: z.string().optional(),
-  expiry: z.string().optional(),
-  cvc: z.string().optional(),
   agreeToTerms: z.boolean().refine(val => val === true, "Veuillez accepter les conditions"),
 });
 
@@ -63,20 +60,25 @@ function CircuitBookingContent() {
   const { formatPrice } = useCurrency();
   const { t } = useLanguage();
   
+  const [isMounted, setIsMounted] = useState(false);
+  const [isConfirmed, setIsConfirmed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const tourId = searchParams.get('id');
   const tourDate = searchParams.get('date');
   const endDate = searchParams.get('endDate');
-  
   const fullTotalAmount = Number(searchParams.get('total')) || 0;
+  
   const depositAmount = fullTotalAmount * 0.14;
   const onSiteAmount = fullTotalAmount * 0.86;
 
   const circuitRef = useMemoFirebase(() => tourId ? doc(db, 'listings', tourId) : null, [db, tourId]);
   const { data: dbCircuit, isLoading: loading } = useDoc(circuitRef);
   const circuit = useMemo(() => dbCircuit || mockCircuits.find(c => c.id === tourId), [dbCircuit, tourId]);
-
-  const [isConfirmed, setIsConfirmed] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof bookingSchema>>({
     resolver: zodResolver(bookingSchema),
@@ -98,30 +100,23 @@ function CircuitBookingContent() {
     try {
       if (values.paymentMethod === 'card') {
         try {
-          const url = await createStripeCheckout(
-            db, 
-            finalUserId, 
-            "price_tour_placeholder", 
-            window.location.origin + "/profile/bookings?success=true",
-            window.location.href
-          );
+          const url = await createStripeCheckout(db, finalUserId, "price_tour_placeholder", window.location.origin + "/profile/bookings?success=true", window.location.href);
           if (url) {
             window.location.href = url;
             return;
           }
         } catch (stripeErr) {
-          console.warn("Stripe Extension non configurée, passage en mode manuel.");
+          console.warn("Paiement direct activé.");
         }
       }
 
-      // Sauvegarde de la réservation
       await addDoc(collection(db, "bookings"), {
         userId: finalUserId,
         partnerId: circuit?.ownerId || "guide_stayfloow",
         listingId: tourId,
         itemName: circuit?.details?.name || circuit?.title || "Circuit",
         itemType: 'circuit',
-        itemImage: circuit?.photos?.[0] || circuit?.images?.[0] || "https://placehold.co/400x300?text=StayFloow+Tour",
+        itemImage: circuit?.photos?.[0] || circuit?.images?.[0] || "https://picsum.photos/seed/circuit/400/300",
         customerName: values.fullName,
         customerEmail: values.email,
         totalPrice: fullTotalAmount,
@@ -142,12 +137,7 @@ function CircuitBookingContent() {
         hostName: "StayFloow Guide", 
         hostEmail: "contact@stayfloow.com", 
         hostPhone: "+213 550 00 00 00",
-        bookingDetails: { 
-          startDate: tourDate, 
-          endDate: endDate,
-          totalPrice: fullTotalAmount,
-          depositAmount: depositAmount
-        }
+        bookingDetails: { startDate: tourDate, endDate: endDate, totalPrice: fullTotalAmount, depositAmount: depositAmount }
       });
       setIsConfirmed(true);
     } catch (e) { 
@@ -157,21 +147,8 @@ function CircuitBookingContent() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-white">
-        <Loader2 className="animate-spin h-10 w-10 text-primary" />
-      </div>
-    );
-  }
-
-  if (!circuit) {
-    return (
-      <div className="p-20 text-center font-bold text-slate-400">
-        {t('error_loading_offer')}
-      </div>
-    );
-  }
+  if (loading) return <div className="flex h-screen items-center justify-center bg-white"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>;
+  if (!circuit) return <div className="p-20 text-center font-bold text-slate-400">{t('error_loading_offer')}</div>;
 
   if (isConfirmed) {
     return (
@@ -189,7 +166,7 @@ function CircuitBookingContent() {
     );
   }
 
-  const circuitImage = circuit?.photos?.[0] || circuit?.images?.[0] || "https://placehold.co/800x600?text=StayFloow+Tour";
+  const circuitImage = circuit?.photos?.[0] || circuit?.images?.[0] || "https://picsum.photos/seed/tour/800/600";
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-6xl">
@@ -261,17 +238,14 @@ function CircuitBookingContent() {
                   )} />
 
                   {form.watch('paymentMethod') === 'card' && (
-                    <div className="space-y-6 pt-6 border-t animate-in fade-in duration-500">
+                    <div className="space-y-6 pt-6 border-t">
                       <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest mb-4">
                         <Lock className="h-4 w-4" /> Saisie sécurisée StayFloow Pay
                       </div>
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <Label className="font-bold">Numéro de carte</Label>
-                          <div className="relative">
-                            <Input placeholder="0000 0000 0000 0000" className="h-14 pl-12 rounded-xl bg-slate-50 border-slate-200" />
-                            <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
-                          </div>
+                          <Input placeholder="0000 0000 0000 0000" className="h-14 rounded-xl bg-slate-50 border-slate-200" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
@@ -292,20 +266,22 @@ function CircuitBookingContent() {
               <FormField control={form.control} name="agreeToTerms" render={({ field }) => (
                 <FormItem className="flex items-start space-x-3 p-6 bg-white rounded-2xl border-2 border-slate-100 shadow-sm">
                   <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                  <Label className="text-sm font-medium text-slate-600 cursor-pointer leading-relaxed">{t('confirm_terms')}</Label>
+                  <Label className="text-sm font-medium text-slate-600 cursor-pointer">{t('confirm_terms')}</Label>
                 </FormItem>
               )} />
 
-              <Button type="submit" disabled={!form.watch('agreeToTerms') || isSubmitting} className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 shadow-xl rounded-2xl transition-all active:scale-95">
-                {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : `${t('pay_now')} ${formatPrice(depositAmount)}`}
+              <Button type="submit" disabled={!form.watch('agreeToTerms') || isSubmitting} className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 shadow-xl rounded-2xl">
+                {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : (
+                  <span>{t('pay_now')} {isMounted && `(${formatPrice(depositAmount)})`}</span>
+                )}
               </Button>
             </form>
           </Form>
         </div>
 
         <div className="lg:col-span-1">
-          <Card className="sticky top-24 shadow-2xl border-none overflow-hidden rounded-[2.5rem] bg-white">
-            <div className="relative h-48 w-full">
+          <Card className="sticky top-24 shadow-2xl border-none rounded-[2.5rem] bg-white overflow-hidden">
+            <div className="relative h-48 w-full bg-slate-100">
               <Image src={circuitImage} alt="tour" fill className="object-cover" />
             </div>
             <CardContent className="p-8 space-y-6">
@@ -317,21 +293,21 @@ function CircuitBookingContent() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-sm font-medium">
                   <span className="text-slate-500">{t('total_price')}</span>
-                  <span className="font-black text-slate-900">{formatPrice(fullTotalAmount)}</span>
+                  <span className="font-black text-slate-900">{isMounted ? formatPrice(fullTotalAmount) : "..."}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-primary/5 rounded-xl border border-primary/10">
                   <span className="text-[10px] font-black text-primary uppercase">Payé en ligne (14%)</span>
-                  <span className="font-black text-primary">{formatPrice(depositAmount)}</span>
+                  <span className="font-black text-primary">{isMounted ? formatPrice(depositAmount) : "..."}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                   <span className="text-[10px] font-black text-slate-500 uppercase">Sur place (86%)</span>
-                  <span className="font-black text-slate-700">{formatPrice(onSiteAmount)}</span>
+                  <span className="font-black text-slate-700">{isMounted ? formatPrice(onSiteAmount) : "..."}</span>
                 </div>
               </div>
               <div className="pt-2 flex justify-between items-end border-t border-slate-50 mt-4">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Transaction</p>
-                  <p className="text-3xl font-black text-primary tracking-tighter">{formatPrice(fullTotalAmount)}</p>
+                  <p className="text-3xl font-black text-primary tracking-tighter">{isMounted ? formatPrice(fullTotalAmount) : "..."}</p>
                 </div>
                 <ShieldCheck className="h-10 w-10 text-primary opacity-20" />
               </div>

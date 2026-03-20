@@ -146,30 +146,30 @@ function CircuitBookingContent() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 md:py-12 max-w-6xl">
-      <Button variant="ghost" onClick={() => router.back()} className="mb-6 md:mb-8 font-black text-slate-400 hover:text-primary px-0">
+    <div className="container mx-auto px-4 py-12 max-w-6xl">
+      <Button variant="ghost" onClick={() => router.back()} className="mb-8 font-black text-slate-400 hover:text-primary px-0">
         <ArrowLeft className="mr-2 h-4 w-4" /> {t('back_to_tour')}
       </Button>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2 order-2 lg:order-1">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <Card className="border-none shadow-xl rounded-[2rem] overflow-hidden bg-white">
-                <CardHeader className="bg-slate-900 text-white p-6 md:p-8"><CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">{t('your_info')}</CardTitle></CardHeader>
-                <CardContent className="p-6 md:p-8 space-y-6">
+                <CardHeader className="bg-slate-900 text-white p-8"><CardTitle className="text-xl font-black uppercase tracking-tight">{t('your_info')}</CardTitle></CardHeader>
+                <CardContent className="p-8 space-y-6">
                   <FormField control={form.control} name="fullName" render={({ field }) => (
-                    <FormItem><FormLabel className="font-bold">{t('full_name')}</FormLabel><FormControl><Input placeholder={t('full_name_placeholder')} className="h-12 md:h-14 rounded-xl bg-slate-50 border-slate-100" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="font-bold">{t('full_name')}</FormLabel><FormControl><Input placeholder={t('full_name_placeholder')} className="h-14 rounded-xl bg-slate-50 border-slate-100" {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField control={form.control} name="email" render={({ field }) => (
-                      <FormItem><FormLabel className="font-bold">{t('contact.email')}</FormLabel><FormControl><Input className="h-12 md:h-14 rounded-xl bg-slate-50 border-slate-100" type="email" placeholder={t('email_placeholder')} {...field} /></FormControl><FormMessage /></FormItem>
+                      <FormItem><FormLabel className="font-bold">{t('contact.email')}</FormLabel><FormControl><Input className="h-14 rounded-xl bg-slate-50 border-slate-100" type="email" placeholder={t('email_placeholder')} {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <div className="flex gap-2">
                       <FormField control={form.control} name="dialCode" render={({ field }) => (
-                        <FormItem className="w-24"><FormLabel className="font-bold">Code</FormLabel><FormControl><Input className="h-12 md:h-14 text-center font-black bg-slate-50 border-slate-100" {...field} /></FormControl></FormItem>
+                        <FormItem className="w-24"><FormLabel className="font-bold">Code</FormLabel><FormControl><Input className="h-14 text-center font-black bg-slate-50 border-slate-100" {...field} /></FormControl></FormItem>
                       )} />
                       <FormField control={form.control} name="phone" render={({ field }) => (
-                        <FormItem className="flex-1"><FormLabel className="font-bold">{t('phone_whatsapp')}</FormLabel><FormControl><Input className="h-12 md:h-14 rounded-xl bg-slate-50 border-slate-100" placeholder={t('phone_placeholder')} {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem className="flex-1"><FormLabel className="font-bold">{t('phone_whatsapp')}</FormLabel><FormControl><Input className="h-14 rounded-xl bg-slate-50 border-slate-100" placeholder={t('phone_placeholder')} {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
                     </div>
                   </div>
@@ -177,14 +177,14 @@ function CircuitBookingContent() {
               </Card>
 
               <Card className="border-none shadow-xl rounded-[2rem] overflow-hidden bg-white">
-                <CardHeader className="bg-slate-900 text-white p-6 md:p-8"><CardTitle className="text-lg md:text-xl font-black uppercase tracking-tight">{t('payment_method')}</CardTitle></CardHeader>
-                <CardContent className="p-6 md:p-8 space-y-8">
+                <CardHeader className="bg-slate-900 text-white p-8"><CardTitle className="text-xl font-black uppercase tracking-tight">{t('payment_method')}</CardTitle></CardHeader>
+                <CardContent className="p-8 space-y-8">
                   <FormField control={form.control} name="paymentMethod" render={({ field }) => (
                     <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Label htmlFor="card" className={cn("flex items-center gap-4 p-5 md:p-6 border-2 rounded-2xl cursor-pointer transition-all", field.value === 'card' ? "border-primary bg-primary/5 shadow-inner" : "border-slate-100")}>
+                      <Label htmlFor="card" className={cn("flex items-center gap-4 p-6 border-2 rounded-2xl cursor-pointer transition-all", field.value === 'card' ? "border-primary bg-primary/5 shadow-inner" : "border-slate-100")}>
                         <RadioGroupItem value="card" id="card" className="sr-only" /><CreditCard className="h-6 w-6 text-primary" /><span className="font-black text-sm">Carte Bancaire Directe</span>
                       </Label>
-                      <Label htmlFor="paypal" className={cn("flex items-center gap-4 p-5 md:p-6 border-2 rounded-2xl cursor-pointer transition-all", field.value === 'paypal' ? "border-primary bg-primary/5 shadow-inner" : "border-slate-100")}>
+                      <Label htmlFor="paypal" className={cn("flex items-center gap-4 p-6 border-2 rounded-2xl cursor-pointer transition-all", field.value === 'paypal' ? "border-primary bg-primary/5 shadow-inner" : "border-slate-100")}>
                         <RadioGroupItem value="paypal" id="paypal" className="sr-only" /><div className="w-6 h-6 bg-[#0070ba] rounded-full flex items-center justify-center text-white text-[10px] font-bold">P</div><span className="font-black text-sm">PayPal Checkout</span>
                       </Label>
                     </RadioGroup>
@@ -195,14 +195,14 @@ function CircuitBookingContent() {
                       <div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest"><Lock className="h-4 w-4" /> Saisie sécurisée StayFloow Pay</div>
                       <div className="space-y-4">
                         <FormField control={form.control} name="cardNumber" render={({ field }) => (
-                          <FormItem><FormLabel className="font-bold">Numéro de carte</FormLabel><FormControl><div className="relative"><Input placeholder="0000 0000 0000 0000" className="h-12 md:h-14 rounded-xl bg-slate-50 border-slate-100 pl-12 font-mono" {...field} onChange={(e) => field.onChange(formatCardNumber(e.target.value))} /><CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" /></div></FormControl><FormMessage /></FormItem>
+                          <FormItem><FormLabel className="font-bold">Numéro de carte</FormLabel><FormControl><div className="relative"><Input placeholder="0000 0000 0000 0000" className="h-14 rounded-xl bg-slate-50 border-slate-100 pl-12 font-mono" {...field} onChange={(e) => field.onChange(formatCardNumber(e.target.value))} /><CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" /></div></FormControl><FormMessage /></FormItem>
                         )} />
                         <div className="grid grid-cols-2 gap-4">
                           <FormField control={form.control} name="expiry" render={({ field }) => (
-                            <FormItem><FormLabel className="font-bold">Expiration (MM/AA)</FormLabel><FormControl><Input placeholder="MM/AA" className="h-12 md:h-14 rounded-xl bg-slate-50 border-slate-100 text-center font-bold" {...field} onChange={(e) => field.onChange(formatExpiry(e.target.value))} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel className="font-bold">Expiration (MM/AA)</FormLabel><FormControl><Input placeholder="MM/AA" className="h-14 rounded-xl bg-slate-50 border-slate-100 text-center font-bold" {...field} onChange={(e) => field.onChange(formatExpiry(e.target.value))} /></FormControl><FormMessage /></FormItem>
                           )} />
                           <FormField control={form.control} name="cvc" render={({ field }) => (
-                            <FormItem><FormLabel className="font-bold">CVC</FormLabel><FormControl><Input placeholder="123" className="h-12 md:h-14 rounded-xl bg-slate-50 border-slate-100 text-center font-bold" {...field} onChange={(e) => field.onChange(e.target.value.replace(/\D/g, '').substring(0, 4))} /></FormControl><FormMessage /></FormItem>
+                            <FormItem><FormLabel className="font-bold">CVC</FormLabel><FormControl><Input placeholder="123" className="h-14 rounded-xl bg-slate-50 border-slate-100 text-center font-bold" {...field} onChange={(e) => field.onChange(e.target.value.replace(/\D/g, '').substring(0, 4))} /></FormControl><FormMessage /></FormItem>
                           )} />
                         </div>
                       </div>
@@ -212,20 +212,20 @@ function CircuitBookingContent() {
               </Card>
 
               <FormField control={form.control} name="agreeToTerms" render={({ field }) => (
-                <FormItem className="flex items-start space-x-3 p-6 bg-white rounded-2xl border-2 border-slate-100 shadow-sm"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label className="text-xs md:text-sm font-medium text-slate-600 cursor-pointer">{t('confirm_terms')}</Label></FormItem>
+                <FormItem className="flex items-start space-x-3 p-6 bg-white rounded-2xl border-2 border-slate-100 shadow-sm"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label className="text-sm font-medium text-slate-600 cursor-pointer">{t('confirm_terms')}</Label></FormItem>
               )} />
 
-              <Button type="submit" disabled={!form.watch('agreeToTerms') || isSubmitting} className="w-full h-16 text-lg md:text-xl font-black bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-xl shadow-primary/20">{isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : <span>{t('pay_now')} {isMounted && `(${formatPrice(depositAmount)})`}</span>}</Button>
+              <Button type="submit" disabled={!form.watch('agreeToTerms') || isSubmitting} className="w-full h-16 text-xl font-black bg-primary hover:bg-primary/90 text-white rounded-2xl shadow-xl shadow-primary/20">{isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : <span>{t('pay_now')} {isMounted && `(${formatPrice(depositAmount)})`}</span>}</Button>
             </form>
           </Form>
         </div>
 
         <div className="lg:col-span-1 order-1 lg:order-2">
           <Card className="sticky top-24 shadow-2xl border-none rounded-[2rem] bg-white overflow-hidden">
-            <div className="relative h-40 md:h-48 w-full"><Image src={circuit?.photos?.[0] || "https://picsum.photos/seed/tour/800/600"} alt="tour" fill className="object-cover" /></div>
-            <CardContent className="p-6 md:p-8 space-y-6">
-              <h3 className="text-xl md:text-2xl font-black text-primary leading-tight">{circuit?.details?.name || circuit?.title}</h3>
-              <div className="flex items-center gap-2 text-[10px] md:text-xs font-black text-slate-400 uppercase"><CalendarIcon className="h-4 w-4 text-primary" /> {tourDate ? format(new Date(tourDate), "dd MMMM yyyy", { locale: fr }) : "Date à confirmer"}</div>
+            <div className="relative h-48 w-full"><Image src={circuit?.photos?.[0] || "https://picsum.photos/seed/circuit/800/600"} alt="tour" fill className="object-cover" /></div>
+            <CardContent className="p-8 space-y-6">
+              <h3 className="text-2xl font-black text-primary leading-tight">{circuit?.details?.name || circuit?.title}</h3>
+              <div className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase"><CalendarIcon className="h-4 w-4 text-primary" /> {tourDate ? format(new Date(tourDate), "dd MMMM yyyy", { locale: fr }) : "Date à confirmer"}</div>
               <Separator />
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-sm font-bold"><span className="text-slate-500">{t('total_price')}</span><span className="text-slate-900">{isMounted ? formatPrice(fullTotalAmount) : "..."}</span></div>
@@ -233,7 +233,7 @@ function CircuitBookingContent() {
                 <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100"><span className="text-[10px] font-black text-slate-500 uppercase">Sur place (86%)</span><span className="font-black text-slate-700">{isMounted ? formatPrice(onSiteAmount) : "..."}</span></div>
               </div>
               <div className="pt-2 flex justify-between items-end border-t border-slate-50 mt-4">
-                <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Transaction</p><p className="text-3xl md:text-4xl font-black text-primary tracking-tighter">{isMounted ? formatPrice(fullTotalAmount) : "..."}</p></div>
+                <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Transaction</p><p className="text-4xl font-black text-primary tracking-tighter">{isMounted ? formatPrice(fullTotalAmount) : "..."}</p></div>
                 <ShieldCheck className="h-10 w-10 text-primary opacity-20" />
               </div>
             </CardContent>

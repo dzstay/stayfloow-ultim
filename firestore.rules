@@ -2,15 +2,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- FONCTIONS DE BASE ---
+    // --- FONCTIONS DE SÉCURITÉ ---
+    
+    // Vérifie si l'utilisateur est authentifié
     function isSignedIn() {
       return request.auth != null;
     }
 
+    // Vérifie si l'utilisateur est un administrateur maître (Basé sur l'UID fourni dans l'erreur)
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.email == "stayflow2025@gmail.com" ||
         request.auth.uid == "Kb7jQGxp4pf1cjdfbMwz4HnujQi2" ||
+        request.auth.token.email == "stayflow2025@gmail.com" ||
         request.auth.uid == "G4d04MgUW4fguFOjmhQBbWezheB2" ||
         request.auth.uid == "CChLqb7OxdbbSpjNRKMAt2vJNa12" ||
         request.auth.uid == "3rixbVLeMaUARuODthz3ds80WeS2" ||
@@ -19,68 +22,72 @@ service cloud.firestore {
       );
     }
 
-    // --- ACCÈS ADMINISTRATEUR GLOBAL (PRIORITÉ MAXIMALE) ---
-    // Cette règle autorise les administrateurs à tout lire et tout écrire partout.
+    // --- RÈGLES GLOBALES ---
+
+    // Accès total pour les administrateurs sur toute la base de données
     match /{document=**} {
       allow read, write: if isAdmin();
     }
 
-    // --- RÈGLES SPÉCIFIQUES PAR COLLECTION ---
+    // --- RÈGLES SPÉCIFIQUES ---
 
-    // USERS
-    match /users/{userId} {
-      allow read, write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+    // BOOKINGS (Réservations)
+    match /bookings/{bookingId} {
+      // Autoriser le listage pour les admins et les utilisateurs connectés
+      // (Nécessaire pour que la requête de collection ne soit pas rejetée d'emblée)
+      allow list: if isSignedIn();
+      
+      // Accès individuel : propriétaire, partenaire ou admin
+      allow get, update, delete: if isAdmin() || (isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.partnerId == request.auth.uid
+      ));
+      
+      allow create: if isSignedIn();
     }
 
-    // LISTINGS
+    // USERS (Profils utilisateurs)
+    match /users/{userId} {
+      allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+    }
+
+    // LISTINGS (Annonces)
     match /listings/{listingId} {
       allow read: if true;
       allow create: if isSignedIn();
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
-    // BOOKINGS
-    match /bookings/{bookingId} {
-      // Autoriser le listage pour les admins (via la règle globale) et les utilisateurs connectés
-      allow list: if isSignedIn();
-      // Lecture/Ecriture spécifique pour les propriétaires ou admins
-      allow get, update, delete: if isAdmin() || (isSignedIn() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.partnerId == request.auth.uid
-      ));
-      allow create: if isSignedIn();
-    }
-
-    // PARTNERS
+    // PARTNERS (Profils partenaires)
     match /partners/{partnerId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn() && (request.auth.uid == partnerId || isAdmin());
+      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == partnerId);
     }
 
-    // CONVERSATIONS
+    // CONVERSATIONS (Messagerie)
     match /conversations/{convId} {
-      allow read, write: if isSignedIn() && (request.auth.uid in resource.data.participants || isAdmin());
+      allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid in resource.data.participants);
       
       match /messages/{msgId} {
         allow read, write: if isSignedIn();
       }
     }
 
-    // SETTINGS & SITE CONFIG
+    // SETTINGS (Configuration site)
     match /settings/{doc} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // MAIL (TRIGGER EMAIL EXTENSION)
+    // MAIL (Trigger Email Extension)
     match /mail/{mailId} {
       allow create: if true;
       allow read: if isAdmin();
     }
 
-    // STRIPE (CUSTOMERS & PRODUCTS)
+    // STRIPE (Customers & Checkout)
     match /customers/{uid}/{any=**} {
-      allow read, write: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
     }
 
     match /products/{id} {

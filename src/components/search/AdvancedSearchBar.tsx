@@ -57,9 +57,6 @@ export default function AdvancedSearchBar({ hideTabs = false, buttonLabel }: Adv
 
   const [isOccupancyOpen, setIsOccupancyOpen] = useState(false);
 
-  // Correction de la variable finale avant toute utilisation
-  const finalButtonLabel = buttonLabel || t('search_btn');
-
   useEffect(() => {
     setIsClient(true);
     const dest = searchParams.get('dest');
@@ -182,15 +179,24 @@ export default function AdvancedSearchBar({ hideTabs = false, buttonLabel }: Adv
     });
   };
 
+  const handleTabClick = (cat: Category) => {
+    setActiveCategory(cat);
+    if (cat === 'cars') router.push('/cars');
+    else if (cat === 'circuits') router.push('/circuits');
+    else router.push('/search');
+  };
+
+  const finalButtonLabel = buttonLabel || (isClient ? t('search_btn') : 'Rechercher');
+
   if (!isClient) return <div className="w-full h-20 bg-slate-100 animate-pulse rounded-xl" />;
 
   return (
     <div className="w-full">
       {!hideTabs && (
         <div className="flex gap-2 md:gap-3 mb-4 md:mb-6 overflow-x-auto no-scrollbar py-1">
-          <TabButton active={activeCategory === 'accommodations'} icon={<Building className="h-4 w-4 md:h-5 md:w-5" />} label={t("accommodations")} onClick={() => setActiveCategory('accommodations')} />
-          <TabButton active={activeCategory === 'cars'} icon={<Car className="h-4 w-4 md:h-5 md:w-5" />} label={t("car_rental")} onClick={() => setActiveCategory('cars')} />
-          <TabButton active={activeCategory === 'circuits'} icon={<Compass className="h-4 w-4 md:h-5 md:w-5" />} label={t("tours")} onClick={() => setActiveCategory('circuits')} />
+          <TabButton active={activeCategory === 'accommodations'} icon={<Building className="h-4 w-4 md:h-5 md:w-5" />} label={t("accommodations")} onClick={() => handleTabClick('accommodations')} />
+          <TabButton active={activeCategory === 'cars'} icon={<Car className="h-4 w-4 md:h-5 md:w-5" />} label={t("car_rental")} onClick={() => handleTabClick('cars')} />
+          <TabButton active={activeCategory === 'circuits'} icon={<Compass className="h-4 w-4 md:h-5 md:w-5" />} label={t("tours")} onClick={() => handleTabClick('circuits')} />
         </div>
       )}
 

@@ -3,10 +3,10 @@
 import React, { use, useState, useEffect, useRef, useMemo } from 'react';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { 
-  MapPin, Star, Share2, Heart, 
+import {
+  MapPin, Star, Share2, Heart,
   Wifi, Coffee, Car, Wind, ChevronLeft, ChevronRight, X,
-  Loader2, Utensils, Clock, 
+  Loader2, Utensils, Clock,
   Sofa, Trees,
   Users, Check,
   Leaf, Info, Train, Plane, FerrisWheel, Bed, Bath,
@@ -50,11 +50,11 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
   const db = useFirestore();
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
-  
+
   const [activeTab, setActiveCategory] = useState('overview');
   const [selectedRooms, setSelectedRooms] = useState<Record<string, number>>({});
   const [isMounted, setIsMounted] = useState(false);
-  
+
   // Lightbox State
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -106,6 +106,16 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     return acc + (room?.price || 0) * qty * nights;
   }, 0);
 
+  const quantityLabel = useMemo(() => {
+    if (!property) return "Quantité";
+    const type = property.details?.propertyType?.toLowerCase() || property.type?.toLowerCase() || "";
+    if (type.includes('hotel') || type.includes('hôtel')) return "Nombre de chambres";
+    if (type.includes('appartement')) return "Nombre d'appartements";
+    if (type.includes('villa')) return "Nombre de villas";
+    if (type.includes('maison')) return "Nombre de maisons";
+    return "Quantité";
+  }, [property]);
+
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   if (!property) return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold">Établissement introuvable.</div>;
 
@@ -129,7 +139,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
           <div className="flex flex-col md:flex-row justify-between items-start gap-4">
             <div className="space-y-2">
               <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">{propertyName}</h1>
-              <a 
+              <a
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location?.address || property.location)}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -145,14 +155,14 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2 aspect-[4/3] md:aspect-[21/9] rounded-2xl overflow-hidden shadow-xl">
-            <div 
-              className="md:col-span-2 md:row-span-2 relative cursor-pointer group" 
+            <div
+              className="md:col-span-2 md:row-span-2 relative cursor-pointer group"
               onClick={() => { setCurrentPhotoIndex(0); setLightboxOpen(true); }}
             >
               <Image src={photos[0]} alt="Stay" fill className="object-cover group-hover:opacity-90 transition-opacity" />
             </div>
-            <div 
-              className="hidden md:block relative cursor-pointer group" 
+            <div
+              className="hidden md:block relative cursor-pointer group"
               onClick={() => { setCurrentPhotoIndex(1 >= photos.length ? 0 : 1); setLightboxOpen(true); }}
             >
               <Image src={photos[1] || photos[0]} alt="Stay" fill className="object-cover group-hover:opacity-90 transition-opacity" />
@@ -161,8 +171,8 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
               <div className="text-4xl font-black mb-2">{rating.toFixed(1)}</div>
               <p className="font-bold text-center">Top StayFloow</p>
             </div>
-            <div 
-              className="hidden md:block relative cursor-pointer group" 
+            <div
+              className="hidden md:block relative cursor-pointer group"
               onClick={() => { setCurrentPhotoIndex(2 >= photos.length ? 0 : 2); setLightboxOpen(true); }}
             >
               <Image src={photos[2] || photos[0]} alt="Stay" fill className="object-cover group-hover:opacity-90 transition-opacity" />
@@ -179,7 +189,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                   <TableHead className="text-white font-bold h-14">Type d'hébergement</TableHead>
                   <TableHead className="text-white font-bold h-14">Options</TableHead>
                   <TableHead className="text-white font-bold h-14">Tarif ({nights} nuits)</TableHead>
-                  <TableHead className="text-white font-bold h-14">Quantité</TableHead>
+                  <TableHead className="text-white font-bold h-14">{quantityLabel}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -189,10 +199,10 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                       <h4 className="font-black text-primary text-lg">{room.name}</h4>
                       <ul className="mt-2 space-y-1">{room.specs.map((s, i) => <li key={i} className="text-xs text-slate-500 flex items-center gap-2"><Check className="h-3 w-3 text-primary" /> {s}</li>)}</ul>
                     </TableCell>
-                    <TableCell className="py-6"><p className="text-green-600 text-xs font-bold flex items-center gap-1"><Check className="h-3 w-3"/> Annulation GRATUITE</p></TableCell>
+                    <TableCell className="py-6"><p className="text-green-600 text-xs font-bold flex items-center gap-1"><Check className="h-3 w-3" /> Annulation GRATUITE</p></TableCell>
                     <TableCell className="py-6"><p className="text-xl font-black text-slate-900">{isMounted ? formatPrice(room.price * nights) : '...'}</p><p className="text-[10px] text-slate-400 uppercase font-black">Taxes incluses</p></TableCell>
                     <TableCell className="py-6">
-                      <Select value={selectedRooms[room.id]?.toString() || "0"} onValueChange={(v) => setSelectedRooms({...selectedRooms, [room.id]: parseInt(v)})}>
+                      <Select value={selectedRooms[room.id]?.toString() || "0"} onValueChange={(v) => setSelectedRooms({ ...selectedRooms, [room.id]: parseInt(v) })}>
                         <SelectTrigger className="w-24 h-12 bg-white font-black"><SelectValue /></SelectTrigger>
                         <SelectContent>{Array.from({ length: 6 }).map((_, n) => <SelectItem key={n} value={n.toString()}>{n}</SelectItem>)}</SelectContent>
                       </Select>
@@ -221,47 +231,47 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
 
       {/* Lightbox Overlay */}
       {lightboxOpen && photos.length > 0 && (
-        <div 
-          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center animate-in fade-in duration-300" 
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center animate-in fade-in duration-300"
           onClick={() => setLightboxOpen(false)}
         >
-          <button 
-            onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }} 
+          <button
+            onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
             className="absolute top-6 right-6 text-white/70 hover:text-white p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-[110]"
           >
             <X className="w-8 h-8" />
           </button>
-          
-          <button 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              setCurrentPhotoIndex((prev) => (prev - 1 + photos.length) % photos.length); 
-            }} 
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setCurrentPhotoIndex((prev) => (prev - 1 + photos.length) % photos.length);
+            }}
             className="absolute left-4 md:left-10 text-white/70 hover:text-white p-4 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-[110]"
           >
             <ChevronLeft className="w-8 h-8" />
           </button>
 
           <div className="relative w-full max-w-5xl aspect-[4/3] md:aspect-video px-4 md:px-0" onClick={e => e.stopPropagation()}>
-            <Image 
-              src={photos[currentPhotoIndex] || photos[0]} 
-              alt={`Photo ${currentPhotoIndex + 1}`} 
-              fill 
+            <Image
+              src={photos[currentPhotoIndex] || photos[0]}
+              alt={`Photo ${currentPhotoIndex + 1}`}
+              fill
               className="object-contain"
               priority
             />
           </div>
 
-          <button 
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              setCurrentPhotoIndex((prev) => (prev + 1) % photos.length); 
-            }} 
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setCurrentPhotoIndex((prev) => (prev + 1) % photos.length);
+            }}
             className="absolute right-4 md:right-10 text-white/70 hover:text-white p-4 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-[110]"
           >
             <ChevronRight className="w-8 h-8" />
           </button>
-          
+
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/70 font-bold bg-black/50 px-6 py-2 rounded-full text-base z-[110]">
             {currentPhotoIndex + 1} / {photos.length}
           </div>

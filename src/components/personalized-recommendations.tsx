@@ -34,7 +34,7 @@ export function PersonalizedRecommendations() {
 
   const { recentlyViewed, similarToLastViewed } = useMemo(() => {
     if (!snapshot) return { recentlyViewed: [], similarToLastViewed: [] };
-    
+
     const allListings = snapshot.map(doc => {
       const data = doc.details || {};
       return {
@@ -65,10 +65,9 @@ export function PersonalizedRecommendations() {
   }, [snapshot]);
 
   const getButtonClass = (mode: 'grid' | 'list') =>
-    `h-10 w-10 flex items-center justify-center rounded-xl border transition-all ${
-      viewMode === mode
-        ? "bg-secondary text-primary border-secondary shadow-lg"
-        : "bg-white text-slate-400 hover:text-primary border-slate-100 shadow-sm"
+    `h-10 w-10 flex items-center justify-center rounded-xl border transition-all ${viewMode === mode
+      ? "bg-secondary text-primary border-secondary shadow-lg"
+      : "bg-white text-slate-400 hover:text-primary border-slate-100 shadow-sm"
     }`;
 
   if (!isMounted) return null;

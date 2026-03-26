@@ -27,9 +27,10 @@ interface AdvancedSearchBarProps {
   hideTabs?: boolean;
   buttonLabel?: string;
   hideLocation?: boolean;
+  stayOnPage?: boolean;
 }
 
-export default function AdvancedSearchBar({ hideTabs = false, hideLocation = false, buttonLabel }: AdvancedSearchBarProps) {
+export default function AdvancedSearchBar({ hideTabs = false, hideLocation = false, stayOnPage = false, buttonLabel }: AdvancedSearchBarProps) {
   const { t, locale } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
@@ -146,6 +147,11 @@ export default function AdvancedSearchBar({ hideTabs = false, hideLocation = fal
       hasInfants: hasInfant.toString()
     }).toString();
     
+    if (stayOnPage) {
+      router.push(`${pathname}?${params}`, { scroll: false });
+      return;
+    }
+
     if (activeCategory === 'cars') router.push(`/cars/results?${params}`);
     else if (activeCategory === 'circuits') router.push(`/circuits/results?${params}`);
     else router.push(`/search?${params}`);

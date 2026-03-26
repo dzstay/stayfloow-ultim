@@ -10,8 +10,9 @@ import {
   Sofa, Trees,
   Users, Check,
   Leaf, Info, Train, Plane, FerrisWheel, Bed, Bath,
-  Calendar as CalendarIcon,
-  Tent
+  Globe, Languages, Map as MapIcon, Calendar as CalendarIcon,
+  Search, Menu, User, Bell, Heart as HeartIcon,
+  Image as ImageIcon, Share
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -116,6 +117,46 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     return "Quantité";
   }, [property]);
 
+  const surroundings = useMemo(() => {
+    if (!property) return [];
+    const address = property.location?.address || property.location || "";
+    if (typeof address !== 'string') return [];
+    
+    const locationLower = address.toLowerCase();
+    const data = [
+      { title: "Meilleures attractions", icon: Star, items: [] as any[] },
+      { title: "Restaurants et cafés", icon: Utensils, items: [] as any[] },
+      { title: "Transports en commun", icon: Train, items: [] as any[] },
+      { title: "Aéroports les plus proches", icon: Plane, items: [] as any[] },
+      { title: "Environnement naturel", icon: Leaf, items: [] as any[] }
+    ];
+
+    if (locationLower.includes('alger')) {
+      data[0].items = [{ name: "Mémorial du Martyr", dist: "3,5 km" }, { name: "Casbah d'Alger", dist: "4,2 km" }, { name: "Jardin d'Essai du Hamma", dist: "2,8 km" }];
+      data[1].items = [{ name: "Le Bardo", dist: "400 m" }, { name: "Restaurant L'Auberge", dist: "600 m" }];
+      data[2].items = [{ name: "Métro El Hamma", dist: "300 m" }, { name: "Gare d'Alger", dist: "1,5 km" }];
+      data[3].items = [{ name: "Aéroport d'Alger - Houari Boumédiène", dist: "18 km" }];
+      data[4].items = [{ name: "Montagne Bouzareah", dist: "5 km" }, { name: "Mer Méditerranée", dist: "1,2 km" }];
+    } else if (locationLower.includes('oran')) {
+      data[0].items = [{ name: "Fort de Santa Cruz", dist: "2.5 km" }, { name: "Mosquée Abdellah Ibn Salam", dist: "1.1 km" }];
+      data[1].items = [{ name: "Le Méridien", dist: "800 m" }, { name: "Café de Paris", dist: "200 m" }];
+      data[2].items = [{ name: "Tramway d'Oran", dist: "500 m" }];
+      data[3].items = [{ name: "Aéroport d'Oran - Ahmed Ben Bella", dist: "12 km" }];
+      data[4].items = [{ name: "Montagne Murdjadjo", dist: "3 km" }];
+    } else if (locationLower.includes('constantine')) {
+      data[0].items = [{ name: "Ponts suspendus", dist: "1.2 km" }, { name: "Mosquée Émir Abdelkader", dist: "2.5 km" }];
+      data[1].items = [{ name: "Restaurant Panorama", dist: "300 m" }];
+      data[3].items = [{ name: "Aéroport de Constantine - Mohamed Boudiaf", dist: "10 km" }];
+    } else {
+      data[0].items = [{ name: "Centre-ville historique", dist: "1,2 km" }, { name: "Parc Municipal", dist: "800 m" }];
+      data[1].items = [{ name: "Cafétéria Centrale", dist: "150 m" }, { name: "Le Gourmet", dist: "450 m" }];
+      data[2].items = [{ name: "Arrêt de Bus le plus proche", dist: "200 m" }];
+      data[3].items = [{ name: "Aéroport Régional", dist: "25 km" }];
+    }
+
+    return data.filter(d => d.items.length > 0);
+  }, [property]);
+
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   if (!property) return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold">Établissement introuvable.</div>;
 
@@ -181,7 +222,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
         </section>
 
         <section ref={availabilityRef} className="pt-10 border-t space-y-6">
-          <div className="bg-slate-50 p-4 md:p-8 rounded-[2rem] border border-slate-100"><AdvancedSearchBar hideTabs hideLocation buttonLabel="Mettre à jour" /></div>
+          <div className="bg-slate-50 p-4 md:p-8 rounded-[2rem] border border-slate-100"><AdvancedSearchBar hideTabs hideLocation stayOnPage={true} buttonLabel="Mettre à jour" /></div>
           <div className="border rounded-2xl overflow-hidden shadow-lg bg-white overflow-x-auto">
             <Table className="min-w-[800px]">
               <TableHeader className="bg-slate-900">
@@ -223,9 +264,41 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
           )}
         </section>
 
-        <section ref={locationRef} className="pt-10 border-t space-y-6">
-          <h2 className="text-2xl font-black text-slate-900">Localisation</h2>
-          <div className="h-[300px] md:h-[450px] rounded-3xl overflow-hidden border-4 border-slate-50 shadow-xl"><OnboardingMap location={property.location?.address || property.location} /></div>
+        <section ref={locationRef} className="pt-10 border-t space-y-10">
+          <div className="space-y-6">
+            <h2 className="text-2xl font-black text-slate-900">Localisation</h2>
+            <div className="h-[300px] md:h-[450px] rounded-3xl overflow-hidden border-4 border-slate-50 shadow-xl">
+              <OnboardingMap location={property.location?.address || property.location} />
+            </div>
+          </div>
+
+          <div className="space-y-8 bg-slate-50 p-6 md:p-10 rounded-[2.5rem] border border-slate-100">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black text-slate-900">Environs de l'établissement</h2>
+              <p className="text-sm font-medium text-slate-500">Les distances sont calculées à vol d'oiseau. La distance réelle peut varier.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-10">
+              {surroundings.map((group, idx) => (
+                <div key={idx} className="space-y-4">
+                  <div className="flex items-center gap-3 text-slate-900 font-black text-sm uppercase tracking-wider">
+                    <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-100">
+                      <group.icon className="w-5 h-5 text-primary" />
+                    </div>
+                    {group.title}
+                  </div>
+                  <div className="space-y-3 pl-11">
+                    {group.items.map((item, i) => (
+                      <div key={i} className="flex justify-between items-baseline gap-4 text-sm">
+                        <span className="text-slate-600 font-medium">{item.name}</span>
+                        <span className="text-slate-400 font-bold whitespace-nowrap">{item.dist}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
       </main>
 

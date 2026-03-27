@@ -73,8 +73,7 @@ function CircuitBookingContent() {
     },
   });
 
-  const formatCardNumber = (v: string) => v.replace(/\W/gi, '').replace(/(.{4})/g, '$1 ').trim().substring(0, 19);
-  const formatExpiry = (v: string) => v.replace(/\W/gi, '').replace(/(.{2})/, '$1/').substring(0, 5);
+
 
   const onSubmit = async (values: z.infer<typeof bookingSchema>) => {
     setIsSubmitting(true);

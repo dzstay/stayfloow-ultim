@@ -102,13 +102,7 @@ function BookCarContent() {
   const depositTotal = fullTotal * 0.14;
   const onSiteTotal = fullTotal * 0.86;
 
-  const formatCardNumber = (value: string) => {
-    return value.replace(/\W/gi, '').replace(/(.{4})/g, '$1 ').trim().substring(0, 19);
-  };
 
-  const formatExpiry = (value: string) => {
-    return value.replace(/\W/gi, '').replace(/(.{2})/, '$1/').substring(0, 5);
-  };
 
   const handleBooking = async (values: z.infer<typeof bookingSchema>) => {
     setIsSubmitting(true);
@@ -226,13 +220,23 @@ function BookCarContent() {
                       </FormItem>
                     )} />
                   </div>
-                  <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-bold text-slate-700">Email</FormLabel>
-                      <FormControl><Input type="email" className="h-14 rounded-xl bg-slate-50" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <FormField control={form.control} name="email" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-bold text-slate-700">Email</FormLabel>
+                        <FormControl><Input type="email" className="h-14 rounded-xl bg-slate-50" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <div className="flex gap-2">
+                      <FormField control={form.control} name="dialCode" render={({ field }) => (
+                        <FormItem className="w-24"><FormLabel className="font-bold text-slate-700">Code</FormLabel><FormControl><Input className="h-14 text-center font-bold bg-slate-50" {...field} /></FormControl></FormItem>
+                      )} />
+                      <FormField control={form.control} name="phone" render={({ field }) => (
+                        <FormItem className="flex-1"><FormLabel className="font-bold text-slate-700">Téléphone</FormLabel><FormControl><Input className="h-14 rounded-xl bg-slate-50" {...field} /></FormControl><FormMessage /></FormItem>
+                      )} />
+                    </div>
+                  </div>
                   
                   <div className="pt-8 border-t">
                     <h3 className="text-xl font-black mb-6 flex items-center gap-3"><CreditCard className="h-6 w-6 text-primary" /> Mode de Paiement</h3>

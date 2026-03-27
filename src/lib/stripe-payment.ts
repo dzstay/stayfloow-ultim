@@ -11,28 +11,42 @@ import { collection, addDoc, onSnapshot, Firestore } from 'firebase/firestore';
 export async function createStripeCheckout(
   db: Firestore, 
   userId: string, 
-  priceId: string, 
+  amount: number, // Montant total (ex: 120.00)
+  currency: string, // Devise (ex: "EUR")
+  productName: string, // Nom affiché sur Stripe
   successUrl: string, 
   cancelUrl: string
 ) {
   try {
     const sessionsRef = collection(db, 'customers', userId, 'checkout_sessions');
     
-    // 1. Ajouter un document pour demander une session
-    // On utilise un timeout court pour ne pas bloquer l'utilisateur si l'extension met trop de temps
+    // 1. Ajouter un document pour demander une session dynamiquement
     const docRef = await addDoc(sessionsRef, {
-      price: priceId,
+      line_items: [
+        {
+          price_data: {
+            currency: currency.toLowerCase(),
+            product_data: {
+              name: productName,
+            },
+            unit_amount: Math.round(amount * 100), // Stripe attend des centimes
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
+      collect_shipping_address: false,
     });
 
     // 2. Écouter le document jusqu'à ce que l'extension Stripe ajoute l'URL
     return new Promise<string | null>((resolve, reject) => {
-      // Sécurité : Timeout après 5 secondes si l'extension ne répond pas
+      // Sécurité : Timeout après 10 secondes si l'extension ne répond pas
       const timeoutId = setTimeout(() => {
         unsubscribe();
-        resolve(null); // On retourne null pour passer en mode direct/manuel
-      }, 5000);
+        resolve(null); 
+      }, 10000);
 
       const unsubscribe = onSnapshot(docRef, (snap) => {
         const data = snap.data();

@@ -44,6 +44,15 @@ export function initializeFirebase() {
   }
 
   // SSR Path (Initialisation simple pour le rendu serveur)
+  if (!firebaseConfig.apiKey) {
+    // Return empty stubs to allow the build to proceed
+    return {
+      firebaseApp: null as any,
+      auth: null as any,
+      firestore: null as any,
+    };
+  }
+
   const ssrApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
   return {
     firebaseApp: ssrApp,

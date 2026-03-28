@@ -104,6 +104,7 @@ export default function AdminDashboardMaster() {
             <SidebarItem icon={<Puzzle />} label="Extensions" onClick={() => router.push('/admin/extensions')} />
             <SidebarItem icon={<Wallet />} label="Finance & Paiements" onClick={() => router.push('/admin/finance')} />
             <SidebarItem icon={<MessageSquare />} label="Support Client" onClick={() => router.push('/admin/messaging')} />
+            <SidebarItem icon={<Users />} label="Prospection" onClick={() => router.push('/admin/prospects')} />
             <SidebarItem icon={<Tag />} label="Paramètres Site" onClick={() => router.push('/admin/settings')} />
           </div>
         </aside>

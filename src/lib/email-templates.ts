@@ -13,8 +13,44 @@ export type EmailTemplateName =
   | 'newBookingNotification' 
   | 'passwordReset';
 
+export interface EmailTemplate {
+  subject: string;
+  body: string;
+}
+
 const BRAND_COLOR = "#10B981";
 const ACCENT_COLOR = "#39FF14";
+
+export const defaultTemplates: Record<EmailTemplateName, EmailTemplate> = {
+  registrationWelcome: {
+    subject: "Bienvenue chez StayFloow ! 🌍",
+    body: "<h1>Bienvenue ! 😍</h1><p>Nous sommes ravis de vous compter parmi nos nouveaux membres.</p>"
+  },
+  partnerWelcome: {
+    subject: "Dossier reçu ! Bienvenue chez StayFloow Pro 🚀",
+    body: "<h1>Bienvenue à bord ! 🤝</h1><p>Votre demande d'enregistrement a bien été réceptionnée.</p>"
+  },
+  bookingConfirmation: {
+    subject: "Réservation Confirmée ! ✅",
+    body: "<h1>C'est confirmé ! ✈️</h1><p>Votre réservation est validée.</p>"
+  },
+  partnerBookingNotification: {
+    subject: "🎉 Nouvelle Réservation Confirmée !",
+    body: "<h1>Nouvelle réservation reçue ! 💸</h1><p>Vous avez une nouvelle réservation.</p>"
+  },
+  adminBookingNotification: {
+    subject: "🚨 [ADMIN] Nouvelle Réservation Payée",
+    body: "<h1>Nouvelle Réservation Enregistrée ! 💰</h1>"
+  },
+  newBookingNotification: {
+    subject: "Nouvelle notification",
+    body: "<p>Vous avez une nouvelle notification.</p>"
+  },
+  passwordReset: {
+    subject: "Réinitialisation de votre mot de passe StayFloow 🔐",
+    body: "<h1>Besoin d'un nouveau mot de passe ?</h1><p>Cliquez sur le lien pour réinitialiser.</p>"
+  }
+};
 
 const baseLayout = (content: string) => `
 <!DOCTYPE html>

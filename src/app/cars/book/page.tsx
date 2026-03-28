@@ -41,9 +41,6 @@ const bookingSchema = z.object({
   phone: z.string().min(6, "Téléphone requis"),
   dialCode: z.string().min(1, "Indicatif requis"),
   paymentMethod: z.enum(["card", "paypal"]),
-  cardNumber: z.string().min(16, "Numéro invalide").max(19),
-  expiry: z.string().regex(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/, "Format MM/AA"),
-  cvc: z.string().min(3, "CVC invalide").max(4),
 });
 
 function BookCarContent() {
@@ -81,9 +78,6 @@ function BookCarContent() {
       phone: "",
       dialCode: "+213",
       paymentMethod: "card",
-      cardNumber: '',
-      expiry: '',
-      cvc: '',
     },
   });
 
@@ -108,13 +102,7 @@ function BookCarContent() {
   const depositTotal = fullTotal * 0.14;
   const onSiteTotal = fullTotal * 0.86;
 
-  const formatCardNumber = (value: string) => {
-    return value.replace(/\W/gi, '').replace(/(.{4})/g, '$1 ').trim().substring(0, 19);
-  };
 
-  const formatExpiry = (value: string) => {
-    return value.replace(/\W/gi, '').replace(/(.{2})/, '$1/').substring(0, 5);
-  };
 
   const handleBooking = async (values: z.infer<typeof bookingSchema>) => {
     setIsSubmitting(true);
@@ -122,26 +110,6 @@ function BookCarContent() {
     const resNum = `ST-CAR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     try {
-      if (values.paymentMethod === 'card') {
-        try {
-          const url = await createStripeCheckout(
-            db, 
-            finalUserId, 
-            "price_car_placeholder", 
-            window.location.origin + "/profile/bookings?success=true", 
-            window.location.href
-          );
-          
-          if (url) {
-            window.location.href = url;
-            return;
-          }
-        } catch (err) {
-          console.warn("Mode développement: Stripe non configuré, passage en enregistrement direct.");
-          // On continue vers l'enregistrement en BDD pour permettre de tester localement
-        }
-      }
-
       await addDoc(collection(db, "bookings"), {
         userId: finalUserId,
         partnerId: dbCar?.ownerId || "stayfloow_fleet",
@@ -153,7 +121,7 @@ function BookCarContent() {
         customerEmail: values.email,
         totalPrice: fullTotal,
         depositPaid: depositTotal,
-        status: 'approved',
+        status: values.paymentMethod === 'card' ? 'pending_payment' : 'approved',
         startDate: fromParam || new Date().toISOString(),
         endDate: toParam || addDays(new Date(), days).toISOString(),
         createdAt: new Date().toISOString(),
@@ -177,6 +145,23 @@ function BookCarContent() {
           depositAmount: depositTotal
         }
       });
+
+      if (values.paymentMethod === 'card') {
+        const url = await createStripeCheckout(
+          depositTotal, 
+          "EUR", 
+          `Acompte Location Voiture: ${displayCar.name}`, 
+          window.location.origin + "/profile/bookings?success=true", 
+          window.location.href
+        );
+        
+        if (url) {
+          window.location.href = url;
+          return;
+        } else {
+          throw new Error("Impossible de générer la session de paiement.");
+        }
+      }
 
       setIsSuccess(true);
     } catch (e) {
@@ -235,13 +220,23 @@ function BookCarContent() {
                       </FormItem>
                     )} />
                   </div>
-                  <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-bold text-slate-700">Email</FormLabel>
-                      <FormControl><Input type="email" className="h-14 rounded-xl bg-slate-50" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <FormField control={form.control} name="email" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-bold text-slate-700">Email</FormLabel>
+                        <FormControl><Input type="email" className="h-14 rounded-xl bg-slate-50" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <div className="flex gap-2">
+                      <FormField control={form.control} name="dialCode" render={({ field }) => (
+                        <FormItem className="w-24"><FormLabel className="font-bold text-slate-700">Code</FormLabel><FormControl><Input className="h-14 text-center font-bold bg-slate-50" {...field} /></FormControl></FormItem>
+                      )} />
+                      <FormField control={form.control} name="phone" render={({ field }) => (
+                        <FormItem className="flex-1"><FormLabel className="font-bold text-slate-700">Téléphone</FormLabel><FormControl><Input className="h-14 rounded-xl bg-slate-50" {...field} /></FormControl><FormMessage /></FormItem>
+                      )} />
+                    </div>
+                  </div>
                   
                   <div className="pt-8 border-t">
                     <h3 className="text-xl font-black mb-6 flex items-center gap-3"><CreditCard className="h-6 w-6 text-primary" /> Mode de Paiement</h3>
@@ -262,59 +257,15 @@ function BookCarContent() {
                     )} />
 
                     {form.watch('paymentMethod') === 'card' && (
-                      <div className="space-y-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100 animate-in slide-in-from-top-4 duration-500">
+                      <div className="space-y-4 bg-emerald-50/50 p-8 rounded-[2rem] border border-emerald-100 animate-in slide-in-from-top-4 duration-500">
                         <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest mb-2">
-                          <Lock className="h-4 w-4" /> Saisie sécurisée StayFloow Pay
+                          <Lock className="h-4 w-4" /> Paiement Sécurisé par Stripe
                         </div>
-                        <div className="space-y-4">
-                          <FormField control={form.control} name="cardNumber" render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-bold">Numéro de carte</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Input 
-                                    placeholder="0000 0000 0000 0000" 
-                                    className="h-14 pl-12 rounded-xl bg-white border-slate-200" 
-                                    {...field}
-                                    onChange={(e) => field.onChange(formatCardNumber(e.target.value))}
-                                  />
-                                  <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField control={form.control} name="expiry" render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="font-bold">Expiration (MM/AA)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="MM/AA" 
-                                    className="h-14 rounded-xl bg-white border-slate-200" 
-                                    {...field}
-                                    onChange={(e) => field.onChange(formatExpiry(e.target.value))}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} />
-                            <FormField control={form.control} name="cvc" render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="font-bold">CVC</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="123" 
-                                    className="h-14 rounded-xl bg-white border-slate-200" 
-                                    {...field}
-                                    onChange={(e) => field.onChange(e.target.value.replace(/\D/g, '').substring(0, 4))}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} />
-                          </div>
-                        </div>
+                        <p className="text-sm font-medium text-slate-600 leading-relaxed">
+                          Vous allez être redirigé vers la page de paiement officielle de **Stripe** pour finaliser votre réservation en toute sécurité. 
+                          <br/><br/>
+                          <span className="text-[10px] text-slate-400 font-bold italic uppercase tracking-wider">Aucune donnée bancaire n'est stockée sur nos serveurs.</span>
+                        </p>
                       </div>
                     )}
                   </div>

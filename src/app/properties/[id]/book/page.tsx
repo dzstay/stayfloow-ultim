@@ -41,9 +41,6 @@ const bookingSchema = z.object({
   phone: z.string().min(6, "Numéro trop court"),
   dialCode: z.string().min(1, "Indicatif requis"),
   paymentMethod: z.enum(["card", "paypal"]),
-  cardNumber: z.string().min(16, "Numéro invalide").max(19),
-  expiry: z.string().regex(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/, "Format MM/AA"),
-  cvc: z.string().min(3, "CVC invalide").max(4),
 });
 
 function PropertyBookingContent({ id }: { id: string }) {
@@ -72,7 +69,7 @@ function PropertyBookingContent({ id }: { id: string }) {
   });
   
   const docRef = useMemoFirebase(() => doc(db, 'listings', id), [db, id]);
-  const { data: property, loading } = useDoc(docRef);
+  const { data: property, isLoading: loading } = useDoc(docRef);
 
   const form = useForm<z.infer<typeof bookingSchema>>({
     resolver: zodResolver(bookingSchema),
@@ -82,9 +79,6 @@ function PropertyBookingContent({ id }: { id: string }) {
       phone: "",
       dialCode: "+213",
       paymentMethod: "card",
-      cardNumber: '',
-      expiry: '',
-      cvc: '',
     },
   });
 
@@ -107,29 +101,7 @@ function PropertyBookingContent({ id }: { id: string }) {
     const reservationNumber = `ST-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     try {
-      // 1. Déclencher le paiement réel si Carte sélectionnée
-      if (values.paymentMethod === 'card') {
-        try {
-          const checkoutUrl = await createStripeCheckout(
-            db, 
-            finalUserId, 
-            "price_accommodation_placeholder", 
-            window.location.origin + "/profile/bookings?success=true", 
-            window.location.href
-          );
-
-          if (checkoutUrl) {
-            // Si on a une URL, on redirige pour le paiement RÉEL
-            window.location.href = checkoutUrl;
-            return;
-          }
-        } catch (err) {
-          console.warn("Mode développement: Stripe non configuré, passage en enregistrement direct.");
-          // On continue vers l'enregistrement en BDD pour permettre de tester localement
-        }
-      }
-
-      // 2. Enregistrement en base de données (si paiement réussi ou autre méthode)
+      // 1. Enregistrement en base de données avec statut 'pending_payment'
       await addDoc(collection(db, "bookings"), {
         userId: finalUserId,
         partnerId: property?.ownerId || "admin",
@@ -141,13 +113,14 @@ function PropertyBookingContent({ id }: { id: string }) {
         customerEmail: values.email,
         totalPrice: fullPrice,
         depositPaid: depositPrice,
-        status: 'approved',
+        status: values.paymentMethod === 'card' ? 'pending_payment' : 'approved',
         startDate: date.from.toISOString(),
         endDate: date.to.toISOString(),
         createdAt: new Date().toISOString(),
         reservationNumber
       });
 
+      // 2. Envoi email de confirmation
       await sendBookingConfirmationEmail({
         customerName: values.fullName,
         customerEmail: values.email,
@@ -165,6 +138,24 @@ function PropertyBookingContent({ id }: { id: string }) {
           depositAmount: depositPrice
         }
       });
+
+      // 3. Paiement Stripe : Redirection Seulement APRÈS sauvegarde
+      if (values.paymentMethod === 'card') {
+        const checkoutUrl = await createStripeCheckout(
+          depositPrice,
+          "EUR",
+          `Acompte Séjour: ${property?.details?.name || "Hébergement StayFloow"}`, 
+          window.location.origin + "/profile/bookings?success=true", 
+          window.location.href
+        );
+
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl;
+          return;
+        } else {
+          throw new Error("Impossible de générer la session de paiement.");
+        }
+      }
 
       setIsSuccess(true);
     } catch (error) {
@@ -245,59 +236,15 @@ function PropertyBookingContent({ id }: { id: string }) {
                     )} />
 
                     {form.watch('paymentMethod') === 'card' && (
-                      <div className="space-y-6 bg-slate-50 p-8 rounded-[2rem] border border-slate-100 animate-in slide-in-from-top-4 duration-500">
+                      <div className="space-y-4 bg-emerald-50/50 p-8 rounded-[2rem] border border-emerald-100 animate-in slide-in-from-top-4 duration-500">
                         <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest mb-2">
-                          <Lock className="h-4 w-4" /> Saisie sécurisée StayFloow Pay
+                          <Lock className="h-4 w-4" /> Paiement Sécurisé par Stripe
                         </div>
-                        <div className="space-y-4">
-                          <FormField control={form.control} name="cardNumber" render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-bold">Numéro de carte</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Input 
-                                    placeholder="0000 0000 0000 0000" 
-                                    className="h-14 pl-12 rounded-xl bg-white border-slate-200" 
-                                    {...field}
-                                    onChange={(e) => field.onChange(formatCardNumber(e.target.value))}
-                                  />
-                                  <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-                          <div className="grid grid-cols-2 gap-4">
-                            <FormField control={form.control} name="expiry" render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="font-bold">Expiration (MM/AA)</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="MM/AA" 
-                                    className="h-14 rounded-xl bg-white border-slate-200" 
-                                    {...field}
-                                    onChange={(e) => field.onChange(formatExpiry(e.target.value))}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} />
-                            <FormField control={form.control} name="cvc" render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="font-bold">CVC</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="123" 
-                                    className="h-14 rounded-xl bg-white border-slate-200" 
-                                    {...field}
-                                    onChange={(e) => field.onChange(e.target.value.replace(/\D/g, '').substring(0, 4))}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} />
-                          </div>
-                        </div>
+                        <p className="text-sm font-medium text-slate-600 leading-relaxed">
+                          Vous allez être redirigé vers la page de paiement officielle de **Stripe** pour finaliser votre réservation en toute sécurité. 
+                          <br/><br/>
+                          <span className="text-[10px] text-slate-400 font-bold italic uppercase tracking-wider">Aucune donnée bancaire n'est stockée sur nos serveurs.</span>
+                        </p>
                       </div>
                     )}
                   </div>

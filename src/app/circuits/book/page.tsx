@@ -33,9 +33,6 @@ const bookingSchema = z.object({
   phone: z.string().min(6, "Numéro requis"),
   dialCode: z.string().min(1, "Indicatif requis"),
   paymentMethod: z.enum(['card', 'paypal']),
-  cardNumber: z.string().min(16, "Numéro de carte invalide").max(19),
-  expiry: z.string().regex(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/, "Format MM/AA invalide"),
-  cvc: z.string().min(3, "CVC invalide").max(4),
   agreeToTerms: z.boolean().refine(val => val === true, "Veuillez accepter les conditions"),
 });
 
@@ -72,15 +69,10 @@ function CircuitBookingContent() {
       phone: "", 
       dialCode: "+213", 
       paymentMethod: 'card', 
-      cardNumber: '', 
-      expiry: '', 
-      cvc: '', 
       agreeToTerms: false 
     },
   });
 
-  const formatCardNumber = (v: string) => v.replace(/\W/gi, '').replace(/(.{4})/g, '$1 ').trim().substring(0, 19);
-  const formatExpiry = (v: string) => v.replace(/\W/gi, '').replace(/(.{2})/, '$1/').substring(0, 5);
 
   const onSubmit = async (values: z.infer<typeof bookingSchema>) => {
     setIsSubmitting(true);
@@ -88,25 +80,6 @@ function CircuitBookingContent() {
     const resNum = `ST-TOUR-${Math.floor(1000 + Math.random() * 8999)}`;
     
     try {
-      if (values.paymentMethod === 'card') {
-        try {
-          const url = await createStripeCheckout(
-            db, 
-            finalUserId, 
-            "price_tour_placeholder", 
-            window.location.origin + "/profile/bookings?success=true", 
-            window.location.href
-          );
-          if (url) {
-            window.location.href = url;
-            return;
-          }
-        } catch (err) {
-          console.warn("Mode développement: Stripe non configuré, passage en enregistrement direct.");
-          // On continue vers l'enregistrement en BDD pour permettre de tester localement
-        }
-      }
-      
       await addDoc(collection(db, "bookings"), { 
         userId: finalUserId, 
         partnerId: circuit?.ownerId || "guide_stayfloow", 
@@ -118,7 +91,7 @@ function CircuitBookingContent() {
         customerEmail: values.email, 
         totalPrice: fullTotalAmount, 
         depositPaid: depositAmount, 
-        status: 'approved', 
+        status: values.paymentMethod === 'card' ? 'pending_payment' : 'approved', 
         startDate: tourDate, 
         endDate: endDate || tourDate, 
         createdAt: new Date().toISOString(), 
@@ -136,6 +109,22 @@ function CircuitBookingContent() {
         hostPhone: "+213 550 00 00 00", 
         bookingDetails: { startDate: tourDate, endDate: endDate, totalPrice: fullTotalAmount, depositAmount: depositAmount } 
       });
+
+      if (values.paymentMethod === 'card') {
+        const url = await createStripeCheckout(
+          depositAmount, 
+          "EUR", 
+          `Acompte Circuit: ${circuit?.details?.name || circuit?.title || "Circuit StayFloow"}`, 
+          window.location.origin + "/profile/bookings?success=true", 
+          window.location.href
+        );
+        if (url) {
+          window.location.href = url;
+          return;
+        } else {
+          throw new Error("Impossible de générer la session de paiement.");
+        }
+      }
 
       setIsConfirmed(true);
     } catch (e) { 
@@ -207,21 +196,15 @@ function CircuitBookingContent() {
                   )} />
 
                   {form.watch('paymentMethod') === 'card' && (
-                    <div className="space-y-6 pt-6 border-t animate-in slide-in-from-top-4 duration-500">
-                      <div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest"><Lock className="h-4 w-4" /> Saisie sécurisée StayFloow Pay</div>
-                      <div className="space-y-4">
-                        <FormField control={form.control} name="cardNumber" render={({ field }) => (
-                          <FormItem><FormLabel className="font-bold">Numéro de carte</FormLabel><FormControl><div className="relative"><Input placeholder="0000 0000 0000 0000" className="h-14 rounded-xl bg-slate-50 border-slate-100 pl-12 font-mono" {...field} onChange={(e) => field.onChange(formatCardNumber(e.target.value))} /><CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" /></div></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField control={form.control} name="expiry" render={({ field }) => (
-                            <FormItem><FormLabel className="font-bold">Expiration (MM/AA)</FormLabel><FormControl><Input placeholder="MM/AA" className="h-14 rounded-xl bg-slate-50 border-slate-100 text-center font-bold" {...field} onChange={(e) => field.onChange(formatExpiry(e.target.value))} /></FormControl><FormMessage /></FormItem>
-                          )} />
-                          <FormField control={form.control} name="cvc" render={({ field }) => (
-                            <FormItem><FormLabel className="font-bold">CVC</FormLabel><FormControl><Input placeholder="123" className="h-14 rounded-xl bg-slate-50 border-slate-100 text-center font-bold" {...field} onChange={(e) => field.onChange(e.target.value.replace(/\D/g, '').substring(0, 4))} /></FormControl><FormMessage /></FormItem>
-                          )} />
-                        </div>
+                    <div className="space-y-4 bg-emerald-50/50 p-8 rounded-[2rem] border border-emerald-100 animate-in slide-in-from-top-4 duration-500">
+                      <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest mb-2">
+                        <Lock className="h-4 w-4" /> Paiement Sécurisé par Stripe
                       </div>
+                      <p className="text-sm font-medium text-slate-600 leading-relaxed">
+                        Vous allez être redirigé vers la page de paiement officielle de **Stripe** pour finaliser votre réservation en toute sécurité. 
+                        <br/><br/>
+                        <span className="text-[10px] text-slate-400 font-bold italic uppercase tracking-wider">Aucune donnée bancaire n'est stockée sur nos serveurs.</span>
+                      </p>
                     </div>
                   )}
                 </CardContent>

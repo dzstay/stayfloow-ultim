@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { properties as mockProperties, cars as mockCars, circuits as mockCircuits } from "@/lib/data";
 import { checkIsAdmin } from "@/lib/admin-config";
 
+
 export default function AdminCatalogPage() {
   const router = useRouter();
   const db = useFirestore();
@@ -56,6 +57,13 @@ export default function AdminCatalogPage() {
       }
     }
   }, [user, isUserLoading, router, isAdmin]);
+
+  const [hiddenMockIds, setHiddenMockIds] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const saved = localStorage.getItem('stayfloow_hidden_mocks');
+    if (saved) setHiddenMockIds(JSON.parse(saved));
+  }, []);
 
   const allListings = useMemo(() => {
     const fromDb = dbListings || [];
@@ -94,10 +102,11 @@ export default function AdminCatalogPage() {
         photos: circ.images,
         createdAt: { toDate: () => new Date() }
       }))
-    ];
+    ].filter(m => !hiddenMockIds.includes(m.id));
 
     return [...fromDb, ...mocks];
-  }, [dbListings]);
+  }, [dbListings, hiddenMockIds]);
+
 
   const filteredListings = useMemo(() => {
     return allListings.filter(l => {
@@ -114,11 +123,13 @@ export default function AdminCatalogPage() {
   }, [allListings, searchTerm, filterCategory, filterStatus]);
 
   const handleDelete = async (id: string) => {
-    if (id.startsWith('prop-') || id.startsWith('car-') || id.startsWith('circ-')) {
-      alert("Impossible de supprimer une annonce de démonstration.");
-      return;
-    }
     if (window.confirm("Supprimer définitivement cette annonce ?")) {
+      if (id.startsWith('prop-') || id.startsWith('car-') || id.startsWith('circ-')) {
+        const newHidden = [...hiddenMockIds, id];
+        setHiddenMockIds(newHidden);
+        localStorage.setItem('stayfloow_hidden_mocks', JSON.stringify(newHidden));
+        return;
+      }
       await deleteDoc(doc(db, 'listings', id));
     }
   };
@@ -130,6 +141,7 @@ export default function AdminCatalogPage() {
     }
     await updateDoc(doc(db, 'listings', id), { status: newStatus });
   };
+
 
   if (isUserLoading || isAuthorized === null) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900">

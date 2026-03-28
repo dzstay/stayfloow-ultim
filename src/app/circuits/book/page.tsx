@@ -80,7 +80,7 @@ function CircuitBookingContent() {
     const resNum = `ST-TOUR-${Math.floor(1000 + Math.random() * 8999)}`;
     
     try {
-      await addDoc(collection(db, "bookings"), { 
+      const docRef = await addDoc(collection(db, "bookings"), { 
         userId: finalUserId, 
         partnerId: circuit?.ownerId || "guide_stayfloow", 
         listingId: tourId, 
@@ -98,17 +98,7 @@ function CircuitBookingContent() {
         reservationNumber: resNum 
       });
 
-      await sendBookingConfirmationEmail({ 
-        customerName: values.fullName, 
-        customerEmail: values.email, 
-        reservationNumber: resNum, 
-        itemName: circuit?.details?.name || circuit?.title || "Circuit", 
-        itemType: 'circuit', 
-        hostName: "StayFloow Guide", 
-        hostEmail: "contact@stayfloow.com", 
-        hostPhone: "+213 550 00 00 00", 
-        bookingDetails: { startDate: tourDate, endDate: endDate, totalPrice: fullTotalAmount, depositAmount: depositAmount } 
-      });
+      const bookingId = docRef.id;
 
       if (values.paymentMethod === 'card') {
         const url = await createStripeCheckout(
@@ -116,7 +106,8 @@ function CircuitBookingContent() {
           "EUR", 
           `Acompte Circuit: ${circuit?.details?.name || circuit?.title || "Circuit StayFloow"}`, 
           window.location.origin + "/profile/bookings?success=true", 
-          window.location.href
+          window.location.href,
+          { bookingId }
         );
         if (url) {
           window.location.href = url;
@@ -124,6 +115,18 @@ function CircuitBookingContent() {
         } else {
           throw new Error("Impossible de générer la session de paiement.");
         }
+      } else {
+        await sendBookingConfirmationEmail({ 
+          customerName: values.fullName, 
+          customerEmail: values.email, 
+          reservationNumber: resNum, 
+          itemName: circuit?.details?.name || circuit?.title || "Circuit", 
+          itemType: 'circuit', 
+          hostName: "StayFloow Guide", 
+          hostEmail: "stayflow2025@gmail.com", 
+          hostPhone: "+213 550 00 00 00", 
+          bookingDetails: { startDate: tourDate, endDate: endDate, totalPrice: fullTotalAmount, depositAmount: depositAmount } 
+        });
       }
 
       setIsConfirmed(true);

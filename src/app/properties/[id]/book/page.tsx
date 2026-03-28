@@ -102,7 +102,7 @@ function PropertyBookingContent({ id }: { id: string }) {
 
     try {
       // 1. Enregistrement en base de données avec statut 'pending_payment'
-      await addDoc(collection(db, "bookings"), {
+      const docRef = await addDoc(collection(db, "bookings"), {
         userId: finalUserId,
         partnerId: property?.ownerId || "admin",
         listingId: id,
@@ -120,33 +120,17 @@ function PropertyBookingContent({ id }: { id: string }) {
         reservationNumber
       });
 
-      // 2. Envoi email de confirmation
-      await sendBookingConfirmationEmail({
-        customerName: values.fullName,
-        customerEmail: values.email,
-        reservationNumber,
-        itemName: property?.details?.name || "Hébergement StayFloow",
-        itemType: 'hébergement',
-        hostName: "Support StayFloow",
-        hostEmail: "contact@stayfloow.com",
-        hostPhone: "+213 550 00 00 00",
-        bookingDetails: {
-          startDate: date.from.toISOString(),
-          endDate: date.to.toISOString(),
-          nights,
-          totalPrice: fullPrice,
-          depositAmount: depositPrice
-        }
-      });
+      const bookingId = docRef.id;
 
-      // 3. Paiement Stripe : Redirection Seulement APRÈS sauvegarde
+      // 3. Paiement Stripe : Redirection
       if (values.paymentMethod === 'card') {
         const checkoutUrl = await createStripeCheckout(
           depositPrice,
           "EUR",
           `Acompte Séjour: ${property?.details?.name || "Hébergement StayFloow"}`, 
           window.location.origin + "/profile/bookings?success=true", 
-          window.location.href
+          window.location.href,
+          { bookingId }
         );
 
         if (checkoutUrl) {
@@ -155,6 +139,25 @@ function PropertyBookingContent({ id }: { id: string }) {
         } else {
           throw new Error("Impossible de générer la session de paiement.");
         }
+      } else {
+        // Envoi de l'email immédiat si mode hors stripe (Paypal / sur place)
+        await sendBookingConfirmationEmail({
+          customerName: values.fullName,
+          customerEmail: values.email,
+          reservationNumber,
+          itemName: property?.details?.name || "Hébergement StayFloow",
+          itemType: 'hébergement',
+          hostName: "Support StayFloow",
+          hostEmail: "stayflow2025@gmail.com",
+          hostPhone: "+213 550 00 00 00",
+          bookingDetails: {
+            startDate: date.from.toISOString(),
+            endDate: date.to.toISOString(),
+            nights,
+            totalPrice: fullPrice,
+            depositAmount: depositPrice
+          }
+        });
       }
 
       setIsSuccess(true);

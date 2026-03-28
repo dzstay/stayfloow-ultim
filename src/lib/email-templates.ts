@@ -8,11 +8,49 @@ export type EmailTemplateName =
   | 'partnerWelcome' 
   | 'registrationWelcome'
   | 'bookingConfirmation' 
+  | 'partnerBookingNotification'
+  | 'adminBookingNotification'
   | 'newBookingNotification' 
   | 'passwordReset';
 
+export interface EmailTemplate {
+  subject: string;
+  body: string;
+}
+
 const BRAND_COLOR = "#10B981";
 const ACCENT_COLOR = "#39FF14";
+
+export const defaultTemplates: Record<EmailTemplateName, EmailTemplate> = {
+  registrationWelcome: {
+    subject: "Bienvenue chez StayFloow ! 🌍",
+    body: "<h1>Bienvenue ! 😍</h1><p>Nous sommes ravis de vous compter parmi nos nouveaux membres.</p>"
+  },
+  partnerWelcome: {
+    subject: "Dossier reçu ! Bienvenue chez StayFloow Pro 🚀",
+    body: "<h1>Bienvenue à bord ! 🤝</h1><p>Votre demande d'enregistrement a bien été réceptionnée.</p>"
+  },
+  bookingConfirmation: {
+    subject: "Réservation Confirmée ! ✅",
+    body: "<h1>C'est confirmé ! ✈️</h1><p>Votre réservation est validée.</p>"
+  },
+  partnerBookingNotification: {
+    subject: "🎉 Nouvelle Réservation Confirmée !",
+    body: "<h1>Nouvelle réservation reçue ! 💸</h1><p>Vous avez une nouvelle réservation.</p>"
+  },
+  adminBookingNotification: {
+    subject: "🚨 [ADMIN] Nouvelle Réservation Payée",
+    body: "<h1>Nouvelle Réservation Enregistrée ! 💰</h1>"
+  },
+  newBookingNotification: {
+    subject: "Nouvelle notification",
+    body: "<p>Vous avez une nouvelle notification.</p>"
+  },
+  passwordReset: {
+    subject: "Réinitialisation de votre mot de passe StayFloow 🔐",
+    body: "<h1>Besoin d'un nouveau mot de passe ?</h1><p>Cliquez sur le lien pour réinitialiser.</p>"
+  }
+};
 
 const baseLayout = (content: string) => `
 <!DOCTYPE html>
@@ -111,16 +149,61 @@ export const getEmailTemplate = async (name: EmailTemplateName, data: any): Prom
             ${data.detailsHtml}
           </div>
 
-          <p><strong>Contact de votre hôte :</strong></p>
-          <p style="font-size: 14px; color: #64748b;">
-            ${data.hostName}<br>
-            📞 ${data.hostPhone}<br>
-            ✉️ ${data.hostEmail}
-          </p>
+          <p><strong>Contact de votre hôte / agence :</strong></p>
+          <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+            <p style="margin: 0 0 5px 0;"><strong>${data.hostName}</strong></p>
+            <p style="margin: 0 0 5px 0;">📞 <a href="tel:${data.hostPhone}" style="color: ${BRAND_COLOR}; text-decoration: none;">${data.hostPhone}</a></p>
+            <p style="margin: 0 0 5px 0;">✉️ <a href="mailto:${data.hostEmail}" style="color: ${BRAND_COLOR}; text-decoration: none;">${data.hostEmail}</a></p>
+            ${data.addressObj ? `<p style="margin: 15px 0 0 0;"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.addressObj)}" style="background: #0f172a; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-size: 14px; display: inline-block;">📍 Voir sur Google Maps</a></p>` : ''}
+          </div>
 
-          <p style="margin-top: 20px;">Retrouvez tous les détails de votre voyage dans votre espace client.</p>
           <div style="text-align: center;">
-            <a href="https://www.stayfloow.com/profile/bookings" class="btn">Mes Réservations</a>
+            <a href="${data.calendarLink}" class="btn" style="background-color: #4285F4; margin-top: 10px;">📅 Ajouter à Google Calendar</a>
+            <a href="https://www.stayfloow.com/profile/bookings" class="btn" style="margin-top: 10px;">Voir la Réservation</a>
+          </div>
+        `)
+      };
+
+    case 'partnerBookingNotification':
+      return {
+        subject: `🎉 Nouvelle Réservation Confirmée ! - ${data.itemName}`,
+        body: baseLayout(`
+          <h1>Nouvelle réservation reçue ! 💸</h1>
+          <p>Félicitations <strong>${data.hostName}</strong>,</p>
+          <p>Vous avez une nouvelle réservation confirmée pour <strong>${data.itemName}</strong>.</p>
+          
+          <div class="card">
+            <h3 style="margin-top: 0;">Coordonnées du Locataire</h3>
+            <p style="margin: 0 0 5px 0;">👤 <strong>Nom :</strong> ${data.customerName}</p>
+            <p style="margin: 0 0 5px 0;">📞 <strong>Téléphone :</strong> <a href="tel:${data.customerPhone}" style="color: ${BRAND_COLOR};">${data.customerPhone}</a></p>
+            <p style="margin: 0 0 15px 0;">✉️ <strong>Email :</strong> <a href="mailto:${data.customerEmail}" style="color: ${BRAND_COLOR};">${data.customerEmail}</a></p>
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0;" />
+            <p style="margin: 0 0 5px 0;"><strong>Référence :</strong> #${data.reservationNumber}</p>
+            ${data.detailsHtml}
+          </div>
+
+          <div style="text-align: center;">
+            <a href="${data.calendarLink}" class="btn" style="background-color: #4285F4;">📅 Ajouter à mon Calendrier</a>
+            <br/>
+            <a href="https://www.stayfloow.com/partners/dashboard" class="btn">Gérer mes réservations</a>
+          </div>
+        `)
+      };
+
+    case 'adminBookingNotification':
+      return {
+        subject: `🚨 [ADMIN] Nouvelle Réservation Payée - ${data.itemName}`,
+        body: baseLayout(`
+          <h1>Nouvelle Réservation Enregistrée ! 💰</h1>
+          <div class="card">
+            <p><strong>Ref :</strong> #${data.reservationNumber}</p>
+            <p><strong>Item :</strong> ${data.itemName} (${data.itemType})</p>
+            <p><strong>Partenaire :</strong> ${data.hostName} (${data.hostEmail})</p>
+            <p><strong>Client :</strong> ${data.customerName} (${data.customerEmail})</p>
+            ${data.detailsHtml}
+          </div>
+          <div style="text-align: center;">
+            <a href="https://www.stayfloow.com/admin/catalog" class="btn">Dashboard Admin</a>
           </div>
         `)
       };

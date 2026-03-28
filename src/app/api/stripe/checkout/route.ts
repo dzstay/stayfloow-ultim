@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { amount, currency, productName, successUrl, cancelUrl } = body;
+    const { amount, currency, productName, successUrl, cancelUrl, metadata } = body;
 
     if (!amount || !currency || !productName || !successUrl || !cancelUrl) {
       return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 });
@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
+      metadata: metadata || {},
     });
 
     return NextResponse.json({ url: session.url });

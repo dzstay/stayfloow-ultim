@@ -110,7 +110,7 @@ function BookCarContent() {
     const resNum = `ST-CAR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     try {
-      await addDoc(collection(db, "bookings"), {
+      const docRef = await addDoc(collection(db, "bookings"), {
         userId: finalUserId,
         partnerId: dbCar?.ownerId || "stayfloow_fleet",
         listingId: carId,
@@ -129,22 +129,7 @@ function BookCarContent() {
         pickupLocation
       });
 
-      await sendBookingConfirmationEmail({
-        customerName: `${values.firstName} ${values.lastName}`,
-        customerEmail: values.email,
-        reservationNumber: resNum,
-        itemName: displayCar.name,
-        itemType: 'location de voiture',
-        hostName: "StayFloow Fleet",
-        hostEmail: "fleet@stayfloow.com",
-        hostPhone: "+213 550 00 00 00",
-        bookingDetails: { 
-          startDate: fromParam || new Date().toISOString(), 
-          endDate: toParam || addDays(new Date(), days).toISOString(),
-          totalPrice: fullTotal,
-          depositAmount: depositTotal
-        }
-      });
+      const bookingId = docRef.id;
 
       if (values.paymentMethod === 'card') {
         const url = await createStripeCheckout(
@@ -152,7 +137,8 @@ function BookCarContent() {
           "EUR", 
           `Acompte Location Voiture: ${displayCar.name}`, 
           window.location.origin + "/profile/bookings?success=true", 
-          window.location.href
+          window.location.href,
+          { bookingId }
         );
         
         if (url) {
@@ -161,6 +147,23 @@ function BookCarContent() {
         } else {
           throw new Error("Impossible de générer la session de paiement.");
         }
+      } else {
+        await sendBookingConfirmationEmail({
+          customerName: `${values.firstName} ${values.lastName}`,
+          customerEmail: values.email,
+          reservationNumber: resNum,
+          itemName: displayCar.name,
+          itemType: 'location de voiture',
+          hostName: "StayFloow Fleet",
+          hostEmail: "stayflow2025@gmail.com",
+          hostPhone: "+213 550 00 00 00",
+          bookingDetails: { 
+            startDate: fromParam || new Date().toISOString(), 
+            endDate: toParam || addDays(new Date(), days).toISOString(),
+            totalPrice: fullTotal,
+            depositAmount: depositTotal
+          }
+        });
       }
 
       setIsSuccess(true);

@@ -63,11 +63,12 @@ export const sendWelcomeEmail = async ({
 };
 
 /**
- * Envoie une confirmation de réservation au client.
+ * Envoie une confirmation de réservation au client, au partenaire et à l'admin.
  */
 export const sendBookingConfirmationEmail = async ({
   customerName,
   customerEmail,
+  customerPhone,
   reservationNumber,
   itemName,
   itemType,
@@ -76,6 +77,9 @@ export const sendBookingConfirmationEmail = async ({
   hostPhone,
   bookingDetails,
 }: any) => {
+  const adminEmail = "stayflow2025@gmail.com";
+
+  // 1. Formater les détails pour le HTML
   let detailsHtml = `<div style="margin: 20px 0; padding: 20px; background: #f1f5f9; border-radius: 12px;">`;
   if (bookingDetails.startDate) {
     detailsHtml += `<p style="margin: 5px 0;"><strong>📅 Début :</strong> ${new Date(bookingDetails.startDate).toLocaleDateString("fr-FR")}</p>`;
@@ -88,7 +92,22 @@ export const sendBookingConfirmationEmail = async ({
   }
   detailsHtml += `</div>`;
 
-  const { subject, body } = await getEmailTemplate("bookingConfirmation", {
+  // 2. Générer le lien Google Calendar
+  const formatDateForCalendar = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toISOString().replace(/-|:|\.\d\d\d/g, "");
+  };
+
+  const startCal = formatDateForCalendar(bookingDetails.startDate);
+  // Pour le calendrier, si c'est la même journée, on ajoute 1h, sinon on prend l'endDate
+  const endCal = bookingDetails.endDate 
+    ? formatDateForCalendar(bookingDetails.endDate) 
+    : formatDateForCalendar(new Date(new Date(bookingDetails.startDate).getTime() + 3600000).toISOString());
+  
+  const calendarLink = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Réservation StayFloow: ${itemName}`)}&dates=${startCal}/${endCal}&details=${encodeURIComponent(`Référence: ${reservationNumber}\nType: ${itemType}`)}`;
+
+  // --- ENVOI CLIENT ---
+  const clientTpl = await getEmailTemplate("bookingConfirmation", {
     customerName,
     reservationNumber,
     itemName,
@@ -97,9 +116,39 @@ export const sendBookingConfirmationEmail = async ({
     hostEmail,
     hostPhone,
     itemType,
+    calendarLink,
+    addressObj: bookingDetails.pickupLocation || itemName // On utilise le nom de l'item ou le lieu de prise en charge
   });
+  await triggerEmail(customerEmail, clientTpl.subject, clientTpl.body);
 
-  return triggerEmail(customerEmail, subject, body);
+  // --- ENVOI PARTENAIRE ---
+  const partnerTpl = await getEmailTemplate("partnerBookingNotification", {
+    hostName,
+    itemName,
+    customerName,
+    customerPhone: customerPhone || "Non renseigné",
+    customerEmail,
+    reservationNumber,
+    detailsHtml,
+    calendarLink
+  });
+  // Si hostEmail est contact@stayfloow.com ou fleet@..., on envoie au mail configuré par défaut ou fourni
+  await triggerEmail(hostEmail, partnerTpl.subject, partnerTpl.body);
+
+  // --- ENVOI ADMIN ---
+  const adminTpl = await getEmailTemplate("adminBookingNotification", {
+    reservationNumber,
+    itemName,
+    itemType,
+    hostName,
+    hostEmail,
+    customerName,
+    customerEmail,
+    detailsHtml
+  });
+  await triggerEmail(adminEmail, adminTpl.subject, adminTpl.body);
+
+  return { success: true };
 };
 
 /**

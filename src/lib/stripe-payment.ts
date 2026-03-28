@@ -10,13 +10,14 @@ export async function createStripeCheckout(
   currency: string,     // Devise (ex: "EUR")
   productName: string,  // Nom affiché sur Stripe
   successUrl: string,
-  cancelUrl: string
+  cancelUrl: string,
+  metadata?: Record<string, string>
 ): Promise<string | null> {
   try {
     const response = await fetch('/api/stripe/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, currency, productName, successUrl, cancelUrl }),
+      body: JSON.stringify({ amount, currency, productName, successUrl, cancelUrl, metadata }),
     });
 
     const data = await response.json();

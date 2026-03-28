@@ -1,32 +1,38 @@
 import { MetadataRoute } from 'next';
 
-/**
- * Génère le plan du site (sitemap.xml) pour Google.
- * Indispensable pour que Google découvre toutes vos pages.
- */
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://www.stayfloow.com';
   
-  const routes = [
-    '',
-    '/search',
-    '/cars',
-    '/cars/results',
-    '/circuits',
-    '/circuits/results',
-    '/partners/join',
-    '/contact',
-    '/about',
-    '/terms',
-    '/privacy',
-    '/auth/login',
-    '/auth/register',
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date(),
-    changeFrequency: 'daily' as const,
-    priority: route === '' ? 1 : 0.8,
-  }));
-
-  return routes;
+  return [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 1,
+    },
+    {
+      url: `${baseUrl}/search`, // Hébergements
+      lastModified: new Date(),
+      changeFrequency: 'always',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/cars`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/circuits`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/partners/dashboard`, // Wait, public page for partners
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+  ];
 }

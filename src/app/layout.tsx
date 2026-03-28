@@ -7,6 +7,8 @@ import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { ChatLoader } from '@/components/chat-loader';
 import ClientProviders from '@/components/client-providers';
+import AuthSync from '@/components/AuthSync';
+import StructuredData from '@/components/structured-data';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -18,11 +20,16 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.stayfloow.com'),
   title: {
-    default: 'StayFloow.com | Réservez Hébergements, Voitures & Circuits en Afrique',
-    template: '%s | StayFloow.com'
+    default: 'StayFloow | N°1 Location Voiture, Hébergement & Circuits (Algérie, Égypte)',
+    template: '%s | StayFloow'
   },
-  description: 'La plateforme de référence pour réserver hôtels, riads, villas, locations de voitures et excursions en Algérie, Égypte et partout en Afrique. Meilleurs prix garantis.',
-  keywords: ['voyage Afrique', 'réservation hôtel Algérie', 'location voiture Alger', 'circuit Sahara', 'StayFloow', 'tourisme Afrique', 'vacances Égypte', 'riad Marrakech'],
+  description: 'Trouvez et réservez instantanément les meilleures locations de voitures, hôtels, villas et circuits touristiques en Algérie et en Égypte au meilleur prix. Voyagez sereinement.',
+  keywords: [
+    'location de voiture algérie', 'réservation hôtel égypte', 'circuit sahara', 
+    'voyage organisé', 'devenir partenaire hôte', 'louer appartement alger', 
+    'ouest algérien', 'agence de location voiture', 'tourisme afrique du nord',
+    'location voiture sans caution algérie', 'excursions pyramides', 'stayfloow'
+  ],
   authors: [{ name: 'StayFloow Team' }],
   alternates: {
     canonical: '/',
@@ -31,15 +38,15 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'fr_FR',
     url: 'https://www.stayfloow.com',
-    siteName: 'StayFloow.com',
-    title: 'StayFloow.com | Le partenaire de vos voyages en Afrique',
-    description: 'Hébergements uniques, locations de voitures et circuits guidés. Planifiez votre séjour parfait en quelques clics.',
+    siteName: 'StayFloow',
+    title: 'StayFloow | La Plateforme N°1 de Voyages en Algérie et Égypte',
+    description: 'La garantie de trouver le meilleur hébergement, véhicule ou circuit pour vos prochaines vacances. Réservez ou devenez partenaire officiel.',
     images: [
       {
-        url: 'https://picsum.photos/seed/stayfloow-og/1200/630',
+        url: 'https://www.stayfloow.com/logo.png', // Fallback to their likely logo or high res
         width: 1200,
         height: 630,
-        alt: 'StayFloow.com Travel Platform',
+        alt: 'Plateforme StayFloow',
       },
     ],
   },
@@ -78,6 +85,7 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning className={inter.variable}>
       <head>
+        <StructuredData />
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://picsum.photos" />
         <script

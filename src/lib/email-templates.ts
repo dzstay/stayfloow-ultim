@@ -11,7 +11,8 @@ export type EmailTemplateName =
   | 'partnerBookingNotification'
   | 'adminBookingNotification'
   | 'newBookingNotification' 
-  | 'passwordReset';
+  | 'passwordReset'
+  | 'prospectInvitation';
 
 export interface EmailTemplate {
   subject: string;
@@ -49,6 +50,10 @@ export const defaultTemplates: Record<EmailTemplateName, EmailTemplate> = {
   passwordReset: {
     subject: "Réinitialisation de votre mot de passe StayFloow 🔐",
     body: "<h1>Besoin d'un nouveau mot de passe ?</h1><p>Cliquez sur le lien pour réinitialiser.</p>"
+  },
+  prospectInvitation: {
+    subject: "Développez vos réservations avec StayFloow en Afrique du Nord 🌍",
+    body: "<h1>Rejoignez-nous</h1><p>Inscrivez votre hébergement gratuitement.</p>"
   }
 };
 
@@ -219,6 +224,34 @@ export const getEmailTemplate = async (name: EmailTemplateName, data: any): Prom
             <a href="${data.resetLink}" class="btn">Réinitialiser mon mot de passe</a>
           </div>
           <p style="font-size: 12px; color: #94a3b8;">Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité.</p>
+        `)
+      };
+
+    case 'prospectInvitation':
+      return {
+        subject: `Développez vos réservations avec StayFloow en Afrique du Nord 🌍`,
+        body: baseLayout(`
+          <h1>Bonjour ${data.prospectName},</h1>
+          <p>Nous avons découvert votre propriété exceptionnelle sur <strong>${data.sourcePlatform}</strong> et nous serions absolument ravis de collaborer avec vous.</p>
+          <p><strong>StayFloow.com</strong> est une nouvelle plateforme premium 100% pensée pour le tourisme en de la région MENA (Algérie, Maroc, Égypte). Nous connectons notre clientèle internationale et de la diaspora à des hébergements locaux de haute qualité.</p>
+          
+          <div class="card">
+            <h3 style="margin-top: 0; color: #10B981;">Vos Avantages B2B Exclusifs :</h3>
+            <ul style="margin: 0; padding-left: 20px;">
+              <li><strong>0% de commission</strong> sur le premier mois pour essayer.</li>
+              <li>Mise en avant sponsorisée sur notre catalogue.</li>
+              <li>Synchronisation complète avec votre calendrier actuel.</li>
+            </ul>
+          </div>
+
+          <p>Accepteriez-vous d'en discuter brièvement ou souhaitez-vous inscrire votre hébergement dès aujourd'hui et recevoir vos premières réservations ?</p>
+
+          <div style="text-align: center;">
+            <a href="https://www.stayfloow.com/become-partner" class="btn">Devenir Partenaire Gratuitement</a>
+          </div>
+          
+          <p>À très bientôt,</p>
+          <p>L'équipe d'acquisition StayFloow 🌍</p>
         `)
       };
 

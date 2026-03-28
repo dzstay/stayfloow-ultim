@@ -163,3 +163,12 @@ export const sendPasswordResetEmail = async ({
   const { subject, body } = await getEmailTemplate("passwordReset", { resetLink });
   return triggerEmail(userEmail, subject, body);
 };
+
+/**
+ * Envoie un email d'invitation à un prospect (Outbound B2B).
+ */
+export const sendProspectEmail = async ({ prospectName, prospectEmail, sourcePlatform }: { prospectName: string, prospectEmail: string, sourcePlatform: string }) => {
+  const { subject, body } = await getEmailTemplate("prospectInvitation", { prospectName, sourcePlatform });
+  return triggerEmail(prospectEmail, subject, body);
+};
+

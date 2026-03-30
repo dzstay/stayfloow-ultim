@@ -146,10 +146,14 @@ export default function ProspectManagementPage() {
           </div>
         </div>
         <div className="flex gap-4">
-          <Card className="flex items-center px-4 py-2 border-none shadow-sm h-fit bg-white">
-            <RefreshCw className="h-4 w-4 mr-2 text-primary" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sync Live Active</span>
-          </Card>
+          <Button 
+            variant="outline" 
+            className="flex items-center px-4 py-2 border-none shadow-sm h-fit bg-white hover:bg-slate-50 transition-all group"
+            onClick={() => toast({ title: "Live Sync", description: "La synchronisation en temps réel est active via Firestore." })}
+          >
+            <RefreshCw className="h-3 w-3 mr-2 text-primary group-hover:rotate-180 transition-transform duration-500" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Sync Live Active</span>
+          </Button>
         </div>
       </div>
 

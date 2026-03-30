@@ -16,3 +16,7 @@ env:
     secret: stripe-secret-key
     availability:
       - RUNTIME
+
+  - variable: STAYFLOOW_PROSPECTS_SECRET
+    availability:
+      - RUNTIME

@@ -28,6 +28,7 @@ export default function ProspectManagementPage() {
   const db = useFirestore();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("Tous");
   const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -41,11 +42,15 @@ export default function ProspectManagementPage() {
   
   const { data: prospects, isLoading: prospectsLoading } = useCollection(prospectsRef);
 
-  const filteredProspects = (prospects || []).filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.email && p.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (p.location && p.location.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredProspects = (prospects || []).filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.email && p.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (p.location && p.location.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesType = typeFilter === "Tous" || p.type === typeFilter;
+    
+    return matchesSearch && matchesType;
+  });
 
   const stats = React.useMemo(() => {
     return {
@@ -160,14 +165,30 @@ export default function ProspectManagementPage() {
           <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
             <Filter className="h-4 w-4" /> Liste des Cibles
           </CardTitle>
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              className="pl-9 h-10 rounded-xl border-slate-200" 
-              placeholder="Rechercher..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center bg-white rounded-xl border border-slate-200 p-1 shadow-sm">
+              {["Tous", "Hôtel", "Voiture", "Circuit"].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTypeFilter(t)}
+                  className={cn(
+                    "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all",
+                    typeFilter === t ? "bg-primary text-white shadow-md" : "text-slate-400 hover:text-slate-600"
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input 
+                className="pl-9 h-10 rounded-xl border-slate-200 shadow-sm" 
+                placeholder="Rechercher..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -176,6 +197,7 @@ export default function ProspectManagementPage() {
               <thead>
                 <tr className="border-b bg-slate-50/50">
                   <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Prospect</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Type</th>
                   <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Source / Lieu</th>
                   <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Statut</th>
                   <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</th>
@@ -189,6 +211,9 @@ export default function ProspectManagementPage() {
                         <span className="font-black text-slate-800 uppercase text-sm tracking-tight">{p.name}</span>
                         <span className="text-xs font-bold text-slate-400">{p.email || p.phone || "No contact"}</span>
                       </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <TypeBadge type={p.type || 'Autre'} />
                     </td>
                     <td className="px-6 py-5 text-sm font-bold text-slate-500">
                       <div className="flex flex-col">
@@ -274,6 +299,20 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <Badge className={cn("border-none px-3 font-black uppercase text-[10px] rounded-full", styles[status] || "bg-slate-200")}>
       {status}
+    </Badge>
+  );
+}
+
+function TypeBadge({ type }: { type: string }) {
+  const styles: any = {
+    "Hôtel": "bg-amber-100 text-amber-700 border-amber-200",
+    "Voiture": "bg-blue-100 text-blue-700 border-blue-200",
+    "Circuit": "bg-emerald-100 text-emerald-700 border-emerald-200",
+    "Autre": "bg-slate-100 text-slate-600 border-slate-200"
+  };
+  return (
+    <Badge variant="outline" className={cn("px-2.5 py-0.5 font-black uppercase text-[9px] rounded-lg", styles[type] || styles["Autre"])}>
+      {type}
     </Badge>
   );
 }

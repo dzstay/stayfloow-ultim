@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
     const payload = await req.json();
 
-    const { name, email, phone, location, sourcePlatform, propertyLink } = payload;
+    const { name, email, phone, location, sourcePlatform, propertyLink, type } = payload;
 
     if (!name || (!email && !phone)) {
       return NextResponse.json({ error: 'Nom et (Email ou Téléphone) requis' }, { status: 400 });
@@ -36,6 +36,7 @@ export async function POST(req: Request) {
       location: location || '',
       sourcePlatform: sourcePlatform || 'Inconnu',
       propertyLink: propertyLink || '',
+      type: type || 'Autre', // Hôtel, Voiture, Circuit
       status: 'Nouveau', // Nouveau, Contacté, Converti, Refusé
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()

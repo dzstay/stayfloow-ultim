@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { KeyRound, Loader2, ArrowLeft } from 'lucide-react';
-import { sendPasswordResetEmail } from '@/lib/mail';
+import { sendPasswordResetEmailAction } from "@/app/actions/mail";
 import { useState } from 'react';
 
 const forgotPasswordSchema = z.object({
@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
     setIsSending(true);
 
     try {
-      await sendPasswordResetEmail({ userEmail: values.email, userType: 'customer' });
+      await sendPasswordResetEmailAction({ userEmail: values.email, userType: 'customer' });
       toast({
         title: "Email envoyé !",
         description: "Si un compte existe pour cet email, vous recevrez un lien pour réinitialiser votre mot de passe.",

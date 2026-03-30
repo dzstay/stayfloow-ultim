@@ -33,7 +33,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ReCAPTCHA from "react-google-recaptcha";
-import { sendWelcomeEmail } from '@/lib/mail';
+import { sendWelcomeEmailAction } from "@/app/actions/mail";
 
 const NORMALIZATION_RATES: Record<string, number> = {
   EUR: 1,
@@ -264,7 +264,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
       const listingRef = doc(db, 'listings', listingId);
       setDocumentNonBlocking(listingRef, finalData, { merge: false });
 
-      sendWelcomeEmail({
+      await sendWelcomeEmailAction({
         hostName: formData.firstName,
         submissionType: initialCategory === 'accommodation' ? 'établissement' : initialCategory === 'car_rental' ? 'véhicule' : 'circuit',
         submissionName: formData.listingName,

@@ -16,6 +16,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CrossSellCard } from "@/components/cross-sell-card";
 import { CheckCircle } from "lucide-react";
+import { useCurrency } from "@/hooks/use-currency";
 
 function UserBookingsContent() {
   const { user, isUserLoading } = useUser();

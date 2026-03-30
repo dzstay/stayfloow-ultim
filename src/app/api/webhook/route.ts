@@ -40,24 +40,20 @@ export async function POST(req: Request) {
     }
 
     try {
-      // Importation dynamique pour éviter l'initialisation Firebase au Build
-      const { doc, getDoc, updateDoc } = await import('firebase/firestore');
-      const { initializeFirebase } = await import('@/firebase');
+      // Utilisation du SDK Admin pour outrepasser les Security Rules
+      const { adminDb } = await import('@/firebase/admin');
       const { sendBookingConfirmationEmail } = await import('@/lib/mail');
 
-      const { firestore } = initializeFirebase();
-      if (!firestore) throw new Error("Firestore introuvable");
+      const bookingRef = adminDb.collection('bookings').doc(bookingId);
+      const bookingDoc = await bookingRef.get();
 
-      const bookingRef = doc(firestore, 'bookings', bookingId);
-      const bookingDoc = await getDoc(bookingRef);
-
-      if (!bookingDoc.exists()) {
+      if (!bookingDoc.exists) {
         return NextResponse.json({ error: 'Booking non trouvé' }, { status: 404 });
       }
 
-      const booking = bookingDoc.data();
+      const booking = bookingDoc.data()!;
       
-      await updateDoc(bookingRef, {
+      await bookingRef.update({
         status: 'approved',
         paymentIntentId: session.payment_intent as string | undefined,
         paidAt: new Date().toISOString()

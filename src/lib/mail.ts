@@ -10,25 +10,38 @@ import { getEmailTemplate, type EmailTemplateName } from './email-templates';
 
 const triggerEmail = async (to: string, subject: string, body: string) => {
   try {
-    const { firestore } = initializeFirebase();
-    if (!firestore) return;
-
-    // La collection 'mail' est celle configurée dans l'extension
-    const mailCol = collection(firestore, 'mail');
+    // 1. Détection de l'environnement serveur
+    const isServer = typeof window === 'undefined';
     
-    // Structure requise par l'extension Firebase Trigger Email
-    addDocumentNonBlocking(mailCol, {
-      to: to,
-      message: {
-        subject: subject,
-        html: body,
-      },
-    });
+    if (isServer) {
+      const { adminDb } = await import('@/firebase/admin');
+      await adminDb.collection('mail').add({
+        to: to,
+        message: {
+          subject: subject,
+          html: body,
+        },
+      });
+      console.log(`[STAYFLOOW SERVER MAIL] Demande envoyée via ADMIN SDK pour : ${to}`);
+    } else {
+      // Logic Client existante
+      const { firestore } = initializeFirebase();
+      if (!firestore) return;
+      const { collection } = await import('firebase/firestore');
+      const mailCol = collection(firestore, 'mail');
+      addDocumentNonBlocking(mailCol, {
+        to: to,
+        message: {
+          subject: subject,
+          html: body,
+        },
+      });
+      console.log(`[STAYFLOOW CLIENT MAIL] Demande générée pour : ${to}`);
+    }
     
-    console.log(`[STAYFLOOW MAIL] Demande d'envoi générée pour : ${to}`);
     return { success: true };
   } catch (error) {
-    console.error("[STAYFLOOW MAIL] Erreur lors de la génération de la demande:", error);
+    console.error("[STAYFLOOW MAIL] Erreur lors de l'envoi:", error);
     return { success: false, error };
   }
 };

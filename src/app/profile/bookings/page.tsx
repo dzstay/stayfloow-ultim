@@ -13,18 +13,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { format, addDays } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useCurrency } from "@/context/currency-context";
-import { cn } from "@/lib/utils";
+import { useSearchParams, useRouter } from "next/navigation";
+import { CrossSellCard } from "@/components/cross-sell-card";
+import { CheckCircle } from "lucide-react";
 
-export default function UserBookingsPage() {
+function UserBookingsContent() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const { formatPrice } = useCurrency();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isSuccess = searchParams.get('success') === 'true';
 
   const bookingsRef = useMemoFirebase(() => {
     if (!user) return null;
@@ -41,7 +40,6 @@ export default function UserBookingsPage() {
     if (!bookings) return { upcoming: [], ongoing: [], past: [] };
     const now = new Date();
     
-    // Fonction de sécurité pour parser les dates
     const safeDate = (dateStr: any) => {
       if (!dateStr) return new Date();
       const d = new Date(dateStr);
@@ -66,7 +64,6 @@ export default function UserBookingsPage() {
     const convId = `conv_${booking.userId}_${booking.partnerId}`;
     const convRef = doc(db, "conversations", convId);
     
-    // Créer la conversation si elle n'existe pas
     await setDoc(convRef, {
       participants: [booking.userId, booking.partnerId],
       bookingId: booking.id,
@@ -87,6 +84,29 @@ export default function UserBookingsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
+      {isSuccess && (
+        <div className="bg-white border-b shadow-2xl animate-in fade-in zoom-in-95 duration-700">
+           <div className="max-w-5xl mx-auto py-20 px-8 text-center space-y-8">
+              <div className="relative inline-block">
+                <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full scale-150 animate-pulse" />
+                <CheckCircle className="h-24 w-24 text-green-500 mx-auto relative z-10 animate-bounce" />
+              </div>
+              <div className="space-y-3">
+                <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-tight">Réservation Confirmée !</h2>
+                <p className="text-xl text-slate-500 font-medium max-w-2xl mx-auto">Votre paiement a été reçu avec succès. Un e-mail de confirmation vient de vous être envoyé.</p>
+              </div>
+              <div className="pt-4">
+                <Button onClick={() => router.replace('/profile/bookings')} variant="outline" className="rounded-2xl h-14 px-10 font-black border-2 border-slate-100 hover:border-primary transition-all">
+                  Consulter mes séjours
+                </Button>
+              </div>
+              
+              {/* Cross-Sell Suggestions */}
+              <CrossSellCard location="votre destination" bookedItemType="property" />
+           </div>
+        </div>
+      )}
+
       <header className="bg-primary text-white py-8 px-8 shadow-lg sticky top-0 z-50">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -123,6 +143,18 @@ export default function UserBookingsPage() {
         </Tabs>
       </main>
     </div>
+  );
+}
+
+export default function UserBookingsPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    }>
+      <UserBookingsContent />
+    </React.Suspense>
   );
 }
 

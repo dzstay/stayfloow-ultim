@@ -17,7 +17,10 @@ export default function CustomerSupportChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', content: "Bonjour ! Je suis l'assistant StayFloow. Comment puis-je vous aider aujourd'hui ? (Si vous avez une réservation, précisez votre numéro STxxxx)" }
+    { 
+      role: 'model', 
+      content: "Bonjour ! Je suis votre Concierge StayFloow. Je peux vous aider à gérer vos réservations, résoudre un litige ou planifier votre prochain voyage. (Si vous avez un problème avec une commande, précisez votre numéro STxxxx)" 
+    }
   ]);
   const [isPending, startTransition] = useTransition();
   const scrollRef = useRef<HTMLDivElement>(null);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,14 +24,14 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generatePartnerDescription } from '@/ai/flows/partner-description-generator';
-import { doc, collection, setDoc } from 'firebase/firestore';
+import { doc, collection, setDoc, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { optimizeImage } from '@/lib/image-optimizer';
 import { useToast } from '@/hooks/use-toast';
 import { OnboardingMap } from '@/components/onboarding-map';
 import { useLanguage } from '@/context/language-context';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, eachDayOfInterval, isSameDay, startOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ReCAPTCHA from "react-google-recaptcha";
 import { sendWelcomeEmailAction, sendAdminNewListingNotificationAction } from "@/app/actions/mail";
@@ -147,6 +147,50 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     useOccupancyPricing: false,
     occupancyPrices: {} as Record<number, number>,
   });
+
+  const [bookedDates, setBookedDates] = useState<Date[]>([]);
+  const [rangeStart, setRangeStart] = useState<Date | null>(null);
+  const [hoverDate, setHoverDate] = useState<Date | null>(null);
+
+  // Récupération des dates déjà réservées (si applicable)
+  useEffect(() => {
+    const fetchBookings = async () => {
+      // Note: Dans le cas d'un onboarding pur, listingId n'existe pas encore.
+      // Cette logique est prête pour le cas d'une édition ou si un listingId est fourni.
+      // @ts-ignore - On pourrait passer l'id du listing en prop si disponible
+      const currentListingId = (formData as any).id || null; 
+      if (!currentListingId || !db) return;
+
+      try {
+        const q = query(
+          collection(db, "bookings"),
+          where("listingId", "==", currentListingId),
+          where("status", "in", ["approved", "pending_payment", "paid"])
+        );
+        const querySnapshot = await getDocs(q);
+        const allBookedDays: Date[] = [];
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const start = new Date(data.startDate);
+          const end = new Date(data.endDate);
+          
+          // Remplir tous les jours entre start et end
+          let current = new Date(start);
+          while (current <= end) {
+            allBookedDays.push(new Date(current));
+            current.setDate(current.getDate() + 1);
+          }
+        });
+        
+        setBookedDates(allBookedDays);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+      }
+    };
+
+    fetchBookings();
+  }, [formData.id, db]);
 
   const steps = [
     { id: 1, title: t('step_info') },
@@ -408,7 +452,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
           </div>
         )}
 
-        {currentStep === 3 && renderStep3(formData, setFormData, initialCategory, handleAIEnhance, isGenerating, t)}
+        {currentStep === 3 && renderStep3(formData, setFormData, initialCategory, handleAIEnhance, isGenerating, t, bookedDates, rangeStart, setRangeStart, hoverDate, setHoverDate)}
         
         {currentStep === 4 && (
           <div className="space-y-10">
@@ -572,7 +616,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
   );
 }
 
-function renderStep3(formData: any, setFormData: any, category: string, onAI: any, isGen: boolean, t: any) {
+function renderStep3(formData: any, setFormData: any, category: string, onAI: any, isGen: boolean, t: any, bookedDates: Date[], rangeStart: Date | null, setRangeStart: (d: Date | null) => void, hoverDate: Date | null, setHoverDate: (d: Date | null) => void) {
   const toggleAmenity = (id: string) => {
     setFormData((prev: any) => ({
       ...prev,
@@ -637,6 +681,7 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
             </div>
           )}
 
+
           <div className="space-y-4">
             <Label className="font-black text-lg">Équipements & Inclusions *</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-8 bg-white rounded-3xl border border-slate-100 shadow-inner">
@@ -664,6 +709,132 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* SECTION CALENDRIER DE DISPONIBILITÉ */}
+          <div className="space-y-6">
+            <Label className="font-black text-xl text-slate-900 flex items-center gap-2">
+              <CalendarIcon className="h-6 w-6 text-primary" /> Calendrier de disponibilité *
+            </Label>
+            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-slate-50 p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                      Définissez vos périodes de disponibilité par plages de dates. 
+                    </p>
+                    <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
+                       <p className="text-[11px] text-primary font-black uppercase tracking-widest flex items-center gap-2">
+                         <Wand2 className="h-3 w-3" /> Comment faire ?
+                       </p>
+                       <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                         1. Cliquez sur le <strong>début</strong> de votre période.<br/>
+                         2. Cliquez sur la <strong>fin</strong> de la période.<br/>
+                         3. Répétez pour ajouter d'autres plages distinctes.
+                       </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {formData.availableDates.length > 0 ? (
+                      formData.availableDates.sort((a: Date, b: Date) => a.getTime() - b.getTime()).slice(0, 8).map((date: Date, idx: number) => (
+                        <Badge key={idx} variant="secondary" className="bg-white border-slate-200 text-slate-700 px-3 py-2 rounded-xl font-bold flex items-center gap-2 shadow-sm animate-in fade-in zoom-in-95">
+                          {format(date, "dd MMM", { locale: fr })}
+                          <X className="h-3.5 w-3.5 cursor-pointer text-red-400 hover:text-red-600 transition-colors" onClick={() => setFormData({...formData, availableDates: formData.availableDates.filter((d: any) => d.getTime() !== date.getTime())})} />
+                        </Badge>
+                      ))
+                    ) : (
+                      <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl w-full">
+                        <p className="text-xs font-bold text-amber-600 flex items-center gap-2">
+                          <Info className="h-4 w-4" /> Aucun jour sélectionné. Votre bien ne sera pas visible.
+                        </p>
+                      </div>
+                    )}
+                    {formData.availableDates.length > 8 && (
+                      <Badge variant="outline" className="px-3 py-2 rounded-xl font-bold border-slate-200 bg-white">
+                        + {formData.availableDates.length - 8} autres jours
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Légende */}
+                  <div className="pt-6 space-y-3 border-t border-slate-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 bg-primary rounded-full shadow-sm" />
+                      <span className="text-[10px] font-black uppercase text-slate-500">Disponible (Votre choix)</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 bg-slate-200 rounded-full" />
+                      <span className="text-[10px] font-black uppercase text-slate-400">Non mis en location</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 bg-red-100 border border-red-200 rounded-full relative overflow-hidden">
+                        <div className="absolute inset-0 bg-red-400/20" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase text-red-400">Période déjà réservée (Indisponible)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-white flex justify-center w-full max-w-[350px] mx-auto relative">
+                  <Calendar
+                    mode="multiple"
+                    selected={formData.availableDates}
+                    onDayClick={(day) => {
+                      const date = startOfDay(day);
+                      if (!rangeStart) {
+                        setRangeStart(date);
+                        // Ajouter le jour cliqué
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          availableDates: [...prev.availableDates.filter((d: Date) => !isSameDay(d, date)), date]
+                        }));
+                      } else {
+                        const start = rangeStart < date ? rangeStart : date;
+                        const end = rangeStart < date ? date : rangeStart;
+                        const intervalDates = eachDayOfInterval({ start, end });
+                        
+                        setFormData((prev: any) => {
+                          const existingTimestamps = new Set(prev.availableDates.map((d: Date) => startOfDay(d).getTime()));
+                          intervalDates.forEach(d => existingTimestamps.add(startOfDay(d).getTime()));
+                          return {
+                            ...prev,
+                            availableDates: Array.from(existingTimestamps).map(t => new Date(t as number))
+                          };
+                        });
+                        setRangeStart(null);
+                      }
+                    }}
+                    onDayMouseEnter={(day) => rangeStart && setHoverDate(startOfDay(day))}
+                    onDayMouseLeave={() => setHoverDate(null)}
+                    locale={fr}
+                    disabled={[
+                      { before: new Date() },
+                      ...bookedDates.map(d => ({ from: d, to: d })) // Désactiver les dates réservées
+                    ]}
+                    modifiers={{
+                      rangeStart: rangeStart ? [rangeStart] : [],
+                      rangeHover: (date) => {
+                        if (!rangeStart || !hoverDate) return false;
+                        const start = rangeStart < hoverDate ? rangeStart : hoverDate;
+                        const end = rangeStart < hoverDate ? hoverDate : rangeStart;
+                        return date >= start && date <= end;
+                      }
+                    }}
+                    modifiersClassNames={{
+                      rangeStart: "ring-2 ring-primary ring-offset-2 scale-110",
+                      rangeHover: "bg-primary/20",
+                    }}
+                    className="border-none p-0"
+                    numberOfMonths={1}
+                    classNames={{
+                      button_previous: "absolute left-4",
+                      button_next: "absolute right-4",
+                    }}
+                  />
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
       )}
@@ -754,9 +925,19 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
             <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-slate-50 p-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                 <div className="space-y-6">
-                  <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                    Sélectionnez les <strong>dates de début</strong> du circuit. Le système affichera automatiquement la plage complète de {formData.duration} aux clients.
-                  </p>
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                      Sélectionnez les dates de départ disponibles pour ce circuit.
+                    </p>
+                    <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
+                       <p className="text-[11px] text-primary font-black uppercase tracking-widest flex items-center gap-2">
+                         <Wand2 className="h-3 w-3" /> Sélection rapide
+                       </p>
+                       <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                         Cliquez sur deux dates pour sélectionner tout l'intervalle d'un coup.
+                       </p>
+                    </div>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {formData.availableDates.length > 0 ? (
                       formData.availableDates.sort((a: Date, b: Date) => a.getTime() - b.getTime()).map((date: Date, idx: number) => (
@@ -774,20 +955,59 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
                     )}
                   </div>
                 </div>
-                <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-white flex justify-center">
+                <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-white flex justify-center w-full max-w-[350px] mx-auto relative">
                   <Calendar
                     mode="multiple"
                     selected={formData.availableDates}
-                    onSelect={(dates) => {
-                      const newDates = dates || [];
-                      setFormData((prev: any) => ({
-                        ...prev,
-                        availableDates: newDates
-                      }));
+                    onDayClick={(day) => {
+                      const date = startOfDay(day);
+                      if (!rangeStart) {
+                        setRangeStart(date);
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          availableDates: [...prev.availableDates.filter((d: Date) => !isSameDay(d, date)), date]
+                        }));
+                      } else {
+                        const start = rangeStart < date ? rangeStart : date;
+                        const end = rangeStart < date ? date : rangeStart;
+                        const intervalDates = eachDayOfInterval({ start, end });
+                        
+                        setFormData((prev: any) => {
+                          const existingTimestamps = new Set(prev.availableDates.map((d: Date) => startOfDay(d).getTime()));
+                          intervalDates.forEach(d => existingTimestamps.add(startOfDay(d).getTime()));
+                          return {
+                            ...prev,
+                            availableDates: Array.from(existingTimestamps).map(t => new Date(t as number))
+                          };
+                        });
+                        setRangeStart(null);
+                      }
                     }}
+                    onDayMouseEnter={(day) => rangeStart && setHoverDate(startOfDay(day))}
+                    onDayMouseLeave={() => setHoverDate(null)}
                     locale={fr}
-                    disabled={{ before: new Date() }}
+                    disabled={[
+                      { before: new Date() },
+                      ...bookedDates.map(d => ({ from: d, to: d }))
+                    ]}
+                    modifiers={{
+                      rangeStart: rangeStart ? [rangeStart] : [],
+                      rangeHover: (date) => {
+                        if (!rangeStart || !hoverDate) return false;
+                        const start = rangeStart < hoverDate ? rangeStart : hoverDate;
+                        const end = rangeStart < hoverDate ? hoverDate : rangeStart;
+                        return date >= start && date <= end;
+                      }
+                    }}
+                    modifiersClassNames={{
+                      rangeStart: "ring-2 ring-primary ring-offset-2 scale-110",
+                      rangeHover: "bg-primary/20",
+                    }}
                     className="border-none p-0"
+                    classNames={{
+                      button_previous: "absolute left-4",
+                      button_next: "absolute right-4",
+                    }}
                   />
                 </div>
               </div>

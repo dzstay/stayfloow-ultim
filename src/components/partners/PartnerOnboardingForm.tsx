@@ -31,7 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { OnboardingMap } from '@/components/onboarding-map';
 import { useLanguage } from '@/context/language-context';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, eachDayOfInterval, isSameDay, startOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ReCAPTCHA from "react-google-recaptcha";
 import { sendWelcomeEmailAction, sendAdminNewListingNotificationAction } from "@/app/actions/mail";
@@ -149,6 +149,8 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
   });
 
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
+  const [rangeStart, setRangeStart] = useState<Date | null>(null);
+  const [hoverDate, setHoverDate] = useState<Date | null>(null);
 
   // Récupération des dates déjà réservées (si applicable)
   useEffect(() => {
@@ -449,7 +451,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
           </div>
         )}
 
-        {currentStep === 3 && renderStep3(formData, setFormData, initialCategory, handleAIEnhance, isGenerating, t, bookedDates)}
+        {currentStep === 3 && renderStep3(formData, setFormData, initialCategory, handleAIEnhance, isGenerating, t, bookedDates, rangeStart, setRangeStart, hoverDate, setHoverDate)}
         
         {currentStep === 4 && (
           <div className="space-y-10">
@@ -613,7 +615,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
   );
 }
 
-function renderStep3(formData: any, setFormData: any, category: string, onAI: any, isGen: boolean, t: any, bookedDates: Date[]) {
+function renderStep3(formData: any, setFormData: any, category: string, onAI: any, isGen: boolean, t: any, bookedDates: Date[], rangeStart: Date | null, setRangeStart: (d: Date | null) => void, hoverDate: Date | null, setHoverDate: (d: Date | null) => void) {
   const toggleAmenity = (id: string) => {
     setFormData((prev: any) => ({
       ...prev,
@@ -716,13 +718,20 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
             <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-slate-50 p-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                 <div className="space-y-6">
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                      Sélectionnez les jours où votre hébergement est disponible à la location. 
+                      Définissez vos périodes de disponibilité par plages de dates. 
                     </p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                      Astuce : Cliquez sur les jours pour les activer ou les désactiver.
-                    </p>
+                    <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
+                       <p className="text-[11px] text-primary font-black uppercase tracking-widest flex items-center gap-2">
+                         <Wand2 className="h-3 w-3" /> Comment faire ?
+                       </p>
+                       <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                         1. Cliquez sur le <strong>début</strong> de votre période.<br/>
+                         2. Cliquez sur la <strong>fin</strong> de la période.<br/>
+                         3. Répétez pour ajouter d'autres plages distinctes.
+                       </p>
+                    </div>
                   </div>
                   
                   <div className="flex flex-wrap gap-2">
@@ -770,17 +779,51 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
                   <Calendar
                     mode="multiple"
                     selected={formData.availableDates}
-                    onSelect={(dates) => {
-                      setFormData((prev: any) => ({
-                        ...prev,
-                        availableDates: dates || []
-                      }));
+                    onDayClick={(day) => {
+                      const date = startOfDay(day);
+                      if (!rangeStart) {
+                        setRangeStart(date);
+                        // Ajouter le jour cliqué
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          availableDates: [...prev.availableDates.filter((d: Date) => !isSameDay(d, date)), date]
+                        }));
+                      } else {
+                        const start = rangeStart < date ? rangeStart : date;
+                        const end = rangeStart < date ? date : rangeStart;
+                        const intervalDates = eachDayOfInterval({ start, end });
+                        
+                        setFormData((prev: any) => {
+                          const existingTimestamps = new Set(prev.availableDates.map((d: Date) => startOfDay(d).getTime()));
+                          intervalDates.forEach(d => existingTimestamps.add(startOfDay(d).getTime()));
+                          return {
+                            ...prev,
+                            availableDates: Array.from(existingTimestamps).map(t => new Date(t as number))
+                          };
+                        });
+                        setRangeStart(null);
+                      }
                     }}
+                    onDayMouseEnter={(day) => rangeStart && setHoverDate(startOfDay(day))}
+                    onDayMouseLeave={() => setHoverDate(null)}
                     locale={fr}
                     disabled={[
                       { before: new Date() },
                       ...bookedDates.map(d => ({ from: d, to: d })) // Désactiver les dates réservées
                     ]}
+                    modifiers={{
+                      rangeStart: rangeStart ? [rangeStart] : [],
+                      rangeHover: (date) => {
+                        if (!rangeStart || !hoverDate) return false;
+                        const start = rangeStart < hoverDate ? rangeStart : hoverDate;
+                        const end = rangeStart < hoverDate ? hoverDate : rangeStart;
+                        return date >= start && date <= end;
+                      }
+                    }}
+                    modifiersClassNames={{
+                      rangeStart: "ring-2 ring-primary ring-offset-2 scale-110",
+                      rangeHover: "bg-primary/20",
+                    }}
                     className="border-none p-0"
                     numberOfMonths={1}
                     classNames={{
@@ -881,9 +924,19 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
             <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-slate-50 p-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                 <div className="space-y-6">
-                  <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                    Sélectionnez les <strong>dates de début</strong> du circuit. Le système affichera automatiquement la plage complète de {formData.duration} aux clients.
-                  </p>
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                      Sélectionnez les dates de départ disponibles pour ce circuit.
+                    </p>
+                    <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
+                       <p className="text-[11px] text-primary font-black uppercase tracking-widest flex items-center gap-2">
+                         <Wand2 className="h-3 w-3" /> Sélection rapide
+                       </p>
+                       <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                         Cliquez sur deux dates pour sélectionner tout l'intervalle d'un coup.
+                       </p>
+                    </div>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {formData.availableDates.length > 0 ? (
                       formData.availableDates.sort((a: Date, b: Date) => a.getTime() - b.getTime()).map((date: Date, idx: number) => (
@@ -905,18 +958,50 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
                   <Calendar
                     mode="multiple"
                     selected={formData.availableDates}
-                    onSelect={(dates) => {
-                      const newDates = dates || [];
-                      setFormData((prev: any) => ({
-                        ...prev,
-                        availableDates: newDates
-                      }));
+                    onDayClick={(day) => {
+                      const date = startOfDay(day);
+                      if (!rangeStart) {
+                        setRangeStart(date);
+                        setFormData((prev: any) => ({
+                          ...prev,
+                          availableDates: [...prev.availableDates.filter((d: Date) => !isSameDay(d, date)), date]
+                        }));
+                      } else {
+                        const start = rangeStart < date ? rangeStart : date;
+                        const end = rangeStart < date ? date : rangeStart;
+                        const intervalDates = eachDayOfInterval({ start, end });
+                        
+                        setFormData((prev: any) => {
+                          const existingTimestamps = new Set(prev.availableDates.map((d: Date) => startOfDay(d).getTime()));
+                          intervalDates.forEach(d => existingTimestamps.add(startOfDay(d).getTime()));
+                          return {
+                            ...prev,
+                            availableDates: Array.from(existingTimestamps).map(t => new Date(t as number))
+                          };
+                        });
+                        setRangeStart(null);
+                      }
                     }}
+                    onDayMouseEnter={(day) => rangeStart && setHoverDate(startOfDay(day))}
+                    onDayMouseLeave={() => setHoverDate(null)}
                     locale={fr}
                     disabled={[
                       { before: new Date() },
                       ...bookedDates.map(d => ({ from: d, to: d }))
                     ]}
+                    modifiers={{
+                      rangeStart: rangeStart ? [rangeStart] : [],
+                      rangeHover: (date) => {
+                        if (!rangeStart || !hoverDate) return false;
+                        const start = rangeStart < hoverDate ? rangeStart : hoverDate;
+                        const end = rangeStart < hoverDate ? hoverDate : rangeStart;
+                        return date >= start && date <= end;
+                      }
+                    }}
+                    modifiersClassNames={{
+                      rangeStart: "ring-2 ring-primary ring-offset-2 scale-110",
+                      rangeHover: "bg-primary/20",
+                    }}
                     className="border-none p-0"
                     classNames={{
                       button_previous: "absolute left-4",

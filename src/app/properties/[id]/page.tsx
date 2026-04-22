@@ -1,8 +1,8 @@
 'use client';
 
 import React, { use, useState, useEffect, useRef, useMemo } from 'react';
-import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, collection, query, where, orderBy } from 'firebase/firestore';
 import {
   MapPin, Star, Share2, Heart,
   Wifi, Coffee, Car, Wind, ChevronLeft, ChevronRight, X,
@@ -83,6 +83,35 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     const to = searchParams.get('to');
     if (from && to) setDates({ from: new Date(from), to: new Date(to) });
   }, [searchParams]);
+
+  // 3. Charger les avis pour cet établissement
+  const reviewsRef = useMemoFirebase(() => {
+    return query(
+      collection(db, 'reviews'), 
+      where('listingId', '==', id),
+      where('status', '==', 'published'),
+      orderBy('createdAt', 'desc')
+    );
+  }, [db, id]);
+  const { data: reviews, isLoading: reviewsLoading } = useCollection(reviewsRef);
+
+  const aggregateRating = useMemo(() => {
+    if (!reviews || reviews.length === 0) return { overall: property?.rating || 8.5, count: 0, categories: {} };
+    
+    const count = reviews.length;
+    const overall = reviews.reduce((acc: number, r: any) => acc + (r.overallRating || 0), 0) / count;
+    
+    const cats: any = { staff: 0, facilities: 0, cleanliness: 0, comfort: 0, location: 0 };
+    reviews.forEach((r: any) => {
+      if (r.categories) {
+        Object.keys(cats).forEach(key => cats[key] += (r.categories[key] || 0));
+      }
+    });
+    
+    Object.keys(cats).forEach(key => cats[key] = (cats[key] / count).toFixed(1));
+
+    return { overall: overall.toFixed(1), count, categories: cats };
+  }, [reviews, property]);
 
   const overviewRef = useRef<HTMLDivElement>(null);
   const availabilityRef = useRef<HTMLDivElement>(null);
@@ -198,6 +227,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
           <TabButton active={activeTab === 'availability'} label="Disponibilité" onClick={() => scrollToSection(availabilityRef, 'availability')} />
           <TabButton active={activeTab === 'facilities'} label="Équipements" onClick={() => scrollToSection(facilitiesRef, 'facilities')} />
           <TabButton active={activeTab === 'location'} label="Localisation" onClick={() => scrollToSection(locationRef, 'location')} />
+          <TabButton active={activeTab === 'reviews'} label={`Avis (${aggregateRating.count})`} onClick={() => setActiveCategory('reviews')} />
         </div>
       </div>
 
@@ -235,8 +265,9 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
               <Image src={photos[1] || photos[0]} alt="Stay" fill className="object-cover group-hover:opacity-90 transition-opacity" />
             </div>
             <div className="md:row-span-2 relative bg-primary flex flex-col items-center justify-center text-white p-4">
-              <div className="text-4xl font-black mb-2">{rating.toFixed(1)}</div>
-              <p className="font-bold text-center">Top StayFloow</p>
+              <div className="text-4xl font-black mb-1">{aggregateRating.overall}</div>
+              <p className="font-bold text-center text-xs">Top StayFloow</p>
+              <div className="mt-2 text-[10px] font-medium opacity-80 uppercase tracking-tighter">{aggregateRating.count} avis clients</div>
             </div>
             <div
               className="hidden md:block relative cursor-pointer group"
@@ -325,6 +356,97 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
               ))}
             </div>
           </div>
+        </section>
+
+        {/* SECTION AVIS CLIENTS */}
+        <section className="pt-10 border-t space-y-10">
+           <div className="flex flex-col md:flex-row justify-between items-baseline gap-4">
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Ce qu'en disent les voyageurs</h2>
+              <div className="flex items-center gap-3">
+                <div className="bg-primary text-white text-2xl font-black px-4 py-2 rounded-2xl shadow-lg shadow-primary/20">{aggregateRating.overall}</div>
+                <div>
+                   <p className="font-black text-slate-900 leading-tight">Exceptionnel</p>
+                   <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{aggregateRating.count} avis certifiés</p>
+                </div>
+              </div>
+           </div>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                { label: 'Personnel', key: 'staff' },
+                { label: 'Équipements', key: 'facilities' },
+                { label: 'Propreté', key: 'cleanliness' },
+                { label: 'Confort', key: 'comfort' },
+                { label: 'Rapport qualité/prix', key: 'value' },
+                { label: 'Situation géographique', key: 'location' }
+              ].map((c) => (
+                <div key={c.key} className="space-y-2">
+                   <div className="flex justify-between text-sm font-black text-slate-700">
+                      <span>{c.label}</span>
+                      <span>{(aggregateRating.categories as any)[c.key] || '8.5'}</span>
+                   </div>
+                   <Progress value={(parseFloat((aggregateRating.categories as any)[c.key] || '8.5') / 4) * 100} className="h-1.5 bg-slate-100" />
+                </div>
+              ))}
+           </div>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+              {reviews?.map((r: any) => (
+                <Card key={r.id} className="border-none shadow-xl rounded-3xl p-8 bg-white hover:scale-[1.01] transition-transform">
+                   <div className="flex justify-between items-start mb-6">
+                      <div className="flex items-center gap-4">
+                         <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-primary font-black text-xl">
+                            {r.customerName?.charAt(0) || 'C'}
+                         </div>
+                         <div>
+                            <h4 className="font-black text-slate-900">{r.customerName}</h4>
+                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">
+                               Voyage en {r.transport || 'voiture'} • {format(new Date(r.createdAt), 'MMMM yyyy', { locale: fr })}
+                            </p>
+                         </div>
+                      </div>
+                      <div className="bg-primary/10 text-primary font-black px-3 py-1 rounded-lg text-lg">
+                         {r.overallRating}
+                      </div>
+                   </div>
+
+                   <h5 className="font-black text-lg text-slate-800 mb-4 italic leading-tight">"{r.commentSummary}"</h5>
+                   
+                   <div className="space-y-3">
+                      {r.commentLikes && (
+                        <div className="flex gap-3 text-sm font-medium text-slate-600">
+                           <ThumbsUp className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                           <p>{r.commentLikes}</p>
+                        </div>
+                      )}
+                      {r.commentDislikes && (
+                        <div className="flex gap-3 text-sm font-medium text-slate-500">
+                           <ThumbsDown className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+                           <p>{r.commentDislikes}</p>
+                        </div>
+                      )}
+                   </div>
+
+                   {r.photos && r.photos.length > 0 && (
+                     <div className="flex gap-2 mt-6 overflow-x-auto pb-2 no-scrollbar">
+                        {r.photos.map((p: string, i: number) => (
+                          <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-slate-100">
+                             <Image src={p} alt="Review" fill className="object-cover" />
+                          </div>
+                        ))}
+                     </div>
+                   )}
+                </Card>
+              ))}
+
+              {(!reviews || reviews.length === 0) && (
+                <div className="md:col-span-2 py-20 text-center bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
+                   <MessageSquare className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                   <h4 className="font-black text-slate-400 uppercase tracking-widest">Aucun avis pour le moment</h4>
+                   <p className="text-xs text-slate-400 mt-2">Soyez le premier à donner votre avis après votre séjour !</p>
+                </div>
+              )}
+           </div>
         </section>
       </main>
 

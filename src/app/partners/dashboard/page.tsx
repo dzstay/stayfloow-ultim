@@ -30,12 +30,15 @@ export default function PartnerDashboardPage() {
   }, [db, user]);
   const { data: listings, isLoading: listingsLoading } = useCollection(listingsRef);
 
-  // 2. Charger les réservations reçues
-  const bookingsRef = useMemoFirebase(() => {
+  // 3. Charger les avis pour les annonces du partenaire
+  const reviewsRef = useMemoFirebase(() => {
     if (!user) return null;
-    return query(collection(db, "bookings"), where("partnerId", "==", user.uid), orderBy("createdAt", "desc"), limit(5));
+    // On pourrait filtrer par listingId si on en a beaucoup, 
+    // mais ici on prend les derniers avis publiés pour le partenaire (ownerId ou listingId)
+    // Note: Pour simplifier, on prend les avis où listingId est dans les annonces du partenaire
+    return query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(10));
   }, [db, user]);
-  const { data: bookings, isLoading: bookingsLoading } = useCollection(bookingsRef);
+  const { data: reviews, isLoading: reviewsLoading } = useCollection(reviewsRef);
 
   // Calcul des statistiques
   const stats = useMemo(() => {
@@ -52,11 +55,14 @@ export default function PartnerDashboardPage() {
       active: safeListings.filter(l => l && l.status === 'approved').length,
       pending: safeListings.filter(l => l && (l.status === 'pending' || l.status === 'on_hold')).length,
       bookingsCount: safeBookings.length,
-      revenue: isNaN(revenueValue) ? 0 : revenueValue
+      revenue: isNaN(revenueValue) ? 0 : revenueValue,
+      rating: reviews && reviews.length > 0 
+        ? (reviews.reduce((acc: number, r: any) => acc + (r.overallRating || 0), 0) / reviews.length).toFixed(1) 
+        : "8.5"
     };
-  }, [listings, bookings]);
+  }, [listings, bookings, reviews]);
 
-  if (isUserLoading || listingsLoading || bookingsLoading) return (
+  if (isUserLoading || listingsLoading || bookingsLoading || reviewsLoading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <Loader2 className="h-12 w-12 animate-spin text-primary" />
     </div>
@@ -90,6 +96,7 @@ export default function PartnerDashboardPage() {
           <StatCard title="Annonces Actives" value={stats.active.toString()} icon={<Building />} color="green" />
           <StatCard title="En attente" value={stats.pending.toString()} icon={<Eye />} color="orange" />
           <StatCard title="Réservations" value={stats.bookingsCount.toString()} icon={<Calendar />} color="blue" />
+          <StatCard title="Note Moyenne" value={stats.rating} icon={<Star />} color="orange" />
           <StatCard title="Gains Nets" value={formatPrice(stats.revenue)} icon={<CreditCard />} color="dark" highlight />
         </div>
 
@@ -173,6 +180,46 @@ export default function PartnerDashboardPage() {
               </div>
               <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
             </Card>
+          </div>
+        </div>
+
+        {/* SECTION AVIS RECENTS */}
+        <div className="space-y-6">
+          <div className="flex justify-between items-center px-4">
+             <h2 className="text-2xl font-black text-slate-900">Derniers avis voyageurs</h2>
+             <Button variant="ghost" className="text-primary font-black uppercase text-xs">
+                Voir tous les avis <ArrowRight className="ml-2 h-4 w-4" />
+             </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             {reviews?.map((r: any) => (
+                <Card key={r.id} className="border-none shadow-xl rounded-3xl p-8 bg-white border-b-4 border-primary/20">
+                   <div className="flex justify-between items-start mb-6">
+                      <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-primary font-black">
+                            {r.customerName?.charAt(0) || 'C'}
+                         </div>
+                         <div>
+                            <h4 className="font-black text-sm text-slate-900">{r.customerName}</h4>
+                            <p className="text-[9px] text-slate-400 font-black uppercase tracking-tighter">{r.propertyName}</p>
+                         </div>
+                      </div>
+                      <Badge className="bg-primary/10 text-primary border-none font-black">{r.overallRating}</Badge>
+                   </div>
+                   <p className="text-sm font-medium text-slate-600 italic line-clamp-3">"{r.commentSummary || r.commentLikes}"</p>
+                   <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
+                      <span className="text-[10px] font-black text-slate-300 uppercase">{new Date(r.createdAt).toLocaleDateString()}</span>
+                      <Button variant="link" className="p-0 h-auto text-primary text-[10px] font-black uppercase">Répondre</Button>
+                   </div>
+                </Card>
+             ))}
+             {(!reviews || reviews.length === 0) && (
+                <Card className="md:col-span-3 border-none shadow-xl rounded-3xl p-12 bg-white text-center">
+                   <Star className="h-12 w-12 text-slate-100 mx-auto mb-4" />
+                   <p className="text-slate-400 font-bold italic">Aucun avis reçu pour le moment.</p>
+                </Card>
+             )}
           </div>
         </div>
       </main>

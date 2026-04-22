@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { generatePartnerDescription } from '@/ai/flows/partner-description-generator';
-import { doc, collection, setDoc } from 'firebase/firestore';
+import { doc, collection, setDoc, query, where, getDocs } from 'firebase/firestore';
 import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { optimizeImage } from '@/lib/image-optimizer';
 import { useToast } from '@/hooks/use-toast';
@@ -147,6 +147,48 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     useOccupancyPricing: false,
     occupancyPrices: {} as Record<number, number>,
   });
+
+  const [bookedDates, setBookedDates] = useState<Date[]>([]);
+
+  // Récupération des dates déjà réservées (si applicable)
+  useEffect(() => {
+    const fetchBookings = async () => {
+      // Note: Dans le cas d'un onboarding pur, listingId n'existe pas encore.
+      // Cette logique est prête pour le cas d'une édition ou si un listingId est fourni.
+      // @ts-ignore - On pourrait passer l'id du listing en prop si disponible
+      const currentListingId = formData.id || null; 
+      if (!currentListingId) return;
+
+      try {
+        const q = query(
+          collection(db, "bookings"),
+          where("listingId", "==", currentListingId),
+          where("status", "in", ["approved", "pending_payment", "paid"])
+        );
+        const querySnapshot = await getDocs(q);
+        const allBookedDays: Date[] = [];
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const start = new Date(data.startDate);
+          const end = new Date(data.endDate);
+          
+          // Remplir tous les jours entre start et end
+          let current = new Date(start);
+          while (current <= end) {
+            allBookedDays.push(new Date(current));
+            current.setDate(current.getDate() + 1);
+          }
+        });
+        
+        setBookedDates(allBookedDays);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+      }
+    };
+
+    fetchBookings();
+  }, [formData.id, db]);
 
   const steps = [
     { id: 1, title: t('step_info') },
@@ -637,6 +679,7 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
             </div>
           )}
 
+
           <div className="space-y-4">
             <Label className="font-black text-lg">Équipements & Inclusions *</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-8 bg-white rounded-3xl border border-slate-100 shadow-inner">
@@ -664,6 +707,87 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* SECTION CALENDRIER DE DISPONIBILITÉ */}
+          <div className="space-y-6">
+            <Label className="font-black text-xl text-slate-900 flex items-center gap-2">
+              <CalendarIcon className="h-6 w-6 text-primary" /> Calendrier de disponibilité *
+            </Label>
+            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-slate-50 p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                      Sélectionnez les jours où votre hébergement est disponible à la location. 
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                      Astuce : Cliquez sur les jours pour les activer ou les désactiver.
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {formData.availableDates.length > 0 ? (
+                      formData.availableDates.sort((a: Date, b: Date) => a.getTime() - b.getTime()).slice(0, 8).map((date: Date, idx: number) => (
+                        <Badge key={idx} variant="secondary" className="bg-white border-slate-200 text-slate-700 px-3 py-2 rounded-xl font-bold flex items-center gap-2 shadow-sm animate-in fade-in zoom-in-95">
+                          {format(date, "dd MMM", { locale: fr })}
+                          <X className="h-3.5 w-3.5 cursor-pointer text-red-400 hover:text-red-600 transition-colors" onClick={() => setFormData({...formData, availableDates: formData.availableDates.filter((d: any) => d.getTime() !== date.getTime())})} />
+                        </Badge>
+                      ))
+                    ) : (
+                      <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl w-full">
+                        <p className="text-xs font-bold text-amber-600 flex items-center gap-2">
+                          <Info className="h-4 w-4" /> Aucun jour sélectionné. Votre bien ne sera pas visible.
+                        </p>
+                      </div>
+                    )}
+                    {formData.availableDates.length > 8 && (
+                      <Badge variant="outline" className="px-3 py-2 rounded-xl font-bold border-slate-200 bg-white">
+                        + {formData.availableDates.length - 8} autres jours
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Légende */}
+                  <div className="pt-6 space-y-3 border-t border-slate-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 bg-primary rounded-full shadow-sm" />
+                      <span className="text-[10px] font-black uppercase text-slate-500">Disponible (Votre choix)</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 bg-slate-200 rounded-full" />
+                      <span className="text-[10px] font-black uppercase text-slate-400">Non mis en location</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 bg-red-100 border border-red-200 rounded-full relative overflow-hidden">
+                        <div className="absolute inset-0 bg-red-400/20" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase text-red-400">Période déjà réservée (Indisponible)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-white flex justify-center">
+                  <Calendar
+                    mode="multiple"
+                    selected={formData.availableDates}
+                    onSelect={(dates) => {
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        availableDates: dates || []
+                      }));
+                    }}
+                    locale={fr}
+                    disabled={[
+                      { before: new Date() },
+                      ...bookedDates.map(d => ({ from: d, to: d })) // Désactiver les dates réservées
+                    ]}
+                    className="border-none p-0"
+                    numberOfMonths={1}
+                  />
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
       )}

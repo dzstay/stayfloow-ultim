@@ -50,10 +50,10 @@ import { Suspense } from 'react';
 const placeholderImg = "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80";
 
 export default function PropertyPage({ params }: { params: any }) {
-  const resolvedParams = use(params as Promise<any>);
+  const resolvedParams = React.use(params);
   const id = resolvedParams?.id;
   
-  if (!id) return null;
+  if (!id) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
 
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>}>
@@ -462,9 +462,14 @@ function PropertyPageContent({ id }: { id: string }) {
                     {r.photos && r.photos.length > 0 && (
                       <div className="flex gap-2 mt-6 overflow-x-auto pb-2 no-scrollbar">
                           {r.photos.map((p: string, i: number) => (
-                            <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-slate-100">
-                                <Image src={p || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80"} alt="Review" fill className="object-cover" />
-                            </div>
+                             <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-slate-100">
+                                <Image 
+                                  src={typeof p === 'string' && p ? p : "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80"} 
+                                  alt="Review" 
+                                  fill 
+                                  className="object-cover" 
+                                />
+                             </div>
                           ))}
                       </div>
                     )}

@@ -1,5 +1,5 @@
 import { HomeClient } from '@/components/home-client';
-import { adminDb } from '@/firebase/admin';
+import { getAdminDb } from '@/firebase/admin';
 
 /**
  * Page racine de StayFloow.com (Version Locale Master).
@@ -9,8 +9,9 @@ export default async function Home() {
   let siteConfig = null;
 
   try {
-    if (adminDb) {
-      const configSnap = await adminDb.collection("settings").doc("siteConfig").get();
+    const db = getAdminDb();
+    if (db) {
+      const configSnap = await db.collection("settings").doc("siteConfig").get();
       if (configSnap.exists) {
         siteConfig = configSnap.data();
       }

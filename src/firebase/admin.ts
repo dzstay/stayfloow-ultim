@@ -39,9 +39,10 @@ export const getAdminAuth = () => {
   }
 };
 
-// Keep old exports for compatibility
+// Keep old exports as functions for maximum safety in Next.js 15
 export const adminDb = typeof window === 'undefined' ? getAdminDb() : null;
 export const adminAuth = typeof window === 'undefined' ? getAdminAuth() : null;
 export const adminApp = typeof window === 'undefined' ? getAdminApp() : null;
+
 
 

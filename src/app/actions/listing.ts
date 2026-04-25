@@ -1,6 +1,6 @@
 'use server';
 
-import { adminDb } from '@/firebase/admin';
+import { getAdminDb } from '@/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 /**
@@ -40,8 +40,11 @@ export async function createListingAction(data: ListingData) {
   try {
     if (!data.id) throw new Error("ID de l'annonce manquant");
 
+    const db = getAdminDb();
+    if (!db) throw new Error("Service de base de données indisponible");
+
     // Référence au document dans la collection 'listings'
-    const docRef = adminDb.collection('listings').doc(data.id);
+    const docRef = db.collection('listings').doc(data.id);
 
     // Enregistrement des données
     await docRef.set({

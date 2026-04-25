@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, use, Suspense, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, Suspense, useEffect } from "react";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useDoc, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { doc, collection, addDoc } from "firebase/firestore";
 import { useForm } from "react-hook-form";
@@ -323,11 +323,12 @@ function PropertyBookingContent({ id }: { id: string }) {
   );
 }
 
-export default function PropertyBookingPage({ params }: { params: any }) {
-  const resolvedParams = React.use(params);
-  const id = resolvedParams?.id;
+export default function PropertyBookingPage() {
+  const params = useParams();
+  const id = params?.id as string;
   
-  if (!id) return <div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary h-10 w-10" /></div>;
+  if (!id) return null;
+
   return (
     <Suspense fallback={<div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary h-10 w-10" /></div>}>
       <PropertyBookingContent id={id} />

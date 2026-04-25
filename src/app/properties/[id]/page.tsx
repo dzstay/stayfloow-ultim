@@ -36,7 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useCurrency } from '@/context/currency-context';
 import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
@@ -49,11 +49,11 @@ import { Suspense } from 'react';
 
 const placeholderImg = "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80";
 
-export default function PropertyPage({ params }: { params: any }) {
-  const resolvedParams = React.use(params);
-  const id = resolvedParams?.id;
+export default function PropertyPage() {
+  const params = useParams();
+  const id = params?.id as string;
   
-  if (!id) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
+  if (!id) return null;
 
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>}>
@@ -243,7 +243,7 @@ function PropertyPageContent({ id }: { id: string }) {
   if (!property) return <div className="min-h-screen flex items-center justify-center text-slate-400 font-bold">Établissement introuvable.</div>;
 
   const photos = property.photos || property.images || [];
-  const propertyName = property.details?.name || property.name;
+  const propertyName = property.details?.name || property.name || "Hébergement";
   const rating = property.rating || 8.5;
   const placeholderImg = 'https://picsum.photos/seed/stay/800/600';
 
@@ -432,9 +432,9 @@ function PropertyPageContent({ id }: { id: string }) {
                           </div>
                           <div>
                               <h4 className="font-black text-slate-900">{r.customerName || 'Voyageur StayFloow'}</h4>
-                              <p className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">
-                                Voyage en {r.transport || 'voiture'} • {format(safeDate, 'MMMM yyyy', { locale: fr })}
-                              </p>
+                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">
+                                  Voyage en {r.transport || 'voiture'} • {safeDate instanceof Date && !isNaN(safeDate.getTime()) ? format(safeDate, 'MMMM yyyy', { locale: fr }) : "Date inconnue"}
+                                </p>
                           </div>
                         </div>
                         <div className="bg-primary/10 text-primary font-black px-3 py-1 rounded-lg text-lg">

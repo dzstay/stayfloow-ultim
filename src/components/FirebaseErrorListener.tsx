@@ -31,7 +31,8 @@ export function FirebaseErrorListener() {
 
   // On re-render, if an error exists in state, throw it.
   if (error) {
-    throw error;
+    console.error("[STAYFLOOW FIREBASE ERROR]", error);
+    // throw error; // Temporairement désactivé pour éviter de faire planter tout le site sur une erreur d'avis
   }
 
   // This component renders nothing.

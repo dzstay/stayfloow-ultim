@@ -112,8 +112,7 @@ function PropertyPageContent({ id }: { id: string }) {
     return query(
       collection(db, 'reviews'), 
       where('listingId', '==', id),
-      where('status', '==', 'published'),
-      orderBy('createdAt', 'desc')
+      where('status', '==', 'published')
     );
   }, [db, id]);
   const { data: reviews, isLoading: reviewsLoading } = useCollection(reviewsRef);

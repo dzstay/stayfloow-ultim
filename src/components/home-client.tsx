@@ -28,31 +28,32 @@ const PersonalizedRecommendations = dynamic(() => import('@/components/personali
   loading: () => <div className="space-y-12 py-12"><Skeleton className="w-full h-[300px]" /><Skeleton className="w-full h-[300px]" /></div>
 });
 
-export function HomeClient() {
+export function HomeClient({ initialSiteConfig }: { initialSiteConfig?: any }) {
   const { t } = useLanguage();
   const { formatPrice } = useCurrency();
   const db = useFirestore();
   const [isClient, setIsClient] = useState(false);
   const searchParams = useSearchParams();
 
-  // Récupération de la configuration du site pour le texte Hero
+  // On utilise les données SSR en priorité, puis le hook client
   const configRef = useMemoFirebase(() => doc(db, "settings", "siteConfig"), [db]);
-  const { data: siteConfig } = useDoc(configRef);
+  const { data: siteConfigClient } = useDoc(configRef);
+  const siteConfig = siteConfigClient || initialSiteConfig;
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   // On récupère les paramètres de recherche actuels pour les transmettre aux liens
-  const currentParams = searchParams.toString();
+  const currentParams = typeof window !== 'undefined' ? searchParams.toString() : '';
 
   const visibleProps = useMemo(() => {
-    if (!isClient) return properties;
+    if (typeof window === 'undefined') return properties;
     const hiddenMocks = JSON.parse(localStorage.getItem('stayfloow_hidden_mocks') || '[]');
     return properties.filter(p => !hiddenMocks.includes(p.id));
-  }, [isClient]);
+  }, []); // On ne dépend plus de isClient pour le premier rendu
 
-  // Calcul dynamique des hébergements par type
+  // ... (counts logic same)
   const counts = useMemo(() => {
     return {
       hotel: visibleProps.filter(p => p.type.toLowerCase().includes('hôtel') || p.type.toLowerCase().includes('riad')).length,
@@ -92,8 +93,6 @@ export function HomeClient() {
   ];
 
   const uniqueStays = visibleProps.slice(0, 4);
-
-  if (!isClient) return <div className="min-h-screen bg-slate-50 animate-pulse" />;
 
   // Textes dynamiques ou par défaut
   const displayHeroTitle = siteConfig?.heroTitle || t("hero_title");

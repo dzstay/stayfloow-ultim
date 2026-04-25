@@ -9,6 +9,7 @@ import { ChatLoader } from '@/components/chat-loader';
 import ClientProviders from '@/components/client-providers';
 import StructuredData from '@/components/structured-data';
 import { GoogleTranslate } from '@/components/google-translate';
+import { getLocaleServer } from '@/lib/i18n-server';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -43,7 +44,7 @@ export const metadata: Metadata = {
     description: 'La garantie de trouver le meilleur hébergement, véhicule ou circuit pour vos prochaines vacances. Réservez ou devenez partenaire officiel.',
     images: [
       {
-        url: 'https://www.stayfloow.com/logo.png', // Fallback to their likely logo or high res
+        url: 'https://www.stayfloow.com/logo.png',
         width: 1200,
         height: 630,
         alt: 'Plateforme StayFloow',
@@ -54,7 +55,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'StayFloow.com | Réservez votre séjour en Afrique',
     description: 'Hôtels, Voitures et Circuits aux meilleurs prix.',
-    images: ['https://picsum.photos/seed/stayfloow-twitter/1200/630'],
+    images: ['https://www.stayfloow.com/logo.png'],
   },
   robots: {
     index: true,
@@ -77,13 +78,15 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocaleServer();
+
   return (
-    <html lang="fr" suppressHydrationWarning className={inter.variable}>
+    <html lang={locale} suppressHydrationWarning className={inter.variable}>
       <head>
         <StructuredData />
         <link rel="preconnect" href="https://images.unsplash.com" />
@@ -110,7 +113,7 @@ export default function RootLayout({
       <body className="font-body antialiased bg-background min-h-screen flex flex-col overflow-x-hidden" suppressHydrationWarning>
         <GoogleTranslate />
         <FirebaseClientProvider>
-          <ClientProviders>
+          <ClientProviders initialLocale={locale}>
             <Header />
             <div className="flex-grow">
               {children}

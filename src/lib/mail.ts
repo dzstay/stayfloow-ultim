@@ -212,3 +212,34 @@ export const sendPartnerListingStatusUpdate = async (data: any) => {
   return triggerEmail(data.hostEmail, subject, body);
 };
 
+/**
+ * Envoie une invitation à laisser un avis après le séjour.
+ */
+export const sendReviewInvitationEmail = async ({
+  customerName,
+  customerEmail,
+  itemName,
+  startDate,
+  endDate,
+  token
+}: {
+  customerName: string,
+  customerEmail: string,
+  itemName: string,
+  startDate: string,
+  endDate: string,
+  token: string
+}) => {
+  const reviewLink = `https://www.stayfloow.com/reviews/${token}?email=${encodeURIComponent(customerEmail)}`;
+  
+  const { subject, body } = await getEmailTemplate("reviewRequest", {
+    customerName,
+    itemName,
+    startDate: new Date(startDate).toLocaleDateString("fr-FR"),
+    endDate: new Date(endDate).toLocaleDateString("fr-FR"),
+    reviewLink
+  });
+
+  return triggerEmail(customerEmail, subject, body);
+};
+

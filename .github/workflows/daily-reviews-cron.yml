@@ -1,0 +1,15 @@
+name: Daily Reviews Cron
+
+on:
+  schedule:
+    - cron: '0 9 * * *' # Tous les jours à 09:00 UTC
+  workflow_dispatch: # Permet de lancer manuellement pour tester
+
+jobs:
+  trigger-reviews:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Reviews Cron API
+        run: |
+          curl -X GET "https://www.stayfloow.com/api/cron/reviews" \
+          -H "Authorization: Bearer ${{ secrets.STAYFLOOW_CRON_SECRET }}"

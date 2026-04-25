@@ -14,7 +14,8 @@ export type EmailTemplateName =
   | 'adminListingNotification'
   | 'partnerListingUpdate'
   | 'passwordReset'
-  | 'prospectInvitation';
+  | 'prospectInvitation'
+  | 'reviewRequest';
 
 export interface EmailTemplate {
   subject: string;
@@ -64,6 +65,10 @@ export const defaultTemplates: Record<EmailTemplateName, EmailTemplate> = {
   prospectInvitation: {
     subject: "Développez vos réservations avec StayFloow en Afrique du Nord 🌍",
     body: "<h1>Rejoignez-nous</h1><p>Inscrivez votre hébergement gratuitement.</p>"
+  },
+  reviewRequest: {
+    subject: "Comment s'est passé votre séjour ? 😊",
+    body: "<h1>Votre avis compte !</h1>"
   }
 };
 
@@ -316,6 +321,40 @@ export const getEmailTemplate = async (name: EmailTemplateName, data: any): Prom
           
           <p>À très bientôt,</p>
           <p>L'équipe d'acquisition StayFloow 🌍</p>
+        `)
+      };
+
+    case 'reviewRequest':
+      return {
+        subject: `Comment s'est passé votre séjour à ${data.itemName} ? 😊`,
+        body: baseLayout(`
+          <h1 style="color: ${BRAND_COLOR};">Votre avis nous est précieux ! 😍</h1>
+          <p>Bonjour <strong>${data.customerName}</strong>,</p>
+          <p>Nous espérons que vous avez passé un excellent séjour chez <strong>${data.itemName}</strong> du ${data.startDate} au ${data.endDate}.</p>
+          
+          <div class="card" style="text-align: center;">
+            <p style="font-weight: bold; margin-bottom: 20px;">Quelle est votre évaluation globale de cette expérience ?</p>
+            <div style="margin: 20px 0;">
+              <a href="${data.reviewLink}&initialRate=1" style="text-decoration: none; font-size: 40px; margin: 0 10px;">😞</a>
+              <a href="${data.reviewLink}&initialRate=2" style="text-decoration: none; font-size: 40px; margin: 0 10px;">😐</a>
+              <a href="${data.reviewLink}&initialRate=3" style="text-decoration: none; font-size: 40px; margin: 0 10px;">🙂</a>
+              <a href="${data.reviewLink}&initialRate=4" style="text-decoration: none; font-size: 40px; margin: 0 10px;">😄</a>
+            </div>
+            <p style="font-size: 12px; color: #94a3b8; margin-top: 10px;">Cliquez sur l'emoji qui correspond le mieux à votre ressenti.</p>
+          </div>
+
+          <p>Votre retour aide non seulement <strong>${data.itemName}</strong> à s'améliorer, mais il guide aussi les futurs voyageurs de la communauté StayFloow.</p>
+
+          <div style="text-align: center;">
+            <a href="${data.reviewLink}" class="btn">Évaluer mon séjour</a>
+          </div>
+
+          <p>À très bientôt pour de nouvelles aventures !</p>
+          <p>L'équipe StayFloow 🌍</p>
+          <div style="border-top: 1px solid #e2e8f0; margin-top: 30px; padding-top: 20px; font-size: 11px; color: #cbd5e1;">
+            <p>Vous recevez cet email car vous avez effectué une réservation sur StayFloow.com.</p>
+            <p><a href="https://www.stayfloow.com/unsubscribe" style="color: #94a3b8;">Se désabonner</a></p>
+          </div>
         `)
       };
 

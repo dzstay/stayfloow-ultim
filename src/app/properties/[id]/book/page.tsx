@@ -64,10 +64,19 @@ function PropertyBookingContent({ id }: { id: string }) {
   const toParam = searchParams.get('to');
   const totalParam = searchParams.get('total');
 
-  const [date] = useState<{ from: Date; to: Date }>({
-    from: fromParam ? new Date(fromParam) : new Date(),
-    to: toParam ? new Date(toParam) : addDays(new Date(), 3),
+  const [date, setDate] = useState<{ from: Date; to: Date }>(() => {
+    return { from: new Date(), to: addDays(new Date(), 3) };
   });
+
+  useEffect(() => {
+    if (fromParam && toParam) {
+      const dFrom = new Date(fromParam);
+      const dTo = new Date(toParam);
+      if (!isNaN(dFrom.getTime()) && !isNaN(dTo.getTime())) {
+        setDate({ from: dFrom, to: dTo });
+      }
+    }
+  }, [fromParam, toParam]);
   
   const docRef = useMemoFirebase(() => doc(db, 'listings', id), [db, id]);
   const { data: dbProperty, isLoading: loading } = useDoc(docRef);
@@ -314,8 +323,9 @@ function PropertyBookingContent({ id }: { id: string }) {
   );
 }
 
-export default function PropertyBookingPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function PropertyBookingPage({ params }: { params: any }) {
+  const resolvedParams = use(params as Promise<any>);
+  const id = resolvedParams?.id;
   return (
     <Suspense fallback={<div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary h-10 w-10" /></div>}>
       <PropertyBookingContent id={id} />

@@ -15,14 +15,18 @@ const triggerEmail = async (to: string, subject: string, body: string) => {
     
     if (isServer) {
       const { adminDb } = await import('@/firebase/admin');
-      await adminDb.collection('mail').add({
-        to: to,
-        message: {
-          subject: subject,
-          html: body,
-        },
-      });
-      console.log(`[STAYFLOOW SERVER MAIL] Demande envoyée via ADMIN SDK pour : ${to}`);
+      if (adminDb) {
+        await adminDb.collection('mail').add({
+          to: to,
+          message: {
+            subject: subject,
+            html: body,
+          },
+        });
+        console.log(`[STAYFLOOW SERVER MAIL] Demande envoyée via ADMIN SDK pour : ${to}`);
+      } else {
+        console.warn("[STAYFLOOW SERVER MAIL] adminDb non disponible.");
+      }
     } else {
       // Logic Client existante
       const { firestore } = initializeFirebase();

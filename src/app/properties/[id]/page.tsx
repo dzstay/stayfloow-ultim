@@ -45,10 +45,16 @@ import { fr } from 'date-fns/locale';
 import { properties as mockProperties } from '@/lib/data';
 import { OnboardingMap } from '@/components/onboarding-map';
 import AdvancedSearchBar from '@/components/search/AdvancedSearchBar';
+import { Suspense } from 'react';
 
-export default function PropertyPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+const placeholderImg = "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80";
+
+export default function PropertyPage({ params }: { params: any }) {
+  const resolvedParams = use(params as Promise<any>);
+  const id = resolvedParams?.id;
   
+  if (!id) return null;
+
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>}>
       <PropertyPageContent id={id} />
@@ -71,9 +77,9 @@ function PropertyPageContent({ id }: { id: string }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
-  const [dates, setDates] = useState<{ from: Date; to: Date }>({
-    from: searchParams.get('from') ? new Date(searchParams.get('from')!) : new Date(),
-    to: searchParams.get('to') ? new Date(searchParams.get('to')!) : addDays(new Date(), 3),
+  const [dates, setDates] = useState<{ from: Date; to: Date }>(() => {
+    // Initialisation stable pour éviter le mismatch d'hydratation
+    return { from: new Date(), to: addDays(new Date(), 3) };
   });
 
   const docRef = useMemoFirebase(() => doc(db, 'listings', id), [db, id]);
@@ -92,7 +98,13 @@ function PropertyPageContent({ id }: { id: string }) {
     setIsMounted(true);
     const from = searchParams.get('from');
     const to = searchParams.get('to');
-    if (from && to) setDates({ from: new Date(from), to: new Date(to) });
+    if (from && to) {
+      const dFrom = new Date(from);
+      const dTo = new Date(to);
+      if (!isNaN(dFrom.getTime()) && !isNaN(dTo.getTime())) {
+        setDates({ from: dFrom, to: dTo });
+      }
+    }
   }, [searchParams]);
 
   // 3. Charger les avis pour cet établissement
@@ -134,7 +146,11 @@ function PropertyPageContent({ id }: { id: string }) {
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const nights = Math.max(1, differenceInDays(dates.to, dates.from));
+  const nights = useMemo(() => {
+    if (!dates.from || !dates.to) return 1;
+    const diff = differenceInDays(dates.to, dates.from);
+    return isNaN(diff) ? 1 : Math.max(1, diff);
+  }, [dates]);
 
   const roomTypes = useMemo(() => {
     if (!property) return [];
@@ -447,7 +463,7 @@ function PropertyPageContent({ id }: { id: string }) {
                       <div className="flex gap-2 mt-6 overflow-x-auto pb-2 no-scrollbar">
                           {r.photos.map((p: string, i: number) => (
                             <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-slate-100">
-                                <Image src={p || placeholderImg} alt="Review" fill className="object-cover" />
+                                <Image src={p || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80"} alt="Review" fill className="object-cover" />
                             </div>
                           ))}
                       </div>

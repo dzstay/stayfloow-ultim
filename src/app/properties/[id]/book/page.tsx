@@ -324,8 +324,10 @@ function PropertyBookingContent({ id }: { id: string }) {
 }
 
 export default function PropertyBookingPage({ params }: { params: any }) {
-  const resolvedParams = use(params as Promise<any>);
+  const resolvedParams = React.use(params);
   const id = resolvedParams?.id;
+  
+  if (!id) return <div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary h-10 w-10" /></div>;
   return (
     <Suspense fallback={<div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-primary h-10 w-10" /></div>}>
       <PropertyBookingContent id={id} />

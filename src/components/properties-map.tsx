@@ -94,16 +94,29 @@ const cityCoordinates: Record<string, { top: string; left: string }> = {
   "Fès": { top: "40%", left: "30%" } // Ajouté pour le mock Riad Dar Al-Andalus
 };
 
-function PropertyPin({ property }: { property: Property }) {
+interface MapItem {
+  id: string;
+  name?: string;
+  title?: string;
+  location: string;
+  price?: number;
+  pricePerPerson?: number;
+}
+
+function PropertyPin({ item }: { item: MapItem }) {
   const { formatPrice } = useCurrency();
   
   // Extraire le nom de la ville (gère "Ville, Pays")
-  const cityName = property.location.split(',')[0].trim();
+  const locationStr = typeof item.location === 'string' ? item.location : '';
+  const cityName = locationStr.split(',')[0].trim();
   const coords = cityCoordinates[cityName];
 
   if (!coords) {
     return null;
   }
+
+  const displayName = item.name || item.title || "Annonce";
+  const displayPrice = item.price || item.pricePerPerson || 0;
 
   return (
     <Tooltip>
@@ -115,23 +128,23 @@ function PropertyPin({ property }: { property: Property }) {
           <div className="relative group cursor-pointer">
             <div className="absolute -inset-2 bg-primary/20 group-hover:bg-primary/40 blur-xl rounded-full transition-all"></div>
             <div className="relative bg-white text-primary font-black text-xs px-3 py-1.5 rounded-full shadow-2xl border-2 border-primary/20 flex items-center gap-1 transition-all group-hover:scale-110 group-hover:border-primary group-hover:bg-primary group-hover:text-white">
-              <span>{formatPrice(property.price)}</span>
+              <span>{formatPrice(displayPrice)}</span>
             </div>
           </div>
         </div>
       </TooltipTrigger>
       <TooltipContent className="bg-white border-2 border-primary/10 shadow-2xl p-3 rounded-xl">
         <div className="flex flex-col gap-1">
-          <p className="font-black text-slate-900">{property.name}</p>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{property.location}</p>
+          <p className="font-black text-slate-900">{displayName}</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{locationStr}</p>
         </div>
       </TooltipContent>
     </Tooltip>
   );
 }
 
-export function PropertiesMap({ properties }: { properties?: Property[] }) {
-  if (!properties || properties.length === 0) {
+export function PropertiesMap({ items }: { items?: MapItem[] }) {
+  if (!items || items.length === 0) {
     return (
       <Card className="w-full h-full rounded-[2rem] overflow-hidden relative border-none shadow-inner bg-slate-100 min-h-[300px]">
         <Image
@@ -163,8 +176,8 @@ export function PropertiesMap({ properties }: { properties?: Property[] }) {
         <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
         
         <div className="relative w-full h-full">
-          {properties.map((property) => (
-            <PropertyPin key={property.id} property={property} />
+          {items.map((item) => (
+            <PropertyPin key={item.id} item={item} />
           ))}
         </div>
 

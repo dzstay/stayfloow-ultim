@@ -17,6 +17,13 @@ import { useLanguage } from '@/context/language-context';
 import { properties as mockProperties, type Property } from '@/lib/data';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { PropertiesMap } from '@/components/properties-map';
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -37,6 +44,8 @@ function SearchResultsContent() {
   
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedRatings, setSelectedRatings] = useState<string[]>([]);
+
+  const [isMapOpen, setIsMapOpen] = useState(false);
 
   const locationParam = searchParams.get('dest') || '';
   const hasInfants = searchParams.get('hasInfants') === 'true';
@@ -201,7 +210,10 @@ function SearchResultsContent() {
       <div className="max-w-[1100px] mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
         
         <aside className="hidden lg:block w-[280px] shrink-0 space-y-4">
-          <div className="relative h-24 rounded-lg overflow-hidden border shadow-sm cursor-pointer group">
+          <div 
+            className="relative h-24 rounded-lg overflow-hidden border shadow-sm cursor-pointer group"
+            onClick={() => setIsMapOpen(true)}
+          >
             <div className="absolute inset-0 bg-slate-200 animate-pulse" />
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
               <Button size="sm" className="bg-primary hover:bg-[#059669] text-white font-bold h-8">
@@ -209,6 +221,20 @@ function SearchResultsContent() {
               </Button>
             </div>
           </div>
+
+          <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
+            <DialogContent className="max-w-5xl w-[95vw] h-[80vh] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-white">
+              <DialogHeader className="p-6 border-b bg-white">
+                <DialogTitle className="text-primary font-black text-2xl flex items-center gap-3">
+                  <MapIcon className="h-6 w-6" /> 
+                  Carte des établissements : {locationParam || 'Toutes les destinations'}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 relative h-full">
+                <PropertiesMap items={filteredResults} />
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <FilterSidebar 
             resultCount={filteredResults.length} 
@@ -243,7 +269,11 @@ function SearchResultsContent() {
               </div>
             </SheetContent>
           </Sheet>
-          <Button variant="outline" className="rounded-full border-slate-200 font-bold text-slate-700 h-10 px-6 shrink-0">
+          <Button 
+            variant="outline" 
+            className="rounded-full border-slate-200 font-bold text-slate-700 h-10 px-6 shrink-0"
+            onClick={() => setIsMapOpen(true)}
+          >
             <MapIcon className="mr-2 h-4 w-4 text-primary" /> Carte
           </Button>
         </div>

@@ -17,6 +17,13 @@ import { CircuitResultCard } from '@/components/circuit-result-card';
 import { useLanguage } from '@/context/language-context';
 import { circuits as mockCircuits } from '@/lib/data';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { PropertiesMap } from '@/components/properties-map';
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -34,6 +41,7 @@ function CircuitsContent() {
   
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [selectedRatings, setSelectedRatings] = useState<string[]>([]);
+  const [isMapOpen, setIsMapOpen] = useState(false);
 
   const locationParam = searchParams.get('dest') || '';
 
@@ -151,7 +159,10 @@ function CircuitsContent() {
         
         {/* DESKTOP SIDEBAR */}
         <aside className="hidden lg:block w-[280px] shrink-0 space-y-4">
-          <div className="relative h-24 rounded-lg overflow-hidden border shadow-sm cursor-pointer group">
+          <div 
+            className="relative h-24 rounded-lg overflow-hidden border shadow-sm cursor-pointer group"
+            onClick={() => setIsMapOpen(true)}
+          >
             <div className="absolute inset-0 bg-slate-200 animate-pulse" />
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
               <Button size="sm" className="bg-primary hover:bg-[#059669] text-white font-bold h-8">
@@ -159,6 +170,20 @@ function CircuitsContent() {
               </Button>
             </div>
           </div>
+
+          <Dialog open={isMapOpen} onOpenChange={setIsMapOpen}>
+            <DialogContent className="max-w-5xl w-[95vw] h-[80vh] p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-white">
+              <DialogHeader className="p-6 border-b bg-white">
+                <DialogTitle className="text-primary font-black text-2xl flex items-center gap-3">
+                  <MapIcon className="h-6 w-6" /> 
+                  Carte des circuits : {locationParam || 'Toutes les destinations'}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 relative h-full">
+                <PropertiesMap items={filteredResults} />
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <CircuitSearchSidebar 
             resultCount={filteredResults.length} 

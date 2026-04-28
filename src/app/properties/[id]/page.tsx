@@ -285,7 +285,16 @@ function PropertyPageContent({ id }: { id: string }) {
         <section ref={overviewRef} className="space-y-4">
           <div className="flex flex-col md:flex-row justify-between items-start gap-4">
             <div className="space-y-2">
-              <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight">{propertyName}</h1>
+              <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight flex items-center flex-wrap gap-2">
+                {propertyName}
+                {(property.details?.propertyType === 'hotel' || property.type?.toLowerCase().includes('hôtel')) && Number(property.details?.stars) > 0 && (
+                  <span className="flex items-center gap-0.5 mt-1">
+                    {Array.from({ length: Number(property.details.stars) }).map((_, i) => (
+                      <Star key={i} className="w-5 h-5 md:w-6 md:h-6 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </span>
+                )}
+              </h1>
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(String(property.location?.address || property.location || ""))}`}
                 target="_blank"

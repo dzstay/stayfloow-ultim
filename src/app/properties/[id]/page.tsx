@@ -175,8 +175,31 @@ function PropertyPageContent({ id }: { id: string }) {
     
     const types = [];
     if (property.details?.propertyType === 'hotel' || property.type?.toLowerCase().includes('hôtel')) {
-      types.push({ id: 'double', name: 'Chambre Double Standard', specs: ['1 grand lit double', 'WiFi gratuit', 'Climatisation'], maxGuests: 2, price: basePrice, stock: 10 });
-      types.push({ id: 'suite', name: 'Suite Parentale King Size', specs: ['1 lit King Size', 'Espace salon', 'Vue panoramique'], maxGuests: 3, price: basePrice * 1.6, stock: 3 });
+      const details = property.details || {};
+      let added = false;
+      
+      if (details.singleRoomsCount > 0) {
+        types.push({ id: 'single', name: 'Chambre Simple', specs: ['1 lit simple', 'WiFi gratuit', 'Climatisation'], maxGuests: 1, price: basePrice * 0.7, stock: details.singleRoomsCount });
+        added = true;
+      }
+      if (details.doubleRoomsCount > 0) {
+        types.push({ id: 'double', name: 'Chambre Double Standard', specs: ['1 grand lit double', 'WiFi gratuit', 'Climatisation'], maxGuests: 2, price: basePrice, stock: details.doubleRoomsCount });
+        added = true;
+      }
+      if (details.tripleRoomsCount > 0) {
+        types.push({ id: 'triple', name: 'Chambre Triple', specs: ['1 lit double + 1 lit simple', 'WiFi gratuit', 'Climatisation'], maxGuests: 3, price: basePrice * 1.3, stock: details.tripleRoomsCount });
+        added = true;
+      }
+      if (details.parentalSuitesCount > 0) {
+        types.push({ id: 'suite', name: 'Suite Parentale', specs: ['1 lit King Size', 'Espace salon', 'Vue panoramique'], maxGuests: 3, price: basePrice * 1.6, stock: details.parentalSuitesCount });
+        added = true;
+      }
+
+      // Fallback si l'hôtel n'a pas configuré ses chambres
+      if (!added) {
+        types.push({ id: 'double', name: 'Chambre Double Standard', specs: ['1 grand lit double', 'WiFi gratuit', 'Climatisation'], maxGuests: 2, price: basePrice, stock: 10 });
+        types.push({ id: 'suite', name: 'Suite Parentale King Size', specs: ['1 lit King Size', 'Espace salon', 'Vue panoramique'], maxGuests: 3, price: basePrice * 1.6, stock: 3 });
+      }
     } else {
       types.push({ id: 'entire', name: `Logement entier (${property.details?.roomsCount || 1} pièces)`, specs: [`${property.details?.roomsCount || 1} chambres`, `${property.details?.bathroomsCount || 1} SDB`, 'Cuisine équipée'], maxGuests: property.details?.maxCapacity || 4, price: basePrice, stock: 1 });
     }

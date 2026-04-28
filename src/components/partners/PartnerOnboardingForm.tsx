@@ -131,6 +131,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     gardensCount: 0,
     singleRoomsCount: 0,
     doubleRoomsCount: 0,
+    tripleRoomsCount: 0,
     parentalSuitesCount: 0,
     brand: '',
     model: '',
@@ -284,6 +285,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
             gardensCount: formData.gardensCount,
             singleRoomsCount: formData.singleRoomsCount,
             doubleRoomsCount: formData.doubleRoomsCount,
+            tripleRoomsCount: formData.tripleRoomsCount,
             parentalSuitesCount: formData.parentalSuitesCount,
             stars: formData.stars
           } : initialCategory === 'car_rental' ? {
@@ -697,9 +699,10 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
                 </Select>
               </div>
               <p className="text-xs text-slate-500 font-bold uppercase tracking-tight">Précisez le nombre de chambres disponibles par catégorie sur StayFloow :</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Counter icon={<Bed/>} label="Chambres Simples" value={formData.singleRoomsCount} onChange={(v: number) => setFormData({...formData, singleRoomsCount: v})} light />
                 <Counter icon={<Users/>} label="Chambres Doubles" value={formData.doubleRoomsCount} onChange={(v: number) => setFormData({...formData, doubleRoomsCount: v})} light />
+                <Counter icon={<Users/>} label="Chambres Triples" value={formData.tripleRoomsCount} onChange={(v: number) => setFormData({...formData, tripleRoomsCount: v})} light />
                 <Counter icon={<Star/>} label="Suites Parentales" value={formData.parentalSuitesCount} onChange={(v: number) => setFormData({...formData, parentalSuitesCount: v})} light />
               </div>
             </div>

@@ -147,6 +147,10 @@ export const getEmailTemplate = async (name: EmailTemplateName, data: any): Prom
             <p><strong>Prochaine étape :</strong> Nos experts vérifient votre annonce pour garantir une qualité optimale à nos voyageurs. Vous recevrez une notification dès que votre offre sera en ligne.</p>
             <p>En attendant, vous pouvez compléter votre profil sur votre tableau de bord.</p>
           </div>
+          <div class="card" style="background: #fdf2f8; border-color: #fbcfe8;">
+            <p><strong>Rappel de vos engagements :</strong></p>
+            <p style="font-size: 14px; margin-bottom: 0;">En soumettant cette annonce, vous avez accepté nos conditions générales. Vous vous engagez à fournir le service tel qu'il a été décrit et choisi par le client, et vous assumez l'entière responsabilité de la qualité de cette prestation.</p>
+          </div>
 
           <div style="text-align: center;">
             <a href="${data.setupLink}" class="btn">Mon Espace Partenaire</a>

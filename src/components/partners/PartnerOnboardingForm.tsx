@@ -159,6 +159,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     applyDiscount: false, // Nouvelle option
     useOccupancyPricing: false,
     occupancyPrices: {} as Record<number, number>,
+    agreedToTerms: false,
   });
 
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
@@ -322,6 +323,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
         photos: photos,
         rating: 8.0,
         isBoosted: formData.applyDiscount, // Enregistrement de la mise en avant
+        agreedToTerms: formData.agreedToTerms,
         useOccupancyPricing: formData.useOccupancyPricing,
         occupancyPrices: Object.fromEntries(
           Object.entries(formData.occupancyPrices).map(([occ, price]) => [
@@ -614,6 +616,27 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
               </div>
             </div>
 
+            {/* CONDITIONS GENERALES */}
+            <div className="space-y-4 bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+              <div 
+                className="flex items-start space-x-4 cursor-pointer group" 
+                onClick={() => setFormData({...formData, agreedToTerms: !formData.agreedToTerms})}
+              >
+                <div className={cn(
+                  "w-7 h-7 mt-1 shrink-0 rounded-lg border-2 flex items-center justify-center transition-all shadow-sm",
+                  formData.agreedToTerms ? "bg-primary border-primary text-white" : "bg-white border-slate-300 text-transparent"
+                )}>
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-black text-slate-900 cursor-pointer text-base leading-tight">J'accepte les conditions générales et mes responsabilités envers le client *</Label>
+                  <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                    Je m'engage à fournir le service tel qu'il a été choisi par le client et je prends l'entière responsabilité de cette prestation. J'accepte les conditions générales de la plateforme StayFloow (celles-ci me seront envoyées par e-mail).
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="py-4 border-t flex justify-center">
               <ReCAPTCHA
                 ref={recaptchaRef}
@@ -630,7 +653,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
           </Button>
           <Button 
             onClick={currentStep === 4 ? handleSubmit : handleNext} 
-            disabled={isSubmitting || (currentStep === 4 && !captchaToken)} 
+            disabled={isSubmitting || (currentStep === 4 && (!captchaToken || !formData.agreedToTerms))} 
             className="bg-primary hover:bg-primary/90 px-12 h-14 rounded-xl font-black text-lg shadow-xl shadow-primary/20"
           >
             {isSubmitting ? <Loader2 className="animate-spin" /> : currentStep === 4 ? "Publier l'annonce" : t('continue') + " →"}
@@ -840,7 +863,6 @@ function renderStep3(formData: any, setFormData: any, category: string, onAI: an
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Flexible">Flexible (Remboursement jusqu'à 48h avant)</SelectItem>
-                  <SelectItem value="Modérée">Modérée (Remboursement jusqu'à 7 jours avant)</SelectItem>
                   <SelectItem value="Stricte">Stricte (Non remboursable)</SelectItem>
                 </SelectContent>
               </Select>

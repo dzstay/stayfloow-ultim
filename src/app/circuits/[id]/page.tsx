@@ -121,6 +121,12 @@ export default function CircuitDetailsPage({ params }: { params: Promise<{ id: s
 
       <main className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2 space-y-10">
+          <button 
+            onClick={() => router.back()} 
+            className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-primary transition-colors -mb-6"
+          >
+            <ChevronLeft className="w-4 h-4" /> Retour aux résultats
+          </button>
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Badge className="bg-primary/10 text-primary font-black px-3">CERTIFIÉ STAYFLOOW</Badge>

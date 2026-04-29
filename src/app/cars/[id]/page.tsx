@@ -177,6 +177,12 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           <div className="lg:col-span-2 space-y-8">
+            <button 
+              onClick={() => router.back()} 
+              className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-primary transition-colors -mb-4"
+            >
+              <ChevronLeft className="w-4 h-4" /> Retour aux résultats
+            </button>
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">

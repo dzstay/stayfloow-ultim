@@ -283,6 +283,12 @@ function PropertyPageContent({ id }: { id: string }) {
 
       <main className="max-w-[1100px] mx-auto px-4 py-6 space-y-8">
         <section ref={overviewRef} className="space-y-4">
+          <button 
+            onClick={() => router.back()} 
+            className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-primary transition-colors mb-2"
+          >
+            <ChevronLeft className="w-4 h-4" /> Retour aux résultats
+          </button>
           <div className="flex flex-col md:flex-row justify-between items-start gap-4">
             <div className="space-y-2">
               <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight flex items-center flex-wrap gap-2">

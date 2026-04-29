@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">StayFloow</string>
+    <string name="title_activity_main">StayFloow</string>
+    <string name="package_name">com.stayfloow.app</string>
+    <string name="custom_url_scheme">com.stayfloow.app</string>
+</resources>

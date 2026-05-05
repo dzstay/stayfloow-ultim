@@ -152,6 +152,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
     languages: [] as string[],
     amenities: [] as string[],
     blockedDates: [] as Date[], // Remplacé availableDates par blockedDates
+    availableDates: [] as Date[],
     cancellationPolicy: 'Flexible', // Flexible, Modérée, Stricte
     minNights: 1,
     iCalUrl: '',
@@ -316,6 +317,7 @@ export default function PartnerOnboardingForm({ initialCategory }: Props) {
             duration: formData.duration,
             maxGroupSize: formData.maxGroupSize,
             languages: formData.languages,
+            availableDates: formData.availableDates.map(d => d.toISOString()),
           })
         },
         price: normalizedPriceEUR, 

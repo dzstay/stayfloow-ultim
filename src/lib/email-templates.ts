@@ -4,6 +4,9 @@
  * Design épuré, mobile-responsive et aux couleurs de la marque.
  */
 
+import { translations, Locale, localeDetails } from '@/lib/translations';
+
+
 export type EmailTemplateName = 
   | 'partnerWelcome' 
   | 'registrationWelcome'
@@ -72,9 +75,9 @@ export const defaultTemplates: Record<EmailTemplateName, EmailTemplate> = {
   }
 };
 
-const baseLayout = (content: string) => `
+const baseLayout = (content: string, t?: (key: string) => string, dir: string = 'ltr') => `
 <!DOCTYPE html>
-<html>
+<html dir="${dir}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -102,8 +105,8 @@ const baseLayout = (content: string) => `
         ${content}
       </div>
       <div class="footer">
-        <p style="margin-bottom: 5px;">&copy; ${new Date().getFullYear()} StayFloow.com — Votre partenaire voyage en Afrique.</p>
-        <p>Service Client • Hydra, Alger, Algérie</p>
+        <p style="margin-bottom: 5px;">&copy; ${new Date().getFullYear()} StayFloow.com — ${t ? t("email.footer.tagline") : "Votre partenaire voyage en Afrique."}</p>
+        <p>${t ? t("email.footer.support") : "Service Client"} • Hydra, Alger, Algérie</p>
       </div>
     </div>
   </div>
@@ -111,7 +114,10 @@ const baseLayout = (content: string) => `
 </html>
 `;
 
-export const getEmailTemplate = async (name: EmailTemplateName, data: any): Promise<{ subject: string; body: string }> => {
+export const getEmailTemplate = async (name: EmailTemplateName, data: any, locale: Locale = 'fr'): Promise<{ subject: string; body: string }> => {
+  const t = (key: string) => translations[key]?.[locale] || key;
+  const dir = localeDetails[locale]?.dir || 'ltr';
+
   switch (name) {
     case 'registrationWelcome':
       return {
@@ -163,29 +169,29 @@ export const getEmailTemplate = async (name: EmailTemplateName, data: any): Prom
 
     case 'bookingConfirmation':
       return {
-        subject: `Réservation Confirmée ! ✅ - ${data.itemName}`,
+        subject: `${t("email.booking.subject")}${data.itemName}`,
         body: baseLayout(`
-          <h1>C'est confirmé, préparez vos valises ! ✈️</h1>
-          <p>Bonjour ${data.customerName}, votre réservation pour <strong>${data.itemName}</strong> est validée.</p>
+          <h1>${t("email.booking.title")}</h1>
+          <p>${t("email.booking.hello")} ${data.customerName}, ${t("email.booking.validated")} <strong>${data.itemName}</strong> ${t("email.booking.is_validated")}</p>
           
           <div class="card">
-            <p style="margin-bottom: 5px;"><strong>Référence :</strong> #${data.reservationNumber}</p>
+            <p style="margin-bottom: 5px;"><strong>${t("email.booking.ref")}</strong> #${data.reservationNumber}</p>
             ${data.detailsHtml}
           </div>
 
-          <p><strong>Contact de votre hôte / agence :</strong></p>
+          <p><strong>${t("email.booking.host_contact")}</strong></p>
           <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
             <p style="margin: 0 0 5px 0;"><strong>${data.hostName}</strong></p>
             <p style="margin: 0 0 5px 0;">📞 <a href="tel:${data.hostPhone}" style="color: ${BRAND_COLOR}; text-decoration: none;">${data.hostPhone}</a></p>
             <p style="margin: 0 0 5px 0;">✉️ <a href="mailto:${data.hostEmail}" style="color: ${BRAND_COLOR}; text-decoration: none;">${data.hostEmail}</a></p>
-            ${data.addressObj ? `<p style="margin: 15px 0 0 0;"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.addressObj)}" style="background: #0f172a; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-size: 14px; display: inline-block;">📍 Voir sur Google Maps</a></p>` : ''}
+            ${data.addressObj ? `<p style="margin: 15px 0 0 0;"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.addressObj)}" style="background: #0f172a; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-size: 14px; display: inline-block;">📍 ${t("email.booking.view_map")}</a></p>` : ''}
           </div>
 
           <div style="text-align: center;">
-            <a href="${data.calendarLink}" class="btn" style="background-color: #4285F4; margin-top: 10px;">📅 Ajouter à Google Calendar</a>
-            <a href="https://www.stayfloow.com/profile/bookings" class="btn" style="margin-top: 10px;">Voir la Réservation</a>
+            <a href="${data.calendarLink}" class="btn" style="background-color: #4285F4; margin-top: 10px;">📅 ${t("email.booking.add_calendar")}</a>
+            <a href="https://www.stayfloow.com/profile/bookings" class="btn" style="margin-top: 10px;">${t("email.booking.view_booking")}</a>
           </div>
-        `)
+        `, t, dir)
       };
 
     case 'partnerBookingNotification':

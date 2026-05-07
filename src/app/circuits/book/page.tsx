@@ -43,7 +43,7 @@ function CircuitBookingContent() {
   const { user } = useUser();
   const { toast } = useToast();
   const { formatPrice } = useCurrency();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,7 +95,8 @@ function CircuitBookingContent() {
         startDate: tourDate, 
         endDate: endDate || tourDate, 
         createdAt: new Date().toISOString(), 
-        reservationNumber: resNum 
+        reservationNumber: resNum,
+        customerLocale: locale
       });
 
       const bookingId = docRef.id;
@@ -125,7 +126,8 @@ function CircuitBookingContent() {
           hostName: "StayFloow Guide", 
           hostEmail: "stayflow2025@gmail.com", 
           hostPhone: "+213 550 00 00 00", 
-          bookingDetails: { startDate: tourDate, endDate: endDate, totalPrice: fullTotalAmount, depositAmount: depositAmount } 
+          bookingDetails: { startDate: tourDate, endDate: endDate, totalPrice: fullTotalAmount, depositAmount: depositAmount },
+          customerLocale: locale
         });
       }
 

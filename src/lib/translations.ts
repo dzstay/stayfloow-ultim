@@ -139,4 +139,21 @@ export const translations: Record<string, Record<Locale, string>> = {
     "contact.namePlaceholder": { fr: "Votre nom", en: "Your name", ar: "اسمك", es: "Su nombre" },
     "contact.emailPlaceholder": { fr: "votre@email.com", en: "your@email.com", ar: "بريدك@الإلكتروني.com", es: "tu@email.com" },
     "contact.messagePlaceholder": { fr: "Comment pouvons-nous vous aider ?", en: "How can we help you?", ar: "كيف يمكننا مساعدتك؟", es: "¿Cómo podemos ayudarle?" },
+    
+    // === EMAILS ===
+    "email.booking.subject": { fr: "Réservation Confirmée ! ✅ - ", en: "Booking Confirmed! ✅ - ", ar: "تم تأكيد الحجز! ✅ - ", es: "¡Reserva Confirmada! ✅ - " },
+    "email.booking.title": { fr: "C'est confirmé, préparez vos valises ! ✈️", en: "It's confirmed, pack your bags! ✈️", ar: "تم التأكيد، جهز حقائبك! ✈️", es: "¡Está confirmado, haz tus maletas! ✈️" },
+    "email.booking.hello": { fr: "Bonjour", en: "Hello", ar: "مرحباً", es: "Hola" },
+    "email.booking.validated": { fr: "votre réservation pour", en: "your booking for", ar: "حجزك لـ", es: "tu reserva para" },
+    "email.booking.is_validated": { fr: "est validée.", en: "is confirmed.", ar: "تم تأكيده.", es: "está confirmada." },
+    "email.booking.ref": { fr: "Référence :", en: "Reference:", ar: "المرجع:", es: "Referencia:" },
+    "email.booking.start": { fr: "Début :", en: "Start:", ar: "البداية:", es: "Inicio:" },
+    "email.booking.end": { fr: "Fin :", en: "End:", ar: "النهاية:", es: "Fin:" },
+    "email.booking.total": { fr: "Total :", en: "Total:", ar: "المجموع:", es: "Total:" },
+    "email.booking.host_contact": { fr: "Contact de votre hôte / agence :", en: "Host / Agency Contact:", ar: "جهة اتصال المضيف / الوكالة:", es: "Contacto de tu anfitrión / agencia:" },
+    "email.booking.view_map": { fr: "Voir sur Google Maps", en: "View on Google Maps", ar: "عرض على خرائط جوجل", es: "Ver en Google Maps" },
+    "email.booking.add_calendar": { fr: "Ajouter à Google Calendar", en: "Add to Google Calendar", ar: "إضافة إلى تقويم جوجل", es: "Añadir a Google Calendar" },
+    "email.booking.view_booking": { fr: "Voir la Réservation", en: "View Booking", ar: "عرض الحجز", es: "Ver Reserva" },
+    "email.footer.tagline": { fr: "Votre partenaire voyage en Afrique.", en: "Your travel partner in Africa.", ar: "شريك سفرك في أفريقيا.", es: "Tu socio de viajes en África." },
+    "email.footer.support": { fr: "Service Client", en: "Customer Support", ar: "خدمة العملاء", es: "Atención al cliente" },
 };

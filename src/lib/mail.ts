@@ -1,7 +1,7 @@
-
 import { collection } from 'firebase/firestore';
 import { initializeFirebase, addDocumentNonBlocking } from '@/firebase';
 import { getEmailTemplate, type EmailTemplateName } from './email-templates';
+import { translations, Locale } from './translations';
 
 /**
  * @fileOverview Système d'envoi d'emails StayFloow via l'extension Trigger Email de Firebase.
@@ -93,21 +93,36 @@ export const sendBookingConfirmationEmail = async ({
   hostEmail,
   hostPhone,
   bookingDetails,
+  customerLocale = 'fr',
 }: any) => {
   const adminEmail = "stayflow2025@gmail.com";
+  const t = (key: string) => translations[key]?.[customerLocale as Locale] || key;
 
-  // 1. Formater les détails pour le HTML
-  let detailsHtml = `<div style="margin: 20px 0; padding: 20px; background: #f1f5f9; border-radius: 12px;">`;
+  // 1. Formater les détails pour le HTML (Admin & Partner = FR)
+  let adminDetailsHtml = `<div style="margin: 20px 0; padding: 20px; background: #f1f5f9; border-radius: 12px;">`;
   if (bookingDetails.startDate) {
-    detailsHtml += `<p style="margin: 5px 0;"><strong>📅 Début :</strong> ${new Date(bookingDetails.startDate).toLocaleDateString("fr-FR")}</p>`;
+    adminDetailsHtml += `<p style="margin: 5px 0;"><strong>📅 Début :</strong> ${new Date(bookingDetails.startDate).toLocaleDateString("fr-FR")}</p>`;
   }
   if (bookingDetails.endDate) {
-    detailsHtml += `<p style="margin: 5px 0;"><strong>🏁 Fin :</strong> ${new Date(bookingDetails.endDate).toLocaleDateString("fr-FR")}</p>`;
+    adminDetailsHtml += `<p style="margin: 5px 0;"><strong>🏁 Fin :</strong> ${new Date(bookingDetails.endDate).toLocaleDateString("fr-FR")}</p>`;
   }
   if (bookingDetails.totalPrice) {
-    detailsHtml += `<p style="margin: 5px 0; color: #10B981; font-size: 18px;"><strong>💰 Total :</strong> ${bookingDetails.totalPrice.toLocaleString('fr-DZ')} DZD</p>`;
+    adminDetailsHtml += `<p style="margin: 5px 0; color: #10B981; font-size: 18px;"><strong>💰 Total :</strong> ${bookingDetails.totalPrice.toLocaleString('fr-DZ')} DZD</p>`;
   }
-  detailsHtml += `</div>`;
+  adminDetailsHtml += `</div>`;
+
+  // Formater les détails pour le HTML (Client = Traduit)
+  let clientDetailsHtml = `<div style="margin: 20px 0; padding: 20px; background: #f1f5f9; border-radius: 12px;">`;
+  if (bookingDetails.startDate) {
+    clientDetailsHtml += `<p style="margin: 5px 0;"><strong>📅 ${t("email.booking.start")}</strong> ${new Date(bookingDetails.startDate).toLocaleDateString(customerLocale)}</p>`;
+  }
+  if (bookingDetails.endDate) {
+    clientDetailsHtml += `<p style="margin: 5px 0;"><strong>🏁 ${t("email.booking.end")}</strong> ${new Date(bookingDetails.endDate).toLocaleDateString(customerLocale)}</p>`;
+  }
+  if (bookingDetails.totalPrice) {
+    clientDetailsHtml += `<p style="margin: 5px 0; color: #10B981; font-size: 18px;"><strong>💰 ${t("email.booking.total")}</strong> ${bookingDetails.totalPrice.toLocaleString(customerLocale)} DZD</p>`;
+  }
+  clientDetailsHtml += `</div>`;
 
   // 2. Générer le lien Google Calendar
   const formatDateForCalendar = (dateStr: string) => {
@@ -128,14 +143,14 @@ export const sendBookingConfirmationEmail = async ({
     customerName,
     reservationNumber,
     itemName,
-    detailsHtml,
+    detailsHtml: clientDetailsHtml,
     hostName,
     hostEmail,
     hostPhone,
     itemType,
     calendarLink,
     addressObj: bookingDetails.pickupLocation || itemName // On utilise le nom de l'item ou le lieu de prise en charge
-  });
+  }, customerLocale as Locale);
   await triggerEmail(customerEmail, clientTpl.subject, clientTpl.body);
 
   // --- ENVOI PARTENAIRE ---
@@ -146,7 +161,7 @@ export const sendBookingConfirmationEmail = async ({
     customerPhone: customerPhone || "Non renseigné",
     customerEmail,
     reservationNumber,
-    detailsHtml,
+    detailsHtml: adminDetailsHtml,
     calendarLink
   });
   // Si hostEmail est contact@stayfloow.com ou fleet@..., on envoie au mail configuré par défaut ou fourni
@@ -161,7 +176,7 @@ export const sendBookingConfirmationEmail = async ({
     hostEmail,
     customerName,
     customerEmail,
-    detailsHtml
+    detailsHtml: adminDetailsHtml
   });
   await triggerEmail(adminEmail, adminTpl.subject, adminTpl.body);
 

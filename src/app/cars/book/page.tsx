@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useCurrency } from "@/context/currency-context";
+import { useLanguage } from "@/context/language-context";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -47,6 +48,7 @@ function BookCarContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { formatPrice } = useCurrency();
+  const { locale } = useLanguage();
   const db = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -126,7 +128,8 @@ function BookCarContent() {
         endDate: toParam || addDays(new Date(), days).toISOString(),
         createdAt: new Date().toISOString(),
         reservationNumber: resNum,
-        pickupLocation
+        pickupLocation,
+        customerLocale: locale
       });
 
       const bookingId = docRef.id;
@@ -162,7 +165,8 @@ function BookCarContent() {
             endDate: toParam || addDays(new Date(), days).toISOString(),
             totalPrice: fullTotal,
             depositAmount: depositTotal
-          }
+          },
+          customerLocale: locale
         });
       }
 

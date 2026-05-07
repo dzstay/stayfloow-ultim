@@ -31,6 +31,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/context/currency-context";
+import { useLanguage } from "@/context/language-context";
 import { sendBookingConfirmationEmailAction } from "@/app/actions/mail";
 import { Separator } from "@/components/ui/separator";
 import { CrossSellCard } from "@/components/cross-sell-card";
@@ -49,6 +50,7 @@ function PropertyBookingContent({ id }: { id: string }) {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const { formatPrice } = useCurrency();
+  const { locale } = useLanguage();
   const db = useFirestore();
   const { user } = useUser();
   
@@ -136,7 +138,8 @@ function PropertyBookingContent({ id }: { id: string }) {
         startDate: date.from.toISOString(),
         endDate: date.to.toISOString(),
         createdAt: new Date().toISOString(),
-        reservationNumber
+        reservationNumber,
+        customerLocale: locale
       });
 
       const bookingId = docRef.id;
@@ -175,7 +178,8 @@ function PropertyBookingContent({ id }: { id: string }) {
             nights,
             totalPrice: fullPrice,
             depositAmount: depositPrice
-          }
+          },
+          customerLocale: locale
         });
       }
 

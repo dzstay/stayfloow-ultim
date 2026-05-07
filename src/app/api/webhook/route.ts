@@ -78,7 +78,8 @@ export async function POST(req: Request) {
           totalPrice: booking.totalPrice,
           depositAmount: booking.depositPaid,
           pickupLocation: booking.pickupLocation
-        }
+        },
+        customerLocale: booking.customerLocale || 'fr'
       });
       
     } catch (error) {

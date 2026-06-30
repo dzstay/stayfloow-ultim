@@ -1,5 +1,8 @@
 name: Daily Reviews Cron
 
+# Ce workflow tourne quotidiennement pour récupérer les nouveaux avis
+# Dernière mise à jour d'activité : 30 juin 2026
+
 on:
   schedule:
     - cron: '0 9 * * *' # Tous les jours à 09:00 UTC
